@@ -1,7 +1,18 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "plaid-merchant-logos.plaid.com",
+      },
+      {
+        protocol: "https",
+        hostname: "**.plaid.com",
+      },
+    ],
+  },
 };
 
 export default nextConfig;
