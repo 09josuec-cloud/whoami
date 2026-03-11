@@ -62,7 +62,7 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
       autoSaveTimer.current = setTimeout(() => {
         void onSave({ content: e.getHTML(), title, mood, tags });
-      }, 3000);
+      }, 500);
     },
   });
 
