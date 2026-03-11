@@ -93,7 +93,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         where: { plaidItemId: plaidItem.id },
         select: { id: true, plaidAccountId: true },
       });
-      const accountMap = new Map(bankAccounts.map((a) => [a.plaidAccountId, a.id]));
+      const accountMap = new Map(bankAccounts.map((a: { plaidAccountId: string; id: string }) => [a.plaidAccountId, a.id]));
 
       for (const tx of added) {
         const bankAccountId = accountMap.get(tx.account_id);
