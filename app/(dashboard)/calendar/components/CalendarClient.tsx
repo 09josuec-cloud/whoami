@@ -200,7 +200,8 @@ export default function CalendarClient() {
         setSyncMessage(`Synced ${data.synced} events`);
         await fetchEvents();
       } else {
-        setSyncMessage('Sync failed');
+        const err = (await res.json()) as { error?: string };
+        setSyncMessage(err.error ?? 'Sync failed');
       }
     } catch {
       setSyncMessage('Sync failed');

@@ -122,7 +122,8 @@ export async function POST(_req: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json({ synced });
   } catch (error) {
-    console.error('[Calendar] Sync error:', error);
-    return NextResponse.json({ error: 'Failed to sync calendar' }, { status: 500 });
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('[Calendar] Sync error:', msg);
+    return NextResponse.json({ error: `Sync failed: ${msg}` }, { status: 500 });
   }
 }
