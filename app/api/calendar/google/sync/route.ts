@@ -1,0 +1,128 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/src/lib/auth';
+import { prisma } from '@/src/lib/prisma';
+import { google } from 'googleapis';
+
+export async function POST(_req: NextRequest): Promise<NextResponse> {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const userId = session.user.id;
+
+  const connection = await prisma.calendarConnection.findUnique({
+    where: { userId_provider: { userId, provider: 'google' } },
+  });
+
+  if (!connection) {
+    return NextResponse.json({ error: 'Google Calendar not connected' }, { status: 404 });
+  }
+
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    `${process.env.NEXTAUTH_URL}/api/calendar/google/callback`,
+  );
+
+  oauth2Client.setCredentials({
+    access_token: connection.accessToken,
+    refresh_token: connection.refreshToken ?? undefined,
+  });
+
+  // Refresh token if expired
+  if (connection.tokenExpiry && connection.tokenExpiry < new Date()) {
+    try {
+      const { credentials } = await oauth2Client.refreshAccessToken();
+      oauth2Client.setCredentials(credentials);
+
+      await prisma.calendarConnection.update({
+        where: { id: connection.id },
+        data: {
+          accessToken: credentials.access_token ?? connection.accessToken,
+          tokenExpiry: credentials.expiry_date
+            ? new Date(credentials.expiry_date)
+            : connection.tokenExpiry,
+          updatedAt: new Date(),
+        },
+      });
+    } catch (error) {
+      console.error('[Calendar] Token refresh error:', error);
+      return NextResponse.json({ error: 'Failed to refresh Google token' }, { status: 401 });
+    }
+  }
+
+  const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+
+  const timeMin = new Date();
+  timeMin.setMonth(timeMin.getMonth() - 3);
+
+  const timeMax = new Date();
+  timeMax.setMonth(timeMax.getMonth() + 6);
+
+  try {
+    const response = await calendar.events.list({
+      calendarId: connection.calendarId ?? 'primary',
+      timeMin: timeMin.toISOString(),
+      timeMax: timeMax.toISOString(),
+      maxResults: 500,
+      singleEvents: true,
+      orderBy: 'startTime',
+    });
+
+    const items = response.data.items ?? [];
+    let synced = 0;
+
+    for (const event of items) {
+      if (!event.id || !event.summary) continue;
+
+      const startRaw = event.start?.dateTime ?? event.start?.date;
+      const endRaw = event.end?.dateTime ?? event.end?.date;
+
+      if (!startRaw || !endRaw) continue;
+
+      const allDay = !event.start?.dateTime;
+      const start = new Date(startRaw);
+      const end = new Date(endRaw);
+
+      await prisma.calendarEvent.upsert({
+        where: { googleId: event.id },
+        update: {
+          title: event.summary,
+          description: event.description ?? null,
+          location: event.location ?? null,
+          start,
+          end,
+          allDay,
+          recurrence: event.recurrence ? event.recurrence.join(';') : null,
+          updatedAt: new Date(),
+        },
+        create: {
+          userId,
+          title: event.summary,
+          description: event.description ?? null,
+          location: event.location ?? null,
+          start,
+          end,
+          allDay,
+          source: 'google',
+          googleId: event.id,
+          recurrence: event.recurrence ? event.recurrence.join(';') : null,
+          color: 'blue',
+        },
+      });
+
+      synced++;
+    }
+
+    await prisma.calendarConnection.update({
+      where: { id: connection.id },
+      data: { lastSynced: new Date() },
+    });
+
+    return NextResponse.json({ synced });
+  } catch (error) {
+    console.error('[Calendar] Sync error:', error);
+    return NextResponse.json({ error: 'Failed to sync calendar' }, { status: 500 });
+  }
+}

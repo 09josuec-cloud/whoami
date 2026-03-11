@@ -21,6 +21,7 @@ export const authConfig: NextAuthConfig = {
         pathname.startsWith("/api/auth/forgot-password") ||
         pathname.startsWith("/api/auth/reset-password") ||
         pathname.startsWith("/api/auth/verify-email") ||
+        pathname.startsWith("/api/calendar/google/callback") ||
         pathname.startsWith("/_next") ||
         /\.(svg|png|jpg|jpeg|gif|webp|ico|css|js)$/.test(pathname);
 
