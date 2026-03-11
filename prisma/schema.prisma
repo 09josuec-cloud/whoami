@@ -33,9 +33,10 @@ model User {
   sessions      Session[]
   auditLogs     AuditLog[]
   plaidItems    PlaidItem[]
-  budgets       Budget[]
-  savingsGoals  SavingsGoal[]
-  notifications Notification[]
+  budgets        Budget[]
+  savingsGoals   SavingsGoal[]
+  notifications  Notification[]
+  journalEntries JournalEntry[]
 
   @@map("users")
 }
@@ -213,4 +214,23 @@ model Notification {
   @@index([userId, read])
   @@index([createdAt])
   @@map("notifications")
+}
+
+model JournalEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String?
+  content   String   @db.Text
+  mood      Int?
+  tags      String[] @default([])
+  locked    Boolean  @default(false)
+  entryDate DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, entryDate])
+  @@index([userId])
+  @@map("journal_entries")
 }
