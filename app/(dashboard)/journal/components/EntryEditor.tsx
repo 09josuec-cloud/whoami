@@ -40,6 +40,8 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
   const [tags, setTags] = useState<string[]>(entry?.tags ?? []);
   const [tagInput, setTagInput] = useState('');
   const [locked, setLocked] = useState(entry?.locked ?? false);
+  // revealed = PIN entered this session; resets to false when navigating to a locked entry
+  const [revealed, setRevealed] = useState(!(entry?.locked ?? false));
   const [showPinSetup, setShowPinSetup] = useState(false);
   const [showPinUnlock, setShowPinUnlock] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -55,7 +57,6 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
     editable: !locked,
     onUpdate: ({ editor: e }) => {
       if (locked) return;
-      // Auto-save after 3 seconds of inactivity
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
       autoSaveTimer.current = setTimeout(() => {
         void onSave({ content: e.getHTML(), title, mood, tags });
@@ -63,9 +64,10 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
     },
   });
 
-  // Sync editor content when entry changes
+  // Sync state when switching entries — reset revealed for locked entries
   useEffect(() => {
     if (!editor) return;
+    const isLocked = entry?.locked ?? false;
     const newContent = entry?.content ?? '';
     if (editor.getHTML() !== newContent) {
       editor.commands.setContent(newContent);
@@ -73,8 +75,9 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
     setTitle(entry?.title ?? '');
     setMood(entry?.mood ?? null);
     setTags(entry?.tags ?? []);
-    setLocked(entry?.locked ?? false);
-    editor.setEditable(!(entry?.locked ?? false));
+    setLocked(isLocked);
+    setRevealed(!isLocked); // locked entries always start hidden
+    editor.setEditable(!isLocked);
   }, [entry?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -110,18 +113,19 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
     void onSave({ tags: newTags });
   };
 
-  const toggleLock = useCallback(async () => {
+  const handleLockClick = useCallback(async () => {
     if (locked) {
-      // Unlock: requires PIN verification
-      setShowPinUnlock(true);
+      // Already locked — hide content again (re-lock view)
+      setRevealed(false);
     } else {
-      // Lock: check if PIN is set first
+      // Locking an unlocked entry
       const res = await fetch('/api/journal/pin');
       const data = (await res.json()) as { hasPin?: boolean };
       if (!data.hasPin) {
         setShowPinSetup(true);
       } else {
         setLocked(true);
+        setRevealed(false);
         void onSave({ locked: true });
       }
     }
@@ -145,6 +149,7 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
           onSuccess={() => {
             setShowPinSetup(false);
             setLocked(true);
+            setRevealed(false);
             void onSave({ locked: true });
           }}
           onCancel={() => setShowPinSetup(false)}
@@ -155,7 +160,7 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
           entryId={entry.id}
           onSuccess={() => {
             setShowPinUnlock(false);
-            setLocked(false);
+            setRevealed(true); // session-only reveal, locked stays true in DB
           }}
           onDeleted={() => {
             setShowPinUnlock(false);
@@ -164,123 +169,147 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
           onCancel={() => setShowPinUnlock(false)}
         />
       )}
-      {/* Toolbar */}
-      <div className="flex items-center justify-between border-b border-zinc-800 px-6 py-3 gap-4">
-        <div className="flex items-center gap-2 text-xs text-zinc-500">
-          {saving ? (
-            <span className="text-indigo-400">Saving…</span>
-          ) : (
-            <span>{wordCount} words · {charCount} chars</span>
-          )}
+
+      {/* Locked screen — shown when entry is locked and not yet revealed this session */}
+      {locked && !revealed ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-5 px-6">
+          <div className="text-6xl select-none">🔒</div>
+          <div className="text-center">
+            <p className="text-base font-medium text-zinc-300">This entry is locked</p>
+            <p className="text-xs text-zinc-600 mt-1">Enter your PIN to view it</p>
+          </div>
+          <button
+            onClick={() => setShowPinUnlock(true)}
+            className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+          >
+            Enter PIN
+          </button>
         </div>
-        <div className="flex items-center gap-2">
-          {/* Format buttons */}
-          <button
-            onClick={() => editor?.chain().focus().toggleBold().run()}
-            disabled={locked}
-            className={['px-2 py-1 rounded text-xs font-bold transition-colors', editor?.isActive('bold') ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:bg-zinc-800'].join(' ')}
-          >B</button>
-          <button
-            onClick={() => editor?.chain().focus().toggleItalic().run()}
-            disabled={locked}
-            className={['px-2 py-1 rounded text-xs italic transition-colors', editor?.isActive('italic') ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:bg-zinc-800'].join(' ')}
-          >I</button>
-          <button
-            onClick={() => editor?.chain().focus().toggleBulletList().run()}
-            disabled={locked}
-            className={['px-2 py-1 rounded text-xs transition-colors', editor?.isActive('bulletList') ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:bg-zinc-800'].join(' ')}
-          >• List</button>
-          <div className="w-px h-4 bg-zinc-800" />
-          <button
-            onClick={() => void toggleLock()}
-            className={['px-2.5 py-1 rounded text-xs transition-colors flex items-center gap-1', locked ? 'bg-amber-600/20 text-amber-400' : 'text-zinc-400 hover:bg-zinc-800'].join(' ')}
-            title={locked ? 'Unlock entry' : 'Lock entry'}
-          >
-            {locked ? '🔒 Locked' : '🔓 Lock'}
-          </button>
-          <button
-            onClick={handleSaveNow}
-            disabled={locked || saving}
-            className="px-3 py-1 rounded text-xs bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-40 transition-colors"
-          >
-            Save
-          </button>
-          {onDelete && (
-            <button
-              onClick={() => void onDelete()}
-              className="px-2 py-1 rounded text-xs text-rose-400 hover:bg-rose-500/10 transition-colors"
-            >
-              Delete
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Title */}
-      <div className="px-6 pt-5">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onBlur={() => void onSave({ title, mood, tags })}
-          disabled={locked}
-          placeholder="Title (optional)"
-          className="w-full bg-transparent text-2xl font-semibold text-zinc-100 placeholder-zinc-700 outline-none disabled:opacity-50"
-        />
-      </div>
-
-      {/* Mood picker */}
-      <div className="flex items-center gap-1.5 px-6 pt-3">
-        <span className="text-xs text-zinc-600 mr-1">Mood</span>
-        {MOOD_OPTIONS.map((m) => (
-          <button
-            key={m.value}
-            onClick={() => {
-              const newMood = mood === m.value ? null : m.value;
-              setMood(newMood);
-              void onSave({ mood: newMood });
-            }}
-            disabled={locked}
-            title={m.label}
-            className={['text-lg leading-none rounded-full p-1 transition-all', mood === m.value ? 'bg-indigo-600/30 scale-110' : 'opacity-40 hover:opacity-100'].join(' ')}
-          >
-            {m.emoji}
-          </button>
-        ))}
-      </div>
-
-      {/* Editor */}
-      <div className="flex-1 overflow-y-auto px-6 py-4">
-        <EditorContent
-          editor={editor}
-          className="prose prose-invert prose-sm max-w-none min-h-[200px] focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[200px]"
-        />
-      </div>
-
-      {/* Tags */}
-      <div className="border-t border-zinc-800 px-6 py-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-zinc-600">Tags</span>
-          {tags.map((tag) => (
-            <span key={tag} className="flex items-center gap-1 rounded-full bg-indigo-600/20 px-2.5 py-0.5 text-xs text-indigo-300">
-              {tag}
-              {!locked && (
-                <button onClick={() => removeTag(tag)} className="hover:text-white leading-none">×</button>
+      ) : (
+        <>
+          {/* Toolbar */}
+          <div className="flex items-center justify-between border-b border-zinc-800 px-6 py-3 gap-4">
+            <div className="flex items-center gap-2 text-xs text-zinc-500">
+              {saving ? (
+                <span className="text-indigo-400">Saving…</span>
+              ) : (
+                <span>{wordCount} words · {charCount} chars</span>
               )}
-            </span>
-          ))}
-          {!locked && (
+              {locked && revealed && (
+                <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-amber-400 text-[10px] font-medium">
+                  🔒 Viewing locked entry
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => editor?.chain().focus().toggleBold().run()}
+                disabled={locked}
+                className={['px-2 py-1 rounded text-xs font-bold transition-colors', editor?.isActive('bold') ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:bg-zinc-800'].join(' ')}
+              >B</button>
+              <button
+                onClick={() => editor?.chain().focus().toggleItalic().run()}
+                disabled={locked}
+                className={['px-2 py-1 rounded text-xs italic transition-colors', editor?.isActive('italic') ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:bg-zinc-800'].join(' ')}
+              >I</button>
+              <button
+                onClick={() => editor?.chain().focus().toggleBulletList().run()}
+                disabled={locked}
+                className={['px-2 py-1 rounded text-xs transition-colors', editor?.isActive('bulletList') ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:bg-zinc-800'].join(' ')}
+              >• List</button>
+              <div className="w-px h-4 bg-zinc-800" />
+              <button
+                onClick={() => void handleLockClick()}
+                className={['px-2.5 py-1 rounded text-xs transition-colors flex items-center gap-1', locked ? 'bg-amber-600/20 text-amber-400' : 'text-zinc-400 hover:bg-zinc-800'].join(' ')}
+                title={locked ? 'Hide entry' : 'Lock entry'}
+              >
+                {locked ? '🔒 Hide' : '🔓 Lock'}
+              </button>
+              <button
+                onClick={handleSaveNow}
+                disabled={locked || saving}
+                className="px-3 py-1 rounded text-xs bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-40 transition-colors"
+              >
+                Save
+              </button>
+              {onDelete && (
+                <button
+                  onClick={() => void onDelete()}
+                  className="px-2 py-1 rounded text-xs text-rose-400 hover:bg-rose-500/10 transition-colors"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Title */}
+          <div className="px-6 pt-5">
             <input
               type="text"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={handleTagKeyDown}
-              placeholder="Add tag…"
-              className="bg-transparent text-xs text-zinc-300 placeholder-zinc-700 outline-none w-20"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={() => void onSave({ title, mood, tags })}
+              disabled={locked}
+              placeholder="Title (optional)"
+              className="w-full bg-transparent text-2xl font-semibold text-zinc-100 placeholder-zinc-700 outline-none disabled:opacity-50"
             />
-          )}
-        </div>
-      </div>
+          </div>
+
+          {/* Mood picker */}
+          <div className="flex items-center gap-1.5 px-6 pt-3">
+            <span className="text-xs text-zinc-600 mr-1">Mood</span>
+            {MOOD_OPTIONS.map((m) => (
+              <button
+                key={m.value}
+                onClick={() => {
+                  const newMood = mood === m.value ? null : m.value;
+                  setMood(newMood);
+                  void onSave({ mood: newMood });
+                }}
+                disabled={locked}
+                title={m.label}
+                className={['text-lg leading-none rounded-full p-1 transition-all', mood === m.value ? 'bg-indigo-600/30 scale-110' : 'opacity-40 hover:opacity-100'].join(' ')}
+              >
+                {m.emoji}
+              </button>
+            ))}
+          </div>
+
+          {/* Editor */}
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            <EditorContent
+              editor={editor}
+              className="prose prose-invert prose-sm max-w-none min-h-[200px] focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[200px]"
+            />
+          </div>
+
+          {/* Tags */}
+          <div className="border-t border-zinc-800 px-6 py-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-zinc-600">Tags</span>
+              {tags.map((tag) => (
+                <span key={tag} className="flex items-center gap-1 rounded-full bg-indigo-600/20 px-2.5 py-0.5 text-xs text-indigo-300">
+                  {tag}
+                  {!locked && (
+                    <button onClick={() => removeTag(tag)} className="hover:text-white leading-none">×</button>
+                  )}
+                </span>
+              ))}
+              {!locked && (
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagKeyDown}
+                  placeholder="Add tag…"
+                  className="bg-transparent text-xs text-zinc-300 placeholder-zinc-700 outline-none w-20"
+                />
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
