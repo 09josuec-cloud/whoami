@@ -45,6 +45,8 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
   const [showPinSetup, setShowPinSetup] = useState(false);
   const [showPinUnlock, setShowPinUnlock] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const revealedRef = useRef(revealed);
+  useEffect(() => { revealedRef.current = revealed; }, [revealed]);
   const isNew = !entry?.id;
 
   const editor = useEditor({
@@ -56,7 +58,7 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
     content: entry?.content ?? '',
     editable: !locked,
     onUpdate: ({ editor: e }) => {
-      if (locked) return;
+      if (locked && !revealedRef.current) return;
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
       autoSaveTimer.current = setTimeout(() => {
         void onSave({ content: e.getHTML(), title, mood, tags });
@@ -81,8 +83,8 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
   }, [entry?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    editor?.setEditable(!locked);
-  }, [locked, editor]);
+    editor?.setEditable(!locked || revealed);
+  }, [locked, revealed, editor]);
 
   const handleSaveNow = useCallback(() => {
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
@@ -209,17 +211,17 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
             <div className="flex items-center gap-2">
               <button
                 onClick={() => editor?.chain().focus().toggleBold().run()}
-                disabled={locked}
+                disabled={locked && !revealed}
                 className={['px-2 py-1 rounded text-xs font-bold transition-colors', editor?.isActive('bold') ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:bg-zinc-800'].join(' ')}
               >B</button>
               <button
                 onClick={() => editor?.chain().focus().toggleItalic().run()}
-                disabled={locked}
+                disabled={locked && !revealed}
                 className={['px-2 py-1 rounded text-xs italic transition-colors', editor?.isActive('italic') ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:bg-zinc-800'].join(' ')}
               >I</button>
               <button
                 onClick={() => editor?.chain().focus().toggleBulletList().run()}
-                disabled={locked}
+                disabled={locked && !revealed}
                 className={['px-2 py-1 rounded text-xs transition-colors', editor?.isActive('bulletList') ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:bg-zinc-800'].join(' ')}
               >• List</button>
               <div className="w-px h-4 bg-zinc-800" />
@@ -232,7 +234,7 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
               </button>
               <button
                 onClick={handleSaveNow}
-                disabled={locked || saving}
+                disabled={(locked && !revealed) || saving}
                 className="px-3 py-1 rounded text-xs bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-40 transition-colors"
               >
                 Save
@@ -255,7 +257,7 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onBlur={() => void onSave({ title, mood, tags })}
-              disabled={locked}
+              disabled={locked && !revealed}
               placeholder="Title (optional)"
               className="w-full bg-transparent text-2xl font-semibold text-zinc-100 placeholder-zinc-700 outline-none disabled:opacity-50"
             />
@@ -272,7 +274,7 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
                   setMood(newMood);
                   void onSave({ mood: newMood });
                 }}
-                disabled={locked}
+                disabled={locked && !revealed}
                 title={m.label}
                 className={['text-lg leading-none rounded-full p-1 transition-all', mood === m.value ? 'bg-indigo-600/30 scale-110' : 'opacity-40 hover:opacity-100'].join(' ')}
               >
@@ -296,12 +298,12 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
               {tags.map((tag) => (
                 <span key={tag} className="flex items-center gap-1 rounded-full bg-indigo-600/20 px-2.5 py-0.5 text-xs text-indigo-300">
                   {tag}
-                  {!locked && (
+                  {(!locked || revealed) && (
                     <button onClick={() => removeTag(tag)} className="hover:text-white leading-none">×</button>
                   )}
                 </span>
               ))}
-              {!locked && (
+              {(!locked || revealed) && (
                 <input
                   type="text"
                   value={tagInput}
