@@ -120,7 +120,7 @@ export async function generateSyncNotifications(
       where: { plaidItem: { userId } },
       select: { id: true },
     });
-    const accountIds = userAccounts.map((a) => a.id);
+    const accountIds = userAccounts.map((a: { id: string }) => a.id);
 
     const txs = await prisma.transaction.findMany({
       where: {
