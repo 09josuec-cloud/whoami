@@ -60,7 +60,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
     // Strip content and tags from locked entries so they never reach the client
     const sanitized = entries.map((e) =>
-      e.locked ? { ...e, content: '', tags: [], mood: null, title: null } : e
+      e.locked ? { ...e, content: '', tags: [], mood: null } : e
     );
 
     return NextResponse.json({ entries: sanitized });

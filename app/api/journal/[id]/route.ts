@@ -21,7 +21,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<NextRe
     if (!entry) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     // Never send content of locked entries — unlock is handled via /unlock route
     if (entry.locked) {
-      return NextResponse.json({ entry: { ...entry, content: '', tags: [], mood: null, title: null } });
+      return NextResponse.json({ entry: { ...entry, content: '', tags: [], mood: null } });
     }
     return NextResponse.json({ entry });
   } catch (error) {

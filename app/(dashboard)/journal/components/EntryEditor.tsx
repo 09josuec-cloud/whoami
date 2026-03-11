@@ -182,7 +182,8 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
         <div className="flex flex-1 flex-col items-center justify-center gap-5 px-6">
           <div className="text-6xl select-none">🔒</div>
           <div className="text-center">
-            <p className="text-base font-medium text-zinc-300">This entry is locked</p>
+            {title && <p className="text-lg font-semibold text-zinc-200 mb-1">{title}</p>}
+            <p className="text-base font-medium text-zinc-400">This entry is locked</p>
             <p className="text-xs text-zinc-600 mt-1">Enter your PIN to view it</p>
           </div>
           <button
