@@ -294,6 +294,11 @@ export default function JournalClient() {
             entry={editorEntry}
             onSave={handleSave}
             onDelete={selectedEntry ? handleDelete : undefined}
+            onEntryDeleted={() => {
+              const newEntries = entries.filter((e) => e.id !== selectedId);
+              setEntries(newEntries);
+              setSelectedId(newEntries[0]?.id ?? null);
+            }}
             saving={saving}
           />
         ) : (

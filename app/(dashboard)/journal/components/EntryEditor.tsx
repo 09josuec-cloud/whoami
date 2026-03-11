@@ -5,6 +5,8 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import CharacterCount from '@tiptap/extension-character-count';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import PinSetupModal from './PinSetupModal';
+import PinUnlockModal from './PinUnlockModal';
 
 const MOOD_OPTIONS = [
   { value: 1, emoji: '😞', label: 'Rough' },
@@ -28,15 +30,18 @@ interface EntryEditorProps {
   entry: EntryData | null;
   onSave: (data: Partial<EntryData>) => Promise<void>;
   onDelete?: () => Promise<void>;
+  onEntryDeleted?: () => void;
   saving?: boolean;
 }
 
-export default function EntryEditor({ entry, onSave, onDelete, saving }: EntryEditorProps) {
+export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, saving }: EntryEditorProps) {
   const [title, setTitle] = useState(entry?.title ?? '');
   const [mood, setMood] = useState<number | null>(entry?.mood ?? null);
   const [tags, setTags] = useState<string[]>(entry?.tags ?? []);
   const [tagInput, setTagInput] = useState('');
   const [locked, setLocked] = useState(entry?.locked ?? false);
+  const [showPinSetup, setShowPinSetup] = useState(false);
+  const [showPinUnlock, setShowPinUnlock] = useState(false);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isNew = !entry?.id;
 
@@ -105,11 +110,22 @@ export default function EntryEditor({ entry, onSave, onDelete, saving }: EntryEd
     void onSave({ tags: newTags });
   };
 
-  const toggleLock = () => {
-    const newLocked = !locked;
-    setLocked(newLocked);
-    void onSave({ locked: newLocked });
-  };
+  const toggleLock = useCallback(async () => {
+    if (locked) {
+      // Unlock: requires PIN verification
+      setShowPinUnlock(true);
+    } else {
+      // Lock: check if PIN is set first
+      const res = await fetch('/api/journal/pin');
+      const data = (await res.json()) as { hasPin?: boolean };
+      if (!data.hasPin) {
+        setShowPinSetup(true);
+      } else {
+        setLocked(true);
+        void onSave({ locked: true });
+      }
+    }
+  }, [locked, onSave]);
 
   const charCount = editor?.storage.characterCount?.characters() ?? 0;
   const wordCount = editor?.storage.characterCount?.words() ?? 0;
@@ -124,6 +140,30 @@ export default function EntryEditor({ entry, onSave, onDelete, saving }: EntryEd
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
+      {showPinSetup && (
+        <PinSetupModal
+          onSuccess={() => {
+            setShowPinSetup(false);
+            setLocked(true);
+            void onSave({ locked: true });
+          }}
+          onCancel={() => setShowPinSetup(false)}
+        />
+      )}
+      {showPinUnlock && entry?.id && (
+        <PinUnlockModal
+          entryId={entry.id}
+          onSuccess={() => {
+            setShowPinUnlock(false);
+            setLocked(false);
+          }}
+          onDeleted={() => {
+            setShowPinUnlock(false);
+            onEntryDeleted?.();
+          }}
+          onCancel={() => setShowPinUnlock(false)}
+        />
+      )}
       {/* Toolbar */}
       <div className="flex items-center justify-between border-b border-zinc-800 px-6 py-3 gap-4">
         <div className="flex items-center gap-2 text-xs text-zinc-500">
@@ -152,7 +192,7 @@ export default function EntryEditor({ entry, onSave, onDelete, saving }: EntryEd
           >• List</button>
           <div className="w-px h-4 bg-zinc-800" />
           <button
-            onClick={toggleLock}
+            onClick={() => void toggleLock()}
             className={['px-2.5 py-1 rounded text-xs transition-colors flex items-center gap-1', locked ? 'bg-amber-600/20 text-amber-400' : 'text-zinc-400 hover:bg-zinc-800'].join(' ')}
             title={locked ? 'Unlock entry' : 'Lock entry'}
           >
