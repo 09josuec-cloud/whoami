@@ -34,7 +34,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       where: { plaidItem: { userId: session.user.id } },
       select: { id: true },
     });
-    const userAccountIds = userAccounts.map((a) => a.id);
+    const userAccountIds = userAccounts.map((a: { id: string }) => a.id);
 
     const transactions = await prisma.transaction.findMany({
       where: {

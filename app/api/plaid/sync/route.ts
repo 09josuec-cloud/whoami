@@ -28,7 +28,7 @@ export async function POST(): Promise<NextResponse> {
     }> = [];
 
     for (const item of plaidItems) {
-      const accountMap = new Map(item.accounts.map((a) => [a.plaidAccountId, a.id]));
+      const accountMap = new Map(item.accounts.map((a: { plaidAccountId: string; id: string }) => [a.plaidAccountId, a.id]));
       let cursor: string | undefined = item.cursor ?? undefined;
       let hasMore = true;
 
