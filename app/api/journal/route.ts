@@ -86,7 +86,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  if (!body.content || !body.entryDate) {
+  if (body.content === undefined || body.content === null || !body.entryDate) {
     return NextResponse.json({ error: 'content and entryDate are required' }, { status: 400 });
   }
 
