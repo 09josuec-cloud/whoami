@@ -2,9 +2,20 @@
 
 import { useState } from 'react';
 
+interface UnlockedEntry {
+  id: string;
+  title?: string | null;
+  content: string;
+  mood?: number | null;
+  tags: string[];
+  locked: boolean;
+  entryDate: string;
+  updatedAt: string;
+}
+
 interface PinUnlockModalProps {
   entryId: string;
-  onSuccess: () => void;
+  onSuccess: (entry: UnlockedEntry) => void;
   onDeleted: () => void;
   onCancel: () => void;
 }
@@ -31,6 +42,7 @@ export default function PinUnlockModal({ entryId, onSuccess, onDeleted, onCancel
         success?: boolean;
         deleted?: boolean;
         attemptsLeft?: number;
+        entry?: UnlockedEntry;
       };
 
       if (data.deleted) {
@@ -38,8 +50,8 @@ export default function PinUnlockModal({ entryId, onSuccess, onDeleted, onCancel
         return;
       }
 
-      if (data.success) {
-        onSuccess();
+      if (data.success && data.entry) {
+        onSuccess(data.entry);
         return;
       }
 

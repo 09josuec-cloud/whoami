@@ -58,7 +58,12 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       },
     });
 
-    return NextResponse.json({ entries });
+    // Strip content and tags from locked entries so they never reach the client
+    const sanitized = entries.map((e) =>
+      e.locked ? { ...e, content: '', tags: [], mood: null, title: null } : e
+    );
+
+    return NextResponse.json({ entries: sanitized });
   } catch (error) {
     console.error('[Journal] GET error:', error);
     return NextResponse.json({ error: 'Failed to fetch entries' }, { status: 500 });

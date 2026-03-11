@@ -62,10 +62,14 @@ export default function EntryList({ entries, selectedId, onSelect }: EntryListPr
                 <span className="text-sm shrink-0">{MOOD_EMOJI[entry.mood]}</span>
               )}
             </div>
-            <p className="text-xs text-zinc-500 line-clamp-2 mb-1.5">{preview || 'No content'}</p>
+            {entry.locked ? (
+              <p className="text-xs text-amber-500/50 italic mb-1.5">Protected content</p>
+            ) : (
+              <p className="text-xs text-zinc-500 line-clamp-2 mb-1.5">{preview || 'No content'}</p>
+            )}
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-zinc-600">{formatDate(entry.entryDate)}</span>
-              {entry.tags.length > 0 && (
+              {!entry.locked && entry.tags.length > 0 && (
                 <div className="flex gap-1">
                   {entry.tags.slice(0, 2).map((tag) => (
                     <span key={tag} className="text-[10px] text-indigo-400 bg-indigo-600/10 px-1.5 py-0.5 rounded-full">

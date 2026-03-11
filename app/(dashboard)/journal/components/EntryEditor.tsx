@@ -158,9 +158,14 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
       {showPinUnlock && entry?.id && (
         <PinUnlockModal
           entryId={entry.id}
-          onSuccess={() => {
+          onSuccess={(fullEntry) => {
             setShowPinUnlock(false);
-            setRevealed(true); // session-only reveal, locked stays true in DB
+            setRevealed(true);
+            // Load the real content into the editor
+            setTitle(fullEntry.title ?? '');
+            setMood(fullEntry.mood ?? null);
+            setTags(fullEntry.tags);
+            editor?.commands.setContent(fullEntry.content);
           }}
           onDeleted={() => {
             setShowPinUnlock(false);

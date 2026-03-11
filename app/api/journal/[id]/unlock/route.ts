@@ -46,11 +46,11 @@ export async function POST(req: NextRequest, { params }: Params): Promise<NextRe
 
   if (isCorrect) {
     // Reset attempt counter but keep locked: true in DB — unlock is session-only
-    await prisma.journalEntry.update({
+    const fullEntry = await prisma.journalEntry.update({
       where: { id },
       data: { pinAttempts: 0 },
     });
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, entry: fullEntry });
   }
 
   const newAttempts = entry.pinAttempts + 1;
