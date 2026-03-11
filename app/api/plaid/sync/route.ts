@@ -79,7 +79,7 @@ export async function POST(): Promise<NextResponse> {
           });
           allAddedTxs.push({
             plaidTransactionId: tx.transaction_id,
-            bankAccountId,
+            bankAccountId: bankAccountId as string,
             name: tx.merchant_name ?? tx.name,
             amount: tx.amount,
             date: new Date(tx.date),
