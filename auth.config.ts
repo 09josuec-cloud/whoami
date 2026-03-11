@@ -14,10 +14,13 @@ export const authConfig: NextAuthConfig = {
       const isLoggedIn = !!auth?.user;
       const { pathname } = request.nextUrl;
 
-      const publicRoutes = ["/", "/login", "/register"];
+      const publicRoutes = ["/", "/login", "/register", "/forgot-password", "/reset-password", "/verify-email"];
       const isPublic =
         publicRoutes.includes(pathname) ||
         pathname.startsWith("/api/auth") ||
+        pathname.startsWith("/api/auth/forgot-password") ||
+        pathname.startsWith("/api/auth/reset-password") ||
+        pathname.startsWith("/api/auth/verify-email") ||
         pathname.startsWith("/_next") ||
         /\.(svg|png|jpg|jpeg|gif|webp|ico|css|js)$/.test(pathname);
 

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { registerSchema } from "@/src/lib/validations";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
+import { PasswordInput } from "@/src/components/ui/password-input";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/src/components/ui/card";
 
 type FieldErrors = Partial<
@@ -148,9 +149,8 @@ export default function RegisterPage() {
 
         {/* Password with strength indicator */}
         <div className="flex flex-col gap-1.5">
-          <Input
+          <PasswordInput
             label="Password"
-            type="password"
             autoComplete="new-password"
             placeholder="••••••••••••"
             value={password}
@@ -182,9 +182,8 @@ export default function RegisterPage() {
           )}
         </div>
 
-        <Input
+        <PasswordInput
           label="Confirm password"
-          type="password"
           autoComplete="new-password"
           placeholder="••••••••••••"
           value={confirmPassword}

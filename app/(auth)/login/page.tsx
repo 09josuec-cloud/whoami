@@ -7,6 +7,7 @@ import Link from "next/link";
 import { loginSchema } from "@/src/lib/validations";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
+import { PasswordInput } from "@/src/components/ui/password-input";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/src/components/ui/card";
 
 type FieldErrors = Partial<Record<"email" | "password", string>>;
@@ -118,9 +119,8 @@ function LoginForm() {
           required
         />
         <div className="flex flex-col gap-1.5">
-          <Input
+          <PasswordInput
             label="Password"
-            type="password"
             autoComplete="current-password"
             placeholder="••••••••"
             value={password}
