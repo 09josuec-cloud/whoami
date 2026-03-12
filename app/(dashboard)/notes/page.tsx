@@ -14,7 +14,7 @@ interface Note {
 }
 
 const NOTE_COLORS: { label: string; value: string; bg: string; border: string }[] = [
-  { label: 'Default', value: '', bg: 'bg-zinc-900', border: 'border-zinc-800' },
+  { label: 'Default', value: '', bg: 'bg-[#0f0f12]', border: 'border-transparent' },
   { label: 'Indigo', value: 'indigo', bg: 'bg-indigo-950/40', border: 'border-indigo-800/40' },
   { label: 'Emerald', value: 'emerald', bg: 'bg-emerald-950/40', border: 'border-emerald-800/40' },
   { label: 'Amber', value: 'amber', bg: 'bg-amber-950/40', border: 'border-amber-800/40' },
@@ -32,7 +32,7 @@ const COLOR_DOT: Record<string, string> = {
 
 function getNoteBg(color: string | null) {
   const c = NOTE_COLORS.find((n) => n.value === (color ?? ''));
-  return c ? `${c.bg} ${c.border}` : 'bg-zinc-900 border-zinc-800';
+  return c ? `${c.bg} ${c.border}` : 'bg-[#0f0f12] border-transparent';
 }
 
 function timeAgo(dateStr: string): string {
@@ -203,7 +203,7 @@ export default function NotesPage() {
   return (
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
       {/* Sidebar */}
-      <div className="flex w-72 shrink-0 flex-col border-r border-zinc-800 bg-zinc-950">
+      <div className="flex w-72 shrink-0 flex-col border-r border-zinc-800/60 bg-[#0a0a0d]">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
           <h1 className="text-sm font-semibold text-zinc-100">Notes</h1>
@@ -223,7 +223,7 @@ export default function NotesPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search notes…"
-            className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-600 outline-none focus:ring-1 focus:ring-indigo-500"
+            className="w-full rounded-lg bg-zinc-800/50 px-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-600 outline-none focus:ring-1 focus:ring-indigo-500"
           />
         </div>
 

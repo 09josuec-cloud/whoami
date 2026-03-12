@@ -100,17 +100,17 @@ export default function SubscriptionsList() {
     <div className="space-y-6">
       {/* Summary */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+        <div className="rounded-2xl bg-[#0f0f12] p-5">
           <p className="text-xs text-zinc-500">Monthly subscriptions</p>
           <p className="mt-1 text-xl font-bold text-zinc-100">{fmt(monthlyTotal)}</p>
           <p className="mt-0.5 text-xs text-zinc-600">{activeSubscriptions.length} active</p>
         </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+        <div className="rounded-2xl bg-[#0f0f12] p-5">
           <p className="text-xs text-zinc-500">Annual cost</p>
           <p className="mt-1 text-xl font-bold text-zinc-100">{fmt(monthlyTotal * 12)}</p>
           <p className="mt-0.5 text-xs text-zinc-600">Projected</p>
         </div>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 col-span-2 sm:col-span-1">
+        <div className="rounded-2xl bg-[#0f0f12] p-5 col-span-2 sm:col-span-1">
           <p className="text-xs text-zinc-500">Recurring income</p>
           <p className="mt-1 text-xl font-bold text-emerald-400">{activeIncome.length} stream{activeIncome.length !== 1 ? 's' : ''}</p>
           <p className="mt-0.5 text-xs text-zinc-600">Detected</p>
@@ -123,7 +123,7 @@ export default function SubscriptionsList() {
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
             Recurring Charges
           </h3>
-          <div className="divide-y divide-zinc-800 rounded-xl border border-zinc-800 bg-zinc-900">
+          <div className="divide-y divide-zinc-800/60 rounded-2xl bg-[#0f0f12]">
             {activeSubscriptions.map((sub) => {
               const name = sub.merchant_name ?? sub.description ?? 'Unknown';
               const amt = Math.abs(sub.average_amount?.amount ?? sub.last_amount?.amount ?? 0);
@@ -194,7 +194,7 @@ export default function SubscriptionsList() {
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
             Recurring Income
           </h3>
-          <div className="divide-y divide-zinc-800 rounded-xl border border-zinc-800 bg-zinc-900">
+          <div className="divide-y divide-zinc-800/60 rounded-2xl bg-[#0f0f12]">
             {inflow.map((stream) => {
               const name = stream.merchant_name ?? stream.description ?? 'Income';
               const amt = Math.abs(stream.average_amount?.amount ?? stream.last_amount?.amount ?? 0);

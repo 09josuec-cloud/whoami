@@ -61,7 +61,7 @@ export default function EventDetailModal({ event, onClose, onDelete, onEdit }: E
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl">
+      <div className="w-full max-w-md rounded-2xl bg-[#0f0f12] p-6 shadow-2xl ring-1 ring-zinc-800/60">
         {/* Header */}
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">

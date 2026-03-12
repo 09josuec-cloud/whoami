@@ -249,7 +249,7 @@ function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
   }
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+    <div className="rounded-2xl bg-[#0f0f12] p-5">
       <div className="mb-3 flex items-start justify-between">
         <div className="flex items-center gap-2">
           <div

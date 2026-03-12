@@ -87,7 +87,7 @@ export default function NewEventModal({ initialDate, onSave, onClose }: NewEvent
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl">
+      <div className="w-full max-w-md rounded-2xl bg-[#0f0f12] p-6 shadow-2xl ring-1 ring-zinc-800/60">
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-base font-semibold text-zinc-100">New Event</h2>

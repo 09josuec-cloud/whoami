@@ -20,7 +20,7 @@ export function Card({
   return (
     <div
       className={[
-        "rounded-xl border border-zinc-800 bg-zinc-900/60 backdrop-blur-sm",
+        "rounded-2xl bg-[#0f0f12]",
         "shadow-lg shadow-black/20",
         paddingClasses[padding],
         className,

@@ -31,7 +31,7 @@ export default function JournalFrequencyChart({
   const hasData = data.some((d) => d.count > 0);
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+    <div className="rounded-2xl bg-[#0f0f12] p-5">
       <h2 className="text-lg font-semibold text-zinc-100 mb-4">Journal Activity</h2>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">

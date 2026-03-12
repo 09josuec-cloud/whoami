@@ -112,7 +112,7 @@ export default function NotificationBell() {
 
       {/* Slide-down panel */}
       {open && (
-        <div className="absolute right-0 top-10 z-50 w-80 rounded-xl border border-zinc-800 bg-zinc-950 shadow-xl overflow-hidden">
+        <div className="absolute right-0 top-10 z-50 w-80 rounded-2xl bg-[#0f0f12] shadow-xl overflow-hidden ring-1 ring-zinc-800/60">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
             <span className="text-sm font-semibold text-zinc-100">Notifications</span>

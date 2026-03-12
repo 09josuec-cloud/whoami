@@ -75,7 +75,7 @@ export default function PinUnlockModal({ entryId, onSuccess, onDeleted, onCancel
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl">
+      <div className="w-full max-w-sm rounded-2xl bg-[#0f0f12] p-6 shadow-2xl ring-1 ring-zinc-800/60">
         <div className="mb-1 flex items-center gap-2">
           <span className="text-xl">🔒</span>
           <h2 className="text-lg font-semibold text-zinc-100">Locked Entry</h2>

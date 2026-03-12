@@ -39,7 +39,7 @@ export default function SpendingChart({ data, categories }: SpendingChartProps) 
   const hasData = data.some((row) => categories.some((cat) => (row[cat] as number) > 0));
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+    <div className="rounded-2xl bg-[#0f0f12] p-5">
       <h2 className="text-lg font-semibold text-zinc-100 mb-4">Spending by Category</h2>
       {!hasData ? (
         <div className="flex h-64 items-center justify-center text-zinc-500 text-sm">

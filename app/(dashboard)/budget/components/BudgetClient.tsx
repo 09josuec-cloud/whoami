@@ -84,26 +84,26 @@ function AccountCard({ account }: { account: BankAccountItem }) {
     : account.type;
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+    <div className="rounded-2xl bg-[#0f0f12] p-5">
       <div className="mb-3 flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium text-zinc-500">{institution}</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-600">{institution}</p>
           <p className="mt-0.5 text-sm font-semibold text-zinc-100">{account.name}</p>
         </div>
-        <span className="rounded-full border border-zinc-700 bg-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-400">
+        <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-400">
           {typeLabel}
         </span>
       </div>
-      <p className="text-2xl font-bold tracking-tight text-zinc-100">
+      <p className="text-3xl font-bold tracking-tight text-zinc-100">
         {formatCurrency(account.currentBalance, account.currency)}
       </p>
       {account.availableBalance !== null && account.availableBalance !== account.currentBalance && (
-        <p className="mt-0.5 text-xs text-zinc-500">
+        <p className="mt-0.5 text-xs text-zinc-600">
           {formatCurrency(account.availableBalance, account.currency)} available
         </p>
       )}
       {account.mask && (
-        <p className="mt-2 text-xs text-zinc-600">••••{account.mask}</p>
+        <p className="mt-2 text-xs text-zinc-700">••••{account.mask}</p>
       )}
     </div>
   );
@@ -183,9 +183,9 @@ function StatCard({
   color?: string;
 }) {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-      <p className="text-xs text-zinc-500">{label}</p>
-      <p className={['mt-1 text-xl font-bold tabular-nums', color ?? 'text-zinc-100'].join(' ')}>
+    <div className="rounded-2xl bg-[#0f0f12] p-5">
+      <p className="text-xs font-semibold uppercase tracking-widest text-zinc-600">{label}</p>
+      <p className={['mt-2 text-2xl font-bold tabular-nums tracking-tight', color ?? 'text-zinc-100'].join(' ')}>
         {value}
       </p>
       {sub && <p className="mt-0.5 text-xs text-zinc-600">{sub}</p>}
@@ -496,7 +496,7 @@ export default function BudgetClient() {
 
               {/* Account cards */}
               <section>
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-zinc-600">
                   Connected Accounts
                 </h2>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -508,12 +508,12 @@ export default function BudgetClient() {
 
               {/* Spending chart + Budget progress */}
               <div className="grid gap-6 lg:grid-cols-2">
-                <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+                <section className="rounded-2xl bg-[#0f0f12] p-5">
                   <h2 className="mb-4 text-sm font-semibold text-zinc-100">Spending by Category</h2>
                   <SpendingChart data={spendingChartData} />
                 </section>
 
-                <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+                <section className="rounded-2xl bg-[#0f0f12] p-5">
                   <h2 className="mb-2 text-sm font-semibold text-zinc-100">Budget Progress</h2>
                   <div className="divide-y divide-zinc-800/60">
                     {CATEGORIES.filter((c) => c !== 'Income' && c !== 'Transfer').map((category) => (
@@ -530,7 +530,7 @@ export default function BudgetClient() {
               </div>
 
               {/* Transactions */}
-              <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+              <section className="rounded-2xl bg-[#0f0f12] p-5">
                 <h2 className="mb-4 text-sm font-semibold text-zinc-100">
                   Transactions
                   <span className="ml-2 text-xs font-normal text-zinc-500">
@@ -555,14 +555,14 @@ export default function BudgetClient() {
           {/* Tab: Cash Flow */}
           {activeTab === 'cashflow' && (
             <div className="space-y-6">
-              <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+              <section className="rounded-2xl bg-[#0f0f12] p-5">
                 <h2 className="mb-1 text-sm font-semibold text-zinc-100">Monthly Cash Flow</h2>
                 <p className="mb-5 text-xs text-zinc-500">Income vs. spending over the last 6 months</p>
                 <CashFlowChart data={cashflow} />
               </section>
 
               {/* Monthly breakdown table */}
-              <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+              <section className="rounded-2xl bg-[#0f0f12] p-5">
                 <h2 className="mb-4 text-sm font-semibold text-zinc-100">Monthly Breakdown</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">

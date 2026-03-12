@@ -25,7 +25,7 @@ function fmt(n: number) {
 
 export default function SavingsChart({ data }: SavingsChartProps) {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+    <div className="rounded-2xl bg-[#0f0f12] p-5">
       <h2 className="text-lg font-semibold text-zinc-100 mb-4">Savings Goals</h2>
       {data.length === 0 ? (
         <div className="flex h-32 items-center justify-center text-zinc-500 text-sm">

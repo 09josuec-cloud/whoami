@@ -180,7 +180,7 @@ export default function JournalClient() {
   } : null;
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950">
+    <div className="flex h-[calc(100vh-8rem)] overflow-hidden rounded-2xl bg-[#0a0a0d]">
       {/* Left panel */}
       <div className="flex w-72 shrink-0 flex-col border-r border-zinc-800">
         {/* Header */}

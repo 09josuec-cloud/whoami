@@ -39,7 +39,7 @@ interface BackupCodesModalProps {
 function BackupCodesModal({ codes, onClose }: BackupCodesModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
+      <div className="w-full max-w-md rounded-2xl bg-[#0f0f12] p-6 shadow-2xl">
         <h3 className="text-lg font-semibold text-zinc-100">
           Save your backup codes
         </h3>

@@ -140,7 +140,7 @@ export default function RemindersPage() {
 
       {/* Add form */}
       {showForm && (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+        <div className="rounded-2xl bg-[#0f0f12] p-5">
           <h3 className="mb-3 text-sm font-medium text-zinc-100">New Reminder</h3>
           <div className="flex flex-col gap-3">
             <input
@@ -247,8 +247,8 @@ export default function RemindersPage() {
               <div
                 key={r.id}
                 className={[
-                  'group rounded-xl border bg-zinc-900 p-4 transition-colors',
-                  overdue ? 'border-red-600/30' : r.done ? 'border-zinc-800 opacity-60' : 'border-zinc-800',
+                  'group rounded-2xl bg-[#0f0f12] p-4 transition-colors border',
+                  overdue ? 'border-red-600/20' : r.done ? 'border-transparent opacity-60' : 'border-transparent hover:border-zinc-800/60',
                 ].join(' ')}
               >
                 <div className="flex items-start gap-3">

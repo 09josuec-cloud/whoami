@@ -43,7 +43,7 @@ export default function NetWorthCard({
     savingsTarget > 0 ? Math.min(Math.round((savingsTotal / savingsTarget) * 100), 100) : 0;
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+    <div className="rounded-2xl bg-[#0f0f12] p-5">
       <h2 className="text-lg font-semibold text-zinc-100 mb-1">Net Worth Snapshot</h2>
       <p className="text-4xl font-bold text-emerald-400 mb-5">{fmt(current)}</p>
 

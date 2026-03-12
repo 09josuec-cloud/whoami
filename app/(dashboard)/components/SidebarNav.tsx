@@ -108,10 +108,10 @@ export default function SidebarNav() {
             key={item.href}
             href={item.href}
             className={[
-              'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+              'flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all',
               isActive
-                ? 'bg-indigo-600/20 text-indigo-300 font-medium'
-                : 'text-zinc-400 hover:bg-zinc-800/80 hover:text-zinc-100',
+                ? 'bg-indigo-600/15 text-indigo-300 font-medium shadow-sm'
+                : 'text-zinc-500 hover:bg-zinc-800/60 hover:text-zinc-100',
             ].join(' ')}
             aria-current={isActive ? 'page' : undefined}
           >

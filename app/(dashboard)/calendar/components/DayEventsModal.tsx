@@ -42,7 +42,7 @@ export default function DayEventsModal({ dateStr, events, onClose, onEventClick,
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-xl border border-zinc-800 bg-zinc-950 shadow-2xl">
+      <div className="w-full max-w-sm rounded-2xl bg-[#0f0f12] shadow-2xl ring-1 ring-zinc-800/60">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
           <h2 className="text-sm font-semibold text-zinc-100">{formatDay(dateStr)}</h2>
