@@ -67,6 +67,8 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
   });
 
   // Sync state when switching entries — reset revealed for locked entries
+  // Intentional: syncing multiple state vars from props on entry.id change is correct here
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!editor) return;
     const isLocked = entry?.locked ?? false;
@@ -81,6 +83,7 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
     setRevealed(!isLocked); // locked entries always start hidden
     editor.setEditable(!isLocked);
   }, [entry?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     editor?.setEditable(!locked || revealed);

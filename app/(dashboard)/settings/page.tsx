@@ -1197,9 +1197,16 @@ function ConnectionsTab() {
                 Google Calendar
               </p>
               {calStatus?.connected ? (
-                <div className="mt-0.5 flex items-center gap-1.5">
-                  <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                  <span className="text-xs text-green-400">Connected</span>
+                <div className="mt-0.5 flex flex-col gap-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                    <span className="text-xs text-green-400">Connected</span>
+                  </div>
+                  {calStatus.lastSynced && (
+                    <span className="text-[10px] text-zinc-500">
+                      Last synced {new Date(calStatus.lastSynced).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
                 </div>
               ) : (
                 <div className="mt-0.5 flex items-center gap-1.5">

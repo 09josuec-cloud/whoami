@@ -70,6 +70,11 @@ export async function GET(): Promise<NextResponse> {
 
     let journalStreak = 0;
     const checkDate = new Date(now);
+    // Grace period: if no entry today yet, start counting from yesterday
+    const todayKey = `${checkDate.getFullYear()}-${checkDate.getMonth()}-${checkDate.getDate()}`;
+    if (!entryDays.has(todayKey)) {
+      checkDate.setDate(checkDate.getDate() - 1);
+    }
     while (true) {
       const key = `${checkDate.getFullYear()}-${checkDate.getMonth()}-${checkDate.getDate()}`;
       if (entryDays.has(key)) {

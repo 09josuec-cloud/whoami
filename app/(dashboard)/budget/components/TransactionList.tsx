@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { CATEGORIES, CATEGORY_COLORS, CATEGORY_ICONS } from '@/src/lib/categories';
 
 const PAGE_SIZE = 25;
@@ -30,11 +30,6 @@ export default function TransactionList({ transactions }: TransactionListProps) 
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [page, setPage] = useState(1);
-
-  // Reset page when filters change — NOT inside useMemo (side effects don't belong there)
-  useEffect(() => {
-    setPage(1);
-  }, [search, categoryFilter, transactions]);
 
   const filtered = useMemo(() => {
     return transactions.filter((tx) => {
@@ -74,14 +69,14 @@ export default function TransactionList({ transactions }: TransactionListProps) 
             type="text"
             placeholder="Search transactions..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             className="w-full rounded-lg border border-zinc-700 bg-zinc-800 py-2 pl-9 pr-3 text-sm text-zinc-100 placeholder-zinc-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
           />
         </div>
 
         <select
           value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
+          onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
           className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
         >
           <option value="">All categories</option>

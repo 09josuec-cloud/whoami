@@ -53,6 +53,8 @@ export default function NotificationBell() {
   }, []);
 
   useEffect(() => {
+    // fetchNotifications sets state asynchronously (after await), not synchronously
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchNotifications();
     // Poll every 60 seconds
     const interval = setInterval(() => void fetchNotifications(), 60000);

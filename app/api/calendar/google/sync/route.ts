@@ -3,6 +3,7 @@ import { auth } from '@/src/lib/auth';
 import { prisma } from '@/src/lib/prisma';
 import { google } from 'googleapis';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function POST(_req: NextRequest): Promise<NextResponse> {
   const session = await auth();
   if (!session?.user?.id) {

@@ -41,6 +41,7 @@ model User {
   calendarEvents      CalendarEvent[]
   reminders           Reminder[]
   calendarConnections CalendarConnection[]
+  notes               Note[]
 
   @@map("users")
 }
@@ -280,6 +281,24 @@ model Reminder {
   @@index([userId, dueAt])
   @@index([userId])
   @@map("reminders")
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  content   String   @db.Text
+  tags      String[] @default([])
+  pinned    Boolean  @default(false)
+  color     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, pinned])
+  @@map("notes")
 }
 
 model CalendarConnection {

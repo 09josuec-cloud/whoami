@@ -190,6 +190,50 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
         />
       </div>
 
+      {/* Cash Flow Trend */}
+      {(data?.cashflow ?? []).length > 0 && (
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-zinc-100">Cash Flow</h2>
+            <Link href="/budget" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
+              Details →
+            </Link>
+          </div>
+          <div className="flex items-end gap-2 h-24">
+            {(data?.cashflow ?? []).slice(-6).map((entry, idx, arr) => {
+              const maxVal = Math.max(...arr.map((e) => Math.max(e.income, e.spending)));
+              const incomeH = maxVal > 0 ? (entry.income / maxVal) * 100 : 0;
+              const spendH = maxVal > 0 ? (entry.spending / maxVal) * 100 : 0;
+              return (
+                <div key={idx} className="flex flex-1 flex-col items-center gap-1">
+                  <div className="flex w-full items-end gap-0.5 h-16">
+                    <div
+                      className="flex-1 rounded-sm bg-emerald-500/60 transition-all"
+                      style={{ height: `${incomeH}%` }}
+                      title={`Income: ${fmtFull(entry.income)}`}
+                    />
+                    <div
+                      className="flex-1 rounded-sm bg-rose-500/60 transition-all"
+                      style={{ height: `${spendH}%` }}
+                      title={`Spending: ${fmtFull(entry.spending)}`}
+                    />
+                  </div>
+                  <p className="text-[9px] text-zinc-600 truncate w-full text-center">{entry.label}</p>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-2 flex gap-3">
+            <span className="flex items-center gap-1 text-[10px] text-zinc-500">
+              <span className="h-2 w-2 rounded-sm bg-emerald-500/60" />Income
+            </span>
+            <span className="flex items-center gap-1 text-[10px] text-zinc-500">
+              <span className="h-2 w-2 rounded-sm bg-rose-500/60" />Spending
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Budget health */}
         <div className="lg:col-span-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
@@ -287,6 +331,48 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
           )}
         </div>
       </div>
+
+      {/* Top Spending Categories */}
+      {Object.keys(data?.spending ?? {}).length > 0 && (
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-zinc-100">Top Spending</h2>
+            <Link href="/budget" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
+              Details →
+            </Link>
+          </div>
+          <div className="space-y-2.5">
+            {Object.entries(data?.spending ?? {})
+              .filter(([cat]) => cat !== 'Income' && cat !== 'Transfer')
+              .sort(([, a], [, b]) => b - a)
+              .slice(0, 5)
+              .map(([cat, amount]) => {
+                const topAmount = Math.max(...Object.values(data?.spending ?? {}).filter((_, i) => {
+                  const keys = Object.keys(data?.spending ?? {});
+                  return keys[i] !== 'Income' && keys[i] !== 'Transfer';
+                }));
+                const pct = topAmount > 0 ? (amount / topAmount) * 100 : 0;
+                return (
+                  <div key={cat} className="flex items-center gap-3">
+                    <span className="w-5 text-sm shrink-0">{categoryEmoji[cat] ?? '📦'}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="mb-1 flex items-center justify-between text-xs">
+                        <span className="truncate text-zinc-400">{cat}</span>
+                        <span className="ml-2 shrink-0 font-medium text-zinc-200">{fmtFull(amount)}</span>
+                      </div>
+                      <div className="h-1 w-full overflow-hidden rounded-full bg-zinc-800">
+                        <div
+                          className="h-full rounded-full bg-indigo-500/70 transition-all"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
 
       {/* Recent Transactions */}
       <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5">
