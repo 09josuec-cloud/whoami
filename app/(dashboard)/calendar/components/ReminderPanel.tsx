@@ -16,7 +16,7 @@ interface ReminderPanelProps {
   reminders: Reminder[];
   onToggleDone: (id: string, done: boolean) => void;
   onDelete: (id: string) => void;
-  onAdd: (data: { title: string; dueAt: string; repeat?: string }) => void;
+  onAdd: (data: { title: string; notes?: string; dueAt: string; repeat?: string }) => void | Promise<void>;
 }
 
 const REPEAT_LABELS: Record<string, string> = {
@@ -47,26 +47,29 @@ function isOverdue(dateStr: string, done: boolean): boolean {
 export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd }: ReminderPanelProps) {
   const [showForm, setShowForm] = useState(false);
   const [newTitle, setNewTitle] = useState('');
-  const [newDate, setNewDate] = useState(() => {
-    const now = new Date();
-    return now.toISOString().slice(0, 10);
-  });
+  const [newNotes, setNewNotes] = useState('');
+  const [newDate, setNewDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [newTime, setNewTime] = useState(() => {
     const now = new Date();
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
-    return `${h}:${m}`;
+    return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   });
   const [newRepeat, setNewRepeat] = useState('none');
   const [saving, setSaving] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     if (!newTitle.trim()) return;
     setSaving(true);
     try {
       const dueAt = new Date(`${newDate}T${newTime}`).toISOString();
-      await onAdd({ title: newTitle.trim(), dueAt, repeat: newRepeat });
+      await onAdd({
+        title: newTitle.trim(),
+        notes: newNotes.trim() || undefined,
+        dueAt,
+        repeat: newRepeat === 'none' ? undefined : newRepeat,
+      });
       setNewTitle('');
+      setNewNotes('');
       setShowForm(false);
     } finally {
       setSaving(false);
@@ -74,7 +77,6 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
   };
 
   const pending = reminders.filter((r) => !r.done);
-  const done = reminders.filter((r) => r.done);
 
   return (
     <div className="flex flex-col gap-1">
@@ -85,67 +87,41 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
 
       {pending.map((r) => {
         const overdue = isOverdue(r.dueAt, r.done);
+        const expanded = expandedId === r.id;
         return (
           <div
             key={r.id}
-            className="group flex items-start gap-2 rounded-lg px-2 py-1.5 hover:bg-zinc-800/50 transition-colors"
+            className="group rounded-lg hover:bg-zinc-800/50 transition-colors"
           >
-            <button
-              onClick={() => onToggleDone(r.id, !r.done)}
-              className={[
-                'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors',
-                overdue
-                  ? 'border-red-500/60 hover:border-red-400 hover:bg-red-500/20'
-                  : 'border-zinc-600 hover:border-indigo-400 hover:bg-indigo-500/20',
-              ].join(' ')}
-              title="Mark done"
-            >
-              <span className="sr-only">Toggle done</span>
-            </button>
-            <div className="min-w-0 flex-1">
-              <p className={['truncate text-xs font-medium', overdue ? 'text-red-400' : 'text-zinc-200'].join(' ')}>
-                {r.title}
-              </p>
-              <p className={['text-[10px]', overdue ? 'text-red-500' : 'text-zinc-500'].join(' ')}>
-                {overdue ? 'Overdue · ' : ''}{formatDue(r.dueAt)}
-                {r.repeat && r.repeat !== 'none' && (
-                  <span className="ml-1 rounded bg-zinc-800 px-1 py-px text-[9px] text-zinc-400">
-                    {REPEAT_LABELS[r.repeat] ?? r.repeat}
-                  </span>
-                )}
-              </p>
-            </div>
-            <button
-              onClick={() => onDelete(r.id)}
-              className="hidden shrink-0 text-zinc-600 hover:text-red-400 transition-colors group-hover:block text-xs"
-              title="Delete"
-            >
-              ×
-            </button>
-          </div>
-        );
-      })}
-
-      {/* Done reminders */}
-      {done.length > 0 && (
-        <div className="mt-1 border-t border-zinc-800/60 pt-1">
-          {done.map((r) => (
-            <div
-              key={r.id}
-              className="group flex items-start gap-2 rounded-lg px-2 py-1.5 opacity-50 hover:opacity-70 transition-opacity"
-            >
+            <div className="flex items-start gap-2 px-2 py-1.5">
+              {/* Done checkbox — marks done → deletes */}
               <button
-                onClick={() => onToggleDone(r.id, false)}
-                className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border border-zinc-700 bg-zinc-700 transition-colors hover:bg-zinc-600"
-                title="Mark undone"
+                onClick={() => onToggleDone(r.id, true)}
+                className={[
+                  'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors',
+                  overdue
+                    ? 'border-red-500/60 hover:border-red-400 hover:bg-red-500/20'
+                    : 'border-zinc-600 hover:border-indigo-400 hover:bg-indigo-500/20',
+                ].join(' ')}
+                title="Mark done"
               >
-                <svg className="h-2.5 w-2.5 text-zinc-400" viewBox="0 0 10 10" fill="none">
-                  <path d="M1.5 5l2.5 3 4.5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <span className="sr-only">Mark done</span>
               </button>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs text-zinc-500 line-through">{r.title}</p>
-                <p className="text-[10px] text-zinc-600">{formatDue(r.dueAt)}</p>
+              <div
+                className="min-w-0 flex-1 cursor-pointer"
+                onClick={() => setExpandedId(expanded ? null : r.id)}
+              >
+                <p className={['truncate text-xs font-medium', overdue ? 'text-red-400' : 'text-zinc-200'].join(' ')}>
+                  {r.title}
+                </p>
+                <p className={['text-[10px]', overdue ? 'text-red-500' : 'text-zinc-500'].join(' ')}>
+                  {overdue ? 'Overdue · ' : ''}{formatDue(r.dueAt)}
+                  {r.repeat && r.repeat !== 'none' && (
+                    <span className="ml-1 rounded bg-zinc-800 px-1 py-px text-[9px] text-zinc-400">
+                      {REPEAT_LABELS[r.repeat] ?? r.repeat}
+                    </span>
+                  )}
+                </p>
               </div>
               <button
                 onClick={() => onDelete(r.id)}
@@ -155,9 +131,15 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
                 ×
               </button>
             </div>
-          ))}
-        </div>
-      )}
+            {/* Notes (expandable) */}
+            {expanded && r.notes && (
+              <div className="px-8 pb-2">
+                <p className="text-[10px] text-zinc-500 whitespace-pre-wrap">{r.notes}</p>
+              </div>
+            )}
+          </div>
+        );
+      })}
 
       {/* Add reminder inline form */}
       {showForm && (
@@ -167,9 +149,16 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
             type="text"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') void handleSubmit(); if (e.key === 'Escape') setShowForm(false); }}
+            onKeyDown={(e) => { if (e.key === 'Escape') setShowForm(false); }}
             placeholder="Reminder title…"
             className="w-full rounded-md bg-zinc-800 px-2.5 py-1.5 text-xs text-zinc-100 placeholder-zinc-600 outline-none focus:ring-1 focus:ring-indigo-500"
+          />
+          <textarea
+            value={newNotes}
+            onChange={(e) => setNewNotes(e.target.value)}
+            placeholder="Notes (optional)…"
+            rows={2}
+            className="w-full resize-none rounded-md bg-zinc-800 px-2.5 py-1.5 text-xs text-zinc-100 placeholder-zinc-600 outline-none focus:ring-1 focus:ring-indigo-500"
           />
           <div className="flex gap-1.5">
             <input

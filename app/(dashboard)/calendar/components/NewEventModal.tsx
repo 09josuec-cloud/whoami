@@ -22,10 +22,12 @@ export interface EventFormData {
 const COLOR_OPTIONS = [
   { value: 'indigo', label: 'Indigo', bg: 'bg-indigo-500' },
   { value: 'blue', label: 'Blue', bg: 'bg-blue-500' },
+  { value: 'purple', label: 'Purple', bg: 'bg-purple-500' },
   { value: 'green', label: 'Green', bg: 'bg-green-500' },
   { value: 'yellow', label: 'Yellow', bg: 'bg-yellow-400' },
   { value: 'orange', label: 'Orange', bg: 'bg-orange-500' },
   { value: 'red', label: 'Red', bg: 'bg-red-500' },
+  { value: 'pink', label: 'Pink', bg: 'bg-pink-500' },
 ];
 
 function toLocalDateTimeValue(dateStr: string, time: string): string {
@@ -140,7 +142,13 @@ export default function NewEventModal({ initialDate, onSave, onClose }: NewEvent
                 <input
                   type="time"
                   value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
+                  onChange={(e) => {
+                    const t = e.target.value;
+                    setStartTime(t);
+                    const [h, m] = t.split(':').map(Number);
+                    const endH = (h + 1) % 24;
+                    setEndTime(`${String(endH).padStart(2, '0')}:${String(m ?? 0).padStart(2, '0')}`);
+                  }}
                   className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
                 />
                 <span className="text-zinc-600 text-xs">to</span>

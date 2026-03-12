@@ -8,6 +8,7 @@ interface MonthGridProps {
   events: CalendarEvent[];
   onDayClick: (date: string) => void;
   onEventClick: (event: CalendarEvent) => void;
+  onShowDayEvents: (date: string) => void;
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -20,6 +21,8 @@ const EVENT_COLOR_MAP: Record<string, string> = {
   orange: 'bg-orange-500/80 text-orange-100',
   red: 'bg-red-500/80 text-red-100',
   purple: 'bg-purple-500/80 text-purple-100',
+  teal: 'bg-teal-500/80 text-teal-100',
+  pink: 'bg-pink-500/80 text-pink-100',
 };
 
 const SOURCE_COLOR_MAP: Record<string, string> = {
@@ -48,7 +51,7 @@ function getEventsForDay(events: CalendarEvent[], dateStr: string): CalendarEven
   });
 }
 
-export default function MonthGrid({ year, month, events, onDayClick, onEventClick }: MonthGridProps) {
+export default function MonthGrid({ year, month, events, onDayClick, onEventClick, onShowDayEvents }: MonthGridProps) {
   const today = new Date();
   const todayStr = today.toLocaleDateString('en-CA');
 
@@ -150,7 +153,7 @@ export default function MonthGrid({ year, month, events, onDayClick, onEventClic
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      onDayClick(cell.dateStr);
+                      onShowDayEvents(cell.dateStr);
                     }}
                     className="truncate rounded px-1 py-px text-left text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors"
                   >

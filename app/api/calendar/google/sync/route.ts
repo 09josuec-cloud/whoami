@@ -54,6 +54,21 @@ export async function POST(_req: NextRequest): Promise<NextResponse> {
 
   const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
+  // Map Google colorId → our color names
+  const GOOGLE_COLOR_MAP: Record<string, string> = {
+    '1': 'purple',  // Lavender
+    '2': 'green',   // Sage
+    '3': 'purple',  // Grape
+    '4': 'red',     // Flamingo
+    '5': 'yellow',  // Banana
+    '6': 'orange',  // Tangerine
+    '7': 'blue',    // Peacock
+    '8': 'indigo',  // Blueberry
+    '9': 'green',   // Basil
+    '10': 'red',    // Tomato
+    '11': 'red',    // Flamingo
+  };
+
   const timeMin = new Date();
   timeMin.setMonth(timeMin.getMonth() - 3);
 
@@ -84,6 +99,7 @@ export async function POST(_req: NextRequest): Promise<NextResponse> {
       const allDay = !event.start?.dateTime;
       const start = new Date(startRaw);
       const end = new Date(endRaw);
+      const color = event.colorId ? (GOOGLE_COLOR_MAP[event.colorId] ?? 'blue') : 'blue';
 
       await prisma.calendarEvent.upsert({
         where: { googleId: event.id },
@@ -94,6 +110,7 @@ export async function POST(_req: NextRequest): Promise<NextResponse> {
           start,
           end,
           allDay,
+          color,
           recurrence: event.recurrence ? event.recurrence.join(';') : null,
           updatedAt: new Date(),
         },
@@ -108,7 +125,7 @@ export async function POST(_req: NextRequest): Promise<NextResponse> {
           source: 'google',
           googleId: event.id,
           recurrence: event.recurrence ? event.recurrence.join(';') : null,
-          color: 'blue',
+          color,
         },
       });
 

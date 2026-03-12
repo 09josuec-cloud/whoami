@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/src/lib/auth';
 import { prisma } from '@/src/lib/prisma';
+import { google } from 'googleapis';
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -127,7 +128,31 @@ export async function DELETE(_req: NextRequest, { params }: Params): Promise<Nex
       );
     }
 
+    const googleId = event.googleId;
     await prisma.calendarEvent.delete({ where: { id } });
+
+    // Try to delete from Google Calendar if it was pushed there
+    if (googleId) {
+      try {
+        const connection = await prisma.calendarConnection.findUnique({
+          where: { userId_provider: { userId: session.user.id, provider: 'google' } },
+        });
+        if (connection) {
+          const oauth2Client = new google.auth.OAuth2(
+            process.env.GOOGLE_CLIENT_ID,
+            process.env.GOOGLE_CLIENT_SECRET,
+          );
+          oauth2Client.setCredentials({
+            access_token: connection.accessToken,
+            refresh_token: connection.refreshToken ?? undefined,
+          });
+          const gcal = google.calendar({ version: 'v3', auth: oauth2Client });
+          await gcal.events.delete({ calendarId: connection.calendarId ?? 'primary', eventId: googleId });
+        }
+      } catch (delErr) {
+        console.error('[Calendar] Delete from Google failed (non-fatal):', delErr);
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

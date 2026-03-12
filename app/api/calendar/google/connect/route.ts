@@ -25,7 +25,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const url = oauth2Client.generateAuthUrl({
     access_type: 'offline',
     prompt: 'consent',
-    scope: ['https://www.googleapis.com/auth/calendar.readonly'],
+    scope: ['https://www.googleapis.com/auth/calendar'],
     state: session.user.id,
   });
 

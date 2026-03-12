@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/src/lib/auth';
 import { prisma } from '@/src/lib/prisma';
+import { google } from 'googleapis';
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const session = await auth();
@@ -76,7 +77,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const event = await prisma.calendarEvent.create({
+    let event = await prisma.calendarEvent.create({
       data: {
         userId: session.user.id,
         title: body.title.trim(),
@@ -90,6 +91,47 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         recurrence: body.recurrence ?? null,
       },
     });
+
+    // Try to push to Google Calendar if connected
+    try {
+      const connection = await prisma.calendarConnection.findUnique({
+        where: { userId_provider: { userId: session.user.id, provider: 'google' } },
+      });
+      if (connection) {
+        const oauth2Client = new google.auth.OAuth2(
+          process.env.GOOGLE_CLIENT_ID,
+          process.env.GOOGLE_CLIENT_SECRET,
+        );
+        oauth2Client.setCredentials({
+          access_token: connection.accessToken,
+          refresh_token: connection.refreshToken ?? undefined,
+        });
+        const gcal = google.calendar({ version: 'v3', auth: oauth2Client });
+        const allDay = body.allDay ?? false;
+        const gEvent = await gcal.events.insert({
+          calendarId: connection.calendarId ?? 'primary',
+          requestBody: {
+            summary: event.title,
+            description: event.description ?? undefined,
+            location: event.location ?? undefined,
+            start: allDay
+              ? { date: start.toISOString().slice(0, 10) }
+              : { dateTime: start.toISOString() },
+            end: allDay
+              ? { date: end.toISOString().slice(0, 10) }
+              : { dateTime: end.toISOString() },
+          },
+        });
+        if (gEvent.data.id) {
+          event = await prisma.calendarEvent.update({
+            where: { id: event.id },
+            data: { googleId: gEvent.data.id },
+          });
+        }
+      }
+    } catch (pushErr) {
+      console.error('[Calendar] Push to Google failed (non-fatal):', pushErr);
+    }
 
     return NextResponse.json({ event }, { status: 201 });
   } catch (error) {
