@@ -206,27 +206,40 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
       {/* ── Greeting ── */}
       <div className="flex items-end justify-between pt-1">
         <div>
-          <p className="text-xs font-medium uppercase tracking-widest text-zinc-600">{monthName}</p>
-          <h1 className="mt-0.5 text-2xl font-semibold text-zinc-100">
-            Good to see you, <span className="text-white">{firstName}</span>
+          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-600">{monthName}</p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-zinc-100">
+            Good to see you, <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">{firstName}</span>
           </h1>
         </div>
         <Link
           href="/budget"
-          className="rounded-lg bg-zinc-900 px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
+          className="rounded-xl bg-indigo-600/10 px-4 py-2 text-xs font-medium text-indigo-400 hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors"
         >
           Full report →
         </Link>
       </div>
 
       {/* ── Net Worth Hero ── */}
-      <div className="relative overflow-hidden rounded-2xl bg-[#0f0f12] p-6">
-        {/* Glow */}
-        <div className="pointer-events-none absolute -top-12 left-1/2 h-40 w-96 -translate-x-1/2 rounded-full bg-indigo-600/10 blur-3xl" />
-        <div className="relative">
-          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-600">Net Worth</p>
-          <p className="mt-2 text-5xl font-bold tracking-tight text-white">{fmt(netWorth)}</p>
-          <p className="mt-2 text-xs text-zinc-500">Across {accounts.length} linked {accounts.length === 1 ? 'account' : 'accounts'}</p>
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-950/60 via-[#0f0f15] to-[#0f0f12] p-7">
+        {/* Glows */}
+        <div className="pointer-events-none absolute -top-16 -left-8 h-56 w-72 rounded-full bg-indigo-600/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-8 right-0 h-40 w-64 rounded-full bg-violet-600/10 blur-3xl" />
+        <div className="relative flex items-end justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-indigo-400/70">Net Worth</p>
+            <p className="mt-2 bg-gradient-to-r from-white via-zinc-100 to-zinc-400 bg-clip-text text-5xl font-bold tracking-tight text-transparent">
+              {fmt(netWorth)}
+            </p>
+            <p className="mt-2 text-xs text-zinc-500">
+              Across {accounts.length} linked {accounts.length === 1 ? 'account' : 'accounts'}
+            </p>
+          </div>
+          <div className="hidden sm:flex flex-col items-end gap-1 pb-1">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600">This month</span>
+            <span className={['text-sm font-bold', netCash >= 0 ? 'text-emerald-400' : 'text-rose-400'].join(' ')}>
+              {netCash >= 0 ? '+' : ''}{fmt(netCash)}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -238,6 +251,7 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
           sub="this month"
           valueColor="text-emerald-400"
           trend={null}
+          accentColor="border-emerald-500/50"
         />
         <StatCard
           label="Spending"
@@ -246,6 +260,7 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
           valueColor="text-rose-400"
           trend={prevSpending > 0 ? spendingDelta : null}
           trendInvert
+          accentColor="border-rose-500/50"
         />
         <StatCard
           label="Net Cash"
@@ -253,6 +268,7 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
           sub={netCash >= 0 ? 'surplus this month' : 'deficit this month'}
           valueColor={netCash >= 0 ? 'text-emerald-400' : 'text-rose-400'}
           trend={null}
+          accentColor={netCash >= 0 ? 'border-emerald-500/50' : 'border-rose-500/50'}
         />
       </div>
 
@@ -269,33 +285,33 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
               </div>
               <Link href="/budget" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">Details →</Link>
             </div>
-            <div className="flex items-end gap-3 h-28">
+            <div className="flex items-end gap-2 h-36">
               {cashflow.slice(-6).map((entry, idx, arr) => {
                 const maxVal = Math.max(...arr.map((e) => Math.max(e.income, e.spending)), 1);
                 const incomeH = (entry.income / maxVal) * 100;
                 const spendH = (entry.spending / maxVal) * 100;
                 const isLast = idx === arr.length - 1;
                 return (
-                  <div key={idx} className="flex flex-1 flex-col items-center gap-1.5 group">
-                    <div className="relative flex w-full items-end justify-center gap-0.5 h-20">
+                  <div key={idx} className="flex flex-1 flex-col items-center gap-2 group">
+                    <div className="relative flex w-full items-end justify-center gap-0.5 h-28">
                       {/* Hover tooltip */}
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-10">
-                        <div className="rounded-lg bg-zinc-800 px-2 py-1 text-[10px] whitespace-nowrap text-zinc-300">
-                          <span className="text-emerald-400">{fmtCompact(entry.income)}</span>
-                          <span className="text-zinc-600 mx-1">·</span>
-                          <span className="text-rose-400">{fmtCompact(entry.spending)}</span>
+                      <div className="absolute -top-9 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center z-10">
+                        <div className="rounded-lg bg-zinc-800/90 backdrop-blur-sm px-2.5 py-1.5 text-[10px] whitespace-nowrap text-zinc-300 shadow-lg">
+                          <span className="text-emerald-400 font-medium">{fmtCompact(entry.income)}</span>
+                          <span className="text-zinc-600 mx-1.5">·</span>
+                          <span className="text-rose-400 font-medium">{fmtCompact(entry.spending)}</span>
                         </div>
                       </div>
                       <div
-                        className={['flex-1 rounded-t-sm transition-all', isLast ? 'bg-emerald-500' : 'bg-emerald-500/40'].join(' ')}
+                        className={['flex-1 rounded-t transition-all', isLast ? 'bg-emerald-500' : 'bg-emerald-500/30 group-hover:bg-emerald-500/50'].join(' ')}
                         style={{ height: `${incomeH}%` }}
                       />
                       <div
-                        className={['flex-1 rounded-t-sm transition-all', isLast ? 'bg-rose-500' : 'bg-rose-500/40'].join(' ')}
+                        className={['flex-1 rounded-t transition-all', isLast ? 'bg-rose-500' : 'bg-rose-500/30 group-hover:bg-rose-500/50'].join(' ')}
                         style={{ height: `${spendH}%` }}
                       />
                     </div>
-                    <p className={['text-[10px] truncate w-full text-center', isLast ? 'text-zinc-300 font-medium' : 'text-zinc-600'].join(' ')}>
+                    <p className={['text-[10px] truncate w-full text-center', isLast ? 'text-zinc-200 font-semibold' : 'text-zinc-600'].join(' ')}>
                       {entry.label}
                     </p>
                   </div>
@@ -356,7 +372,7 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
       <div className="grid grid-cols-3 gap-3">
 
         {/* Budget Health — Monarch-style rows */}
-        <div className="col-span-2 rounded-2xl bg-[#0f0f12] p-5">
+        <div className="col-span-2 rounded-2xl bg-[#0f0f12] p-5 ring-1 ring-zinc-800/40">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-zinc-600">Budget Health</p>
@@ -450,8 +466,8 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
                         {Math.round(pct * 100)}%
                       </span>
                     </div>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
-                      <div className="h-full rounded-full transition-all" style={{ width: `${Math.round(pct * 100)}%`, backgroundColor: color }} />
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-800/80">
+                      <div className="h-full rounded-full transition-all" style={{ width: `${Math.round(pct * 100)}%`, backgroundColor: color, boxShadow: `0 0 10px ${color}50` }} />
                     </div>
                     <div className="mt-1 flex justify-between text-[10px] text-zinc-600">
                       <span>{fmtCompact(g.currentAmount)}</span>
@@ -488,8 +504,8 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
                       </span>
                       <span className="text-xs font-semibold text-zinc-200">{fmtCompact(amount)}</span>
                     </div>
-                    <div className="h-1 w-full overflow-hidden rounded-full bg-zinc-800">
-                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color }} />
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800/80">
+                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: color, boxShadow: `0 0 8px ${color}60` }} />
                     </div>
                   </div>
                 );
@@ -539,7 +555,7 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
 }
 
 function StatCard({
-  label, value, sub, valueColor, trend, trendInvert = false,
+  label, value, sub, valueColor, trend, trendInvert = false, accentColor,
 }: {
   label: string;
   value: string;
@@ -547,17 +563,18 @@ function StatCard({
   valueColor: string;
   trend: number | null;
   trendInvert?: boolean;
+  accentColor?: string;
 }) {
   const isPositive = trend !== null && (trendInvert ? trend <= 0 : trend >= 0);
   const isNegative = trend !== null && (trendInvert ? trend > 0 : trend < 0);
 
   return (
-    <div className="rounded-2xl bg-[#0f0f12] p-5">
+    <div className={['relative overflow-hidden rounded-2xl bg-[#0f0f12] p-5', accentColor ? `border-t-2 ${accentColor}` : ''].join(' ')}>
       <p className="text-xs font-semibold uppercase tracking-widest text-zinc-600">{label}</p>
-      <p className={['mt-2 text-2xl font-bold tracking-tight', valueColor].join(' ')}>{value}</p>
+      <p className={['mt-2 text-3xl font-bold tracking-tight', valueColor].join(' ')}>{value}</p>
       <div className="mt-1.5 flex items-center gap-1.5">
         {trend !== null && (
-          <span className={['text-[10px] font-semibold', isPositive ? 'text-emerald-400' : isNegative ? 'text-rose-400' : 'text-zinc-500'].join(' ')}>
+          <span className={['text-[10px] font-semibold rounded px-1 py-0.5', isPositive ? 'bg-emerald-500/10 text-emerald-400' : isNegative ? 'bg-rose-500/10 text-rose-400' : 'text-zinc-500'].join(' ')}>
             {isPositive ? '↓' : '↑'} {Math.abs(trend).toFixed(0)}%
           </span>
         )}

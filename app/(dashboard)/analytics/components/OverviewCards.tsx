@@ -27,7 +27,7 @@ interface StatCardProps {
 
 function StatCard({ icon, label, value, sub, accent = 'text-zinc-100' }: StatCardProps) {
   return (
-    <div className="rounded-2xl bg-[#0f0f12] p-5 flex flex-col gap-1">
+    <div className="rounded-2xl bg-[#0f0f12] p-5 flex flex-col gap-1 ring-1 ring-zinc-800/40">
       <div className="flex items-center gap-2 text-zinc-500 text-xs">
         <span className="text-base">{icon}</span>
         <span className="uppercase tracking-widest font-semibold">{label}</span>

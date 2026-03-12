@@ -183,7 +183,7 @@ function StatCard({
   color?: string;
 }) {
   return (
-    <div className="rounded-2xl bg-[#0f0f12] p-5">
+    <div className="rounded-2xl bg-[#0f0f12] p-5 ring-1 ring-zinc-800/40">
       <p className="text-xs font-semibold uppercase tracking-widest text-zinc-600">{label}</p>
       <p className={['mt-2 text-2xl font-bold tabular-nums tracking-tight', color ?? 'text-zinc-100'].join(' ')}>
         {value}
