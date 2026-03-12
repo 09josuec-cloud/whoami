@@ -370,9 +370,19 @@ export default function CalendarClient() {
   return (
     <div className="flex h-[calc(100vh-8rem)] overflow-hidden rounded-2xl bg-[#0a0a0d]">
       {/* Left sidebar */}
-      <div className="flex w-60 shrink-0 flex-col border-r border-zinc-800">
-        <div className="border-b border-zinc-800/50 px-4 py-4">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-500">Reminders</h2>
+      <div className="flex w-60 shrink-0 flex-col border-r border-zinc-800/50">
+        {/* Today widget */}
+        <div className="border-b border-zinc-800/50 px-4 py-5">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
+            {now.toLocaleDateString('en-US', { weekday: 'long' })}
+          </p>
+          <p className="mt-0.5 text-3xl font-bold text-zinc-100">{now.getDate()}</p>
+          <p className="text-xs text-zinc-500">
+            {now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          </p>
+        </div>
+        <div className="border-b border-zinc-800/50 px-4 py-3">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-600">Reminders</h2>
         </div>
         <div className="flex-1 overflow-y-auto px-2 py-2">
           <ReminderPanel
@@ -413,7 +423,7 @@ export default function CalendarClient() {
       {/* Main calendar area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <div className="flex shrink-0 items-center justify-between border-b border-zinc-800/50 px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between border-b border-zinc-800/50 bg-zinc-900/30 px-4 py-3">
           {/* Navigation */}
           <div className="flex items-center gap-2">
             {/* Back to month (shown in week/day view) */}
