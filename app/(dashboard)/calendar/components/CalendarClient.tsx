@@ -205,6 +205,10 @@ export default function CalendarClient() {
   const handleDayClick = (date: string) => setNewEventDate(date);
   const handleEventClick = (event: CalendarEvent) => setSelectedEvent(event);
   const handleShowDayEvents = (date: string) => setDayEventsDate(date);
+  const handleDayViewClick = (date: string) => {
+    setCurrentDate(new Date(date + 'T12:00:00'));
+    setView('day');
+  };
 
   const handleCreateEvent = async (data: EventFormData) => {
     const res = await fetch('/api/calendar/events', {
@@ -335,24 +339,15 @@ export default function CalendarClient() {
     }
   };
 
-  // When done=true, auto-delete the reminder
   const handleToggleDone = async (id: string, done: boolean) => {
-    if (done) {
-      // Mark done = delete it
-      const res = await fetch(`/api/calendar/reminders/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setReminders((prev) => prev.filter((r) => r.id !== id));
-      }
-    } else {
-      const res = await fetch(`/api/calendar/reminders/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ done: false }),
-      });
-      if (res.ok) {
-        const json = (await res.json()) as { reminder: Reminder };
-        setReminders((prev) => prev.map((r) => (r.id === id ? json.reminder : r)));
-      }
+    const res = await fetch(`/api/calendar/reminders/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ done }),
+    });
+    if (res.ok) {
+      const json = (await res.json()) as { reminder: Reminder };
+      setReminders((prev) => prev.map((r) => (r.id === id ? json.reminder : r)));
     }
   };
 
@@ -387,7 +382,12 @@ export default function CalendarClient() {
             onAdd={handleAddReminder}
           />
         </div>
-        <div className="border-t border-zinc-800 p-3">
+        <div className="border-t border-zinc-800 p-3 flex flex-col gap-2">
+          {googleConnected && (
+            <p className="text-[10px] text-amber-500/80 leading-tight px-1">
+              To push events to Google, disconnect and reconnect to upgrade permissions.
+            </p>
+          )}
           {googleConnected ? (
             <button
               onClick={() => void handleGoogleDisconnect()}
@@ -416,6 +416,21 @@ export default function CalendarClient() {
         <div className="flex shrink-0 items-center justify-between border-b border-zinc-800 px-4 py-3">
           {/* Navigation */}
           <div className="flex items-center gap-2">
+            {/* Back to month (shown in week/day view) */}
+            {view !== 'month' && (
+              <button
+                onClick={() => {
+                  setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1));
+                  setView('month');
+                }}
+                className="flex items-center gap-1 rounded-lg border border-zinc-800 px-2 py-1 text-xs text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 transition-colors"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Month
+              </button>
+            )}
             <button
               onClick={handlePrev}
               className="rounded-lg border border-zinc-800 p-1.5 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 transition-colors"
@@ -454,7 +469,16 @@ export default function CalendarClient() {
               {(['month', 'week', 'day'] as CalendarView[]).map((v) => (
                 <button
                   key={v}
-                  onClick={() => setView(v)}
+                  onClick={() => {
+                    // Always navigate to today when switching views
+                    const d = new Date();
+                    if (v === 'month') {
+                      setCurrentDate(new Date(d.getFullYear(), d.getMonth(), 1));
+                    } else {
+                      setCurrentDate(d);
+                    }
+                    setView(v);
+                  }}
                   className={[
                     'px-2.5 py-1 text-xs capitalize transition-colors',
                     view === v
@@ -534,6 +558,7 @@ export default function CalendarClient() {
             onDayClick={handleDayClick}
             onEventClick={handleEventClick}
             onShowDayEvents={handleShowDayEvents}
+            onDayViewClick={handleDayViewClick}
           />
         ) : view === 'week' ? (
           <WeekView
@@ -542,6 +567,7 @@ export default function CalendarClient() {
             onDayClick={handleDayClick}
             onEventClick={handleEventClick}
             onShowDayEvents={handleShowDayEvents}
+            onDayViewClick={handleDayViewClick}
           />
         ) : (
           <DayView
@@ -578,6 +604,7 @@ export default function CalendarClient() {
           onClose={() => setDayEventsDate(null)}
           onEventClick={handleEventClick}
           onNewEvent={() => setNewEventDate(dayEventsDate)}
+          onViewDay={() => handleDayViewClick(dayEventsDate)}
         />
       )}
     </div>

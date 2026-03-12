@@ -95,8 +95,15 @@ export default function RemindersPage() {
   };
 
   const handleDone = async (id: string) => {
-    const res = await fetch(`/api/calendar/reminders/${id}`, { method: 'DELETE' });
-    if (res.ok) setReminders((prev) => prev.filter((r) => r.id !== id));
+    const res = await fetch(`/api/calendar/reminders/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ done: true }),
+    });
+    if (res.ok) {
+      const json = (await res.json()) as { reminder: Reminder };
+      setReminders((prev) => prev.map((r) => (r.id === id ? json.reminder : r)));
+    }
   };
 
   const handleDelete = async (id: string) => {

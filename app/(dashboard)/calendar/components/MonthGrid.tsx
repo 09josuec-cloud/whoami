@@ -9,6 +9,7 @@ interface MonthGridProps {
   onDayClick: (date: string) => void;
   onEventClick: (event: CalendarEvent) => void;
   onShowDayEvents: (date: string) => void;
+  onDayViewClick: (date: string) => void;
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -51,7 +52,7 @@ function getEventsForDay(events: CalendarEvent[], dateStr: string): CalendarEven
   });
 }
 
-export default function MonthGrid({ year, month, events, onDayClick, onEventClick, onShowDayEvents }: MonthGridProps) {
+export default function MonthGrid({ year, month, events, onDayClick, onEventClick, onShowDayEvents, onDayViewClick }: MonthGridProps) {
   const today = new Date();
   const todayStr = today.toLocaleDateString('en-CA');
 
@@ -114,20 +115,22 @@ export default function MonthGrid({ year, month, events, onDayClick, onEventClic
                 isCurrent ? 'cursor-pointer hover:bg-zinc-900/60' : 'cursor-default',
               ].join(' ')}
             >
-              {/* Day number */}
+              {/* Day number — click goes to day view */}
               <div className="mb-0.5 flex items-center">
-                <span
+                <button
+                  onClick={(e) => { e.stopPropagation(); if (isCurrent) onDayViewClick(cell.dateStr); }}
                   className={[
-                    'flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium',
+                    'flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium transition-colors',
                     isToday
                       ? 'bg-indigo-600 text-white'
                       : isCurrent
-                      ? 'text-zinc-200'
-                      : 'text-zinc-600',
+                      ? 'text-zinc-200 hover:bg-zinc-700'
+                      : 'text-zinc-600 cursor-default',
                   ].join(' ')}
+                  title={isCurrent ? 'View day' : undefined}
                 >
                   {cell.day}
-                </span>
+                </button>
               </div>
 
               {/* Event pills */}

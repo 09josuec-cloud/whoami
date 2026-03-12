@@ -8,6 +8,7 @@ interface DayEventsModalProps {
   onClose: () => void;
   onEventClick: (event: CalendarEvent) => void;
   onNewEvent: () => void;
+  onViewDay: () => void;
 }
 
 const EVENT_COLOR_DOT: Record<string, string> = {
@@ -36,7 +37,7 @@ function formatDay(dateStr: string): string {
   return d.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 }
 
-export default function DayEventsModal({ dateStr, events, onClose, onEventClick, onNewEvent }: DayEventsModalProps) {
+export default function DayEventsModal({ dateStr, events, onClose, onEventClick, onNewEvent, onViewDay }: DayEventsModalProps) {
   const sorted = [...events].sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
 
   return (
@@ -84,10 +85,16 @@ export default function DayEventsModal({ dateStr, events, onClose, onEventClick,
         </div>
 
         {/* Footer */}
-        <div className="border-t border-zinc-800 px-3 py-2.5">
+        <div className="border-t border-zinc-800 px-3 py-2.5 flex gap-2">
+          <button
+            onClick={() => { onViewDay(); onClose(); }}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-zinc-700 py-1.5 text-xs text-zinc-300 hover:border-zinc-600 hover:text-zinc-100 transition-colors"
+          >
+            View Day
+          </button>
           <button
             onClick={() => { onNewEvent(); onClose(); }}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-indigo-600 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 transition-colors"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-indigo-600 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 transition-colors"
           >
             + New Event
           </button>

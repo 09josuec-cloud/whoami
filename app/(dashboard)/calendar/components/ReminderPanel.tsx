@@ -77,6 +77,7 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
   };
 
   const pending = reminders.filter((r) => !r.done);
+  const done = reminders.filter((r) => r.done);
 
   return (
     <div className="flex flex-col gap-1">
@@ -140,6 +141,36 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
           </div>
         );
       })}
+
+      {/* Completed reminders */}
+      {done.length > 0 && (
+        <div className="mt-2 border-t border-zinc-800/60 pt-1">
+          <p className="px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-600">Completed</p>
+          {done.map((r) => (
+            <div
+              key={r.id}
+              className="group flex items-start gap-2 rounded-lg px-2 py-1.5 opacity-50 hover:opacity-80 transition-opacity"
+            >
+              <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border border-zinc-700 bg-zinc-700">
+                <svg className="h-2.5 w-2.5 text-zinc-400" viewBox="0 0 10 10" fill="none">
+                  <path d="M1.5 5l2.5 3 4.5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs text-zinc-500 line-through">{r.title}</p>
+                <p className="text-[10px] text-zinc-600">{formatDue(r.dueAt)}</p>
+              </div>
+              <button
+                onClick={() => onDelete(r.id)}
+                className="hidden shrink-0 text-zinc-600 hover:text-red-400 transition-colors group-hover:block text-xs"
+                title="Delete"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Add reminder inline form */}
       {showForm && (
