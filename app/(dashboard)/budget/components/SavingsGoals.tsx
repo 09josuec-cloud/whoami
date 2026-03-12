@@ -249,7 +249,7 @@ function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
   }
 
   return (
-    <div className="rounded-2xl bg-[#0f0f12] p-5">
+    <div className="rounded-2xl bg-[#0f0f12] p-5 ring-1 ring-zinc-800/40">
       <div className="mb-3 flex items-start justify-between">
         <div className="flex items-center gap-2">
           <div
@@ -293,7 +293,7 @@ function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
       <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-zinc-800">
         <div
           className="h-full rounded-full transition-all duration-700"
-          style={{ width: `${pct}%`, backgroundColor: color }}
+          style={{ width: `${pct}%`, backgroundColor: color, boxShadow: `0 0 8px ${color}60` }}
         />
       </div>
 
@@ -390,7 +390,7 @@ export default function SavingsGoals() {
         )}
         <button
           onClick={() => { setEditingGoal(undefined); setShowModal(true); }}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+          className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />

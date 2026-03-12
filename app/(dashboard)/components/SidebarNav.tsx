@@ -110,7 +110,7 @@ export default function SidebarNav() {
             className={[
               'flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all',
               isActive
-                ? 'bg-indigo-600/15 text-indigo-300 font-medium shadow-sm'
+                ? 'bg-gradient-to-r from-indigo-600/20 to-transparent text-indigo-300 font-medium shadow-sm'
                 : 'text-zinc-500 hover:bg-zinc-800/60 hover:text-zinc-100',
             ].join(' ')}
             aria-current={isActive ? 'page' : undefined}
@@ -118,7 +118,7 @@ export default function SidebarNav() {
             <span className={isActive ? 'text-indigo-400' : ''}>{item.icon}</span>
             {item.label}
             {isActive && (
-              <span className="ml-auto h-1.5 w-1.5 rounded-full bg-indigo-400" aria-hidden="true" />
+              <span className="ml-auto h-1.5 w-1.5 rounded-full bg-indigo-400 shadow-sm shadow-indigo-400/50" aria-hidden="true" />
             )}
           </Link>
         );
@@ -128,9 +128,9 @@ export default function SidebarNav() {
         <span className="px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
           Coming soon
         </span>
-        <div className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-zinc-600 cursor-default">
-          <SparklesIcon />
-          AI Assistant
+        <div className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm cursor-default">
+          <span className="text-zinc-600"><SparklesIcon /></span>
+          <span className="bg-gradient-to-r from-indigo-400/40 to-violet-400/40 bg-clip-text text-transparent">AI Assistant</span>
         </div>
       </div>
     </nav>

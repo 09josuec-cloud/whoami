@@ -118,29 +118,33 @@ export default function RemindersPage() {
   return (
     <div className="space-y-6 px-6 py-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-zinc-100">Reminders</h1>
-          <p className="mt-0.5 text-sm text-zinc-500">
-            {pendingCount} pending
-            {overdueCount > 0 && (
-              <span className="ml-2 rounded-full bg-red-500/20 px-2 py-0.5 text-xs text-red-400">
-                {overdueCount} overdue
-              </span>
-            )}
-          </p>
+      <div className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-violet-950/40 via-[#0f0f15] to-[#0f0f12] p-7">
+        <div className="pointer-events-none absolute -top-8 right-0 h-32 w-64 rounded-full bg-violet-600/10 blur-3xl" />
+        <div className="relative flex items-start justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-violet-400/70">Reminders</p>
+            <h1 className="mt-1 text-3xl font-bold tracking-tight text-white">{pendingCount} pending</h1>
+            <p className="mt-1 text-sm text-zinc-500">
+              Stay on top of everything
+              {overdueCount > 0 && (
+                <span className="ml-2 rounded-full bg-red-500/20 px-2 py-0.5 text-xs text-red-400">
+                  {overdueCount} overdue
+                </span>
+              )}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+          >
+            + New Reminder
+          </button>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
-        >
-          + New Reminder
-        </button>
       </div>
 
       {/* Add form */}
       {showForm && (
-        <div className="rounded-2xl bg-[#0f0f12] p-5">
+        <div className="rounded-2xl bg-[#0f0f12] p-5 ring-1 ring-zinc-800/40">
           <h3 className="mb-3 text-sm font-medium text-zinc-100">New Reminder</h3>
           <div className="flex flex-col gap-3">
             <input
@@ -150,32 +154,32 @@ export default function RemindersPage() {
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Escape') setShowForm(false); }}
               placeholder="Reminder title *"
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full rounded-xl bg-zinc-800/50 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none ring-1 ring-zinc-700/50 focus:ring-indigo-500"
             />
             <textarea
               value={newNotes}
               onChange={(e) => setNewNotes(e.target.value)}
               placeholder="Notes (optional)"
               rows={2}
-              className="w-full resize-none rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full resize-none rounded-xl bg-zinc-800/50 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none ring-1 ring-zinc-700/50 focus:ring-indigo-500"
             />
             <div className="flex gap-2">
               <input
                 type="date"
                 value={newDate}
                 onChange={(e) => setNewDate(e.target.value)}
-                className="flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
+                className="flex-1 rounded-xl bg-zinc-800/50 px-3 py-2 text-sm text-zinc-100 outline-none ring-1 ring-zinc-700/50 focus:ring-indigo-500 [color-scheme:dark]"
               />
               <input
                 type="time"
                 value={newTime}
                 onChange={(e) => setNewTime(e.target.value)}
-                className="w-32 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
+                className="w-32 rounded-xl bg-zinc-800/50 px-3 py-2 text-sm text-zinc-100 outline-none ring-1 ring-zinc-700/50 focus:ring-indigo-500 [color-scheme:dark]"
               />
               <select
                 value={newRepeat}
                 onChange={(e) => setNewRepeat(e.target.value)}
-                className="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-1 focus:ring-indigo-500"
+                className="rounded-xl bg-zinc-800/50 px-3 py-2 text-sm text-zinc-100 outline-none ring-1 ring-zinc-700/50 focus:ring-indigo-500"
               >
                 <option value="none">No repeat</option>
                 <option value="daily">Daily</option>
@@ -187,7 +191,7 @@ export default function RemindersPage() {
               <button
                 onClick={() => void handleAdd()}
                 disabled={saving || !newTitle.trim()}
-                className="flex-1 rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+                className="flex-1 rounded-xl bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
               >
                 {saving ? 'Saving…' : 'Add Reminder'}
               </button>
@@ -247,8 +251,8 @@ export default function RemindersPage() {
               <div
                 key={r.id}
                 className={[
-                  'group rounded-2xl bg-[#0f0f12] p-4 transition-colors border',
-                  overdue ? 'border-red-600/20' : r.done ? 'border-transparent opacity-60' : 'border-transparent hover:border-zinc-800/60',
+                  'group rounded-2xl bg-[#0f0f12] p-4 transition-colors ring-1',
+                  overdue ? 'ring-red-600/20' : r.done ? 'ring-zinc-800/40 opacity-60' : 'ring-zinc-800/40 hover:ring-zinc-700/60',
                 ].join(' ')}
               >
                 <div className="flex items-start gap-3">

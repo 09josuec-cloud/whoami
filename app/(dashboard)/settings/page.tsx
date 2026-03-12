@@ -1327,8 +1327,9 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       {/* Page heading */}
-      <div>
-        <h1 className="text-2xl font-semibold text-zinc-100">Settings</h1>
+      <div className="relative overflow-hidden">
+        <div className="pointer-events-none absolute -top-8 right-0 h-32 w-64 rounded-full bg-indigo-600/10 blur-3xl" />
+        <h1 className="bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent text-3xl font-bold tracking-tight">Settings</h1>
         <p className="mt-1 text-sm text-zinc-400">
           Manage your account, security, and integrations.
         </p>

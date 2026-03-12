@@ -201,15 +201,15 @@ export default function NotesPage() {
   const editorBg = getNoteBg(editColor || null);
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden rounded-2xl bg-[#0a0a0d]">
       {/* Sidebar */}
       <div className="flex w-72 shrink-0 flex-col border-r border-zinc-800/60 bg-[#0a0a0d]">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
-          <h1 className="text-sm font-semibold text-zinc-100">Notes</h1>
+          <h1 className="text-sm font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">Notes</h1>
           <button
             onClick={openNew}
-            className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 transition-colors text-lg leading-none"
+            className="flex h-7 w-7 items-center justify-center rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 transition-colors text-lg leading-none"
             title="New note"
           >
             +
@@ -223,7 +223,7 @@ export default function NotesPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search notes…"
-            className="w-full rounded-lg bg-zinc-800/50 px-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-600 outline-none focus:ring-1 focus:ring-indigo-500"
+            className="w-full rounded-xl bg-zinc-800/50 px-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-600 outline-none ring-1 ring-zinc-700/40 focus:ring-indigo-500"
           />
         </div>
 
@@ -234,7 +234,7 @@ export default function NotesPage() {
               onClick={() => setSelectedTag('')}
               className={[
                 'rounded-full px-2 py-0.5 text-[10px] transition-colors',
-                selectedTag === '' ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200',
+                selectedTag === '' ? 'bg-indigo-600/90 text-white shadow-sm rounded-full' : 'bg-zinc-800/60 text-zinc-400 hover:text-zinc-200',
               ].join(' ')}
             >
               All
@@ -245,7 +245,7 @@ export default function NotesPage() {
                 onClick={() => setSelectedTag(selectedTag === tag ? '' : tag)}
                 className={[
                   'rounded-full px-2 py-0.5 text-[10px] transition-colors',
-                  selectedTag === tag ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200',
+                  selectedTag === tag ? 'bg-indigo-600/90 text-white shadow-sm rounded-full' : 'bg-zinc-800/60 text-zinc-400 hover:text-zinc-200',
                 ].join(' ')}
               >
                 {tag}
