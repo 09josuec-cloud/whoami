@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { useSession } from 'next-auth/react';
 import { Button } from '@/src/components/ui/button';
 import { Input } from '@/src/components/ui/input';
 import {
@@ -1283,32 +1282,34 @@ function ConnectionsTab() {
 // ---------------------------------------------------------------------------
 
 export default function SettingsPage() {
-  const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState<Tab>('general');
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [createdAt, setCreatedAt] = useState<string | null>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
 
-  const email = session?.user?.email ?? '';
-  const name = session?.user?.name ?? '';
-
-  // Fetch createdAt from session API (it may not be in the JWT)
   useEffect(() => {
-    const fetchCreatedAt = async () => {
+    const fetchSession = async () => {
       try {
         const res = await fetch('/api/auth/session');
         if (res.ok) {
           const data = (await res.json()) as {
-            user?: { createdAt?: string };
+            user?: { email?: string; name?: string; createdAt?: string };
           };
+          setEmail(data.user?.email ?? '');
+          setName(data.user?.name ?? '');
           setCreatedAt(data.user?.createdAt ?? null);
         }
       } catch {
         // non-critical
+      } finally {
+        setSessionLoading(false);
       }
     };
-    void fetchCreatedAt();
+    void fetchSession();
   }, []);
 
-  if (status === 'loading') {
+  if (sessionLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
