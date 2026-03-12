@@ -48,11 +48,8 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
   const [showForm, setShowForm] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newNotes, setNewNotes] = useState('');
-  const [newDate, setNewDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [newTime, setNewTime] = useState(() => {
-    const now = new Date();
-    return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-  });
+  const [newDate, setNewDate] = useState('');
+  const [newTime, setNewTime] = useState('');
   const [newRepeat, setNewRepeat] = useState('none');
   const [saving, setSaving] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -145,7 +142,7 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
       {/* Completed reminders */}
       {done.length > 0 && (
         <div className="mt-2 border-t border-zinc-800/60 pt-1">
-          <p className="px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-600">Completed</p>
+          <p className="px-2 py-1 text-xs font-semibold uppercase tracking-widest text-zinc-600">Completed</p>
           {done.map((r) => (
             <div
               key={r.id}
@@ -174,7 +171,7 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
 
       {/* Add reminder inline form */}
       {showForm && (
-        <div className="mt-1 rounded-lg border border-zinc-700 bg-zinc-900 p-2.5 flex flex-col gap-2">
+        <div className="mt-1 rounded-xl bg-zinc-800/40 p-3 flex flex-col gap-2">
           <input
             autoFocus
             type="text"
@@ -235,8 +232,13 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
 
       {!showForm && (
         <button
-          onClick={() => setShowForm(true)}
-          className="mt-1 flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] text-zinc-500 hover:text-indigo-400 transition-colors"
+          onClick={() => {
+            const now = new Date();
+            setNewDate(now.toISOString().slice(0, 10));
+            setNewTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+            setShowForm(true);
+          }}
+          className="mt-1 flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-zinc-500 hover:text-indigo-400 transition-colors"
         >
           <span className="text-sm leading-none">+</span>
           Add Reminder

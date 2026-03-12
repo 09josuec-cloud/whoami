@@ -88,11 +88,11 @@ export default function MonthGrid({ year, month, events, onDayClick, onEventClic
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 border-b border-zinc-800">
+      <div className="grid grid-cols-7 border-b border-zinc-800/50">
         {WEEKDAYS.map((day) => (
           <div
             key={day}
-            className="py-2 text-center text-[11px] font-medium text-zinc-500 uppercase tracking-wider"
+            className="py-2 text-center text-[11px] font-semibold text-zinc-400 uppercase tracking-wider"
           >
             {day}
           </div>
@@ -111,8 +111,8 @@ export default function MonthGrid({ year, month, events, onDayClick, onEventClic
               key={idx}
               onClick={() => isCurrent && onDayClick(cell.dateStr)}
               className={[
-                'flex flex-col overflow-hidden border-b border-r border-zinc-800/70 px-1 pt-1 pb-0.5 transition-colors',
-                isCurrent ? 'cursor-pointer hover:bg-zinc-900/60' : 'cursor-default',
+                'flex flex-col overflow-hidden border-b border-r border-zinc-800/30 px-1 pt-1 pb-0.5 transition-colors',
+                isCurrent ? 'cursor-pointer hover:bg-zinc-800/40' : 'cursor-default',
               ].join(' ')}
             >
               {/* Day number — click goes to day view */}
@@ -120,12 +120,12 @@ export default function MonthGrid({ year, month, events, onDayClick, onEventClic
                 <button
                   onClick={(e) => { e.stopPropagation(); if (isCurrent) onDayViewClick(cell.dateStr); }}
                   className={[
-                    'flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium transition-colors',
+                    'flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium transition-colors',
                     isToday
-                      ? 'bg-indigo-600 text-white'
+                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
                       : isCurrent
                       ? 'text-zinc-200 hover:bg-zinc-700'
-                      : 'text-zinc-600 cursor-default',
+                      : 'text-zinc-700 cursor-default',
                   ].join(' ')}
                   title={isCurrent ? 'View day' : undefined}
                 >
@@ -143,7 +143,7 @@ export default function MonthGrid({ year, month, events, onDayClick, onEventClic
                       onEventClick(event);
                     }}
                     className={[
-                      'w-full truncate rounded px-1 py-px text-left text-[10px] font-medium leading-4 transition-opacity hover:opacity-80',
+                      'w-full truncate rounded-md px-1.5 py-0.5 text-left text-[10px] font-medium leading-4 transition-opacity hover:opacity-80',
                       getEventColor(event),
                     ].join(' ')}
                     title={event.title}
@@ -158,7 +158,7 @@ export default function MonthGrid({ year, month, events, onDayClick, onEventClic
                       e.stopPropagation();
                       onShowDayEvents(cell.dateStr);
                     }}
-                    className="truncate rounded px-1 py-px text-left text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors"
+                    className="truncate rounded px-1 py-px text-left text-[10px] text-indigo-400 hover:text-indigo-300 transition-colors"
                   >
                     +{dayEvents.length - 3} more
                   </button>
