@@ -8,6 +8,10 @@ import JournalFrequencyChart from './JournalFrequencyChart';
 import BudgetChart from './BudgetChart';
 import SavingsChart from './SavingsChart';
 import NetWorthCard from './NetWorthCard';
+import InsightsPanel from './InsightsPanel';
+import CashFlowChart from './CashFlowChart';
+import type { Insight } from './InsightsPanel';
+import type { CashFlowMonth } from './CashFlowChart';
 
 // ---- Types ----
 
@@ -103,35 +107,36 @@ interface AllData {
   journal: JournalData;
   budget: BudgetData;
   savings: SavingsData;
+  insights: Insight[];
+  cashflow: CashFlowMonth[];
 }
 
 // ---- Skeleton ----
 
 function Skeleton({ className }: { className?: string }) {
-  return <div className={`animate-pulse rounded-xl bg-zinc-800/60 ${className ?? ''}`} />;
+  return <div className={`animate-pulse rounded-xl bg-white/[0.04] ${className ?? ''}`} />;
 }
 
 function LoadingSkeleton() {
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6 pb-8">
       <div>
         <Skeleton className="h-7 w-36" />
         <Skeleton className="mt-2 h-4 w-64" />
       </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        {[...Array(6)].map((_, i) => (
-          <Skeleton key={i} className="h-24" />
-        ))}
+        {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-28" />)}
       </div>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <Skeleton className="h-36" />
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Skeleton className="h-80" />
         <Skeleton className="h-80" />
       </div>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Skeleton className="h-72" />
         <Skeleton className="h-72" />
       </div>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Skeleton className="h-72 lg:col-span-2" />
         <Skeleton className="h-72" />
       </div>
@@ -159,6 +164,8 @@ export default function AnalyticsClient() {
           journalRes,
           budgetRes,
           savingsRes,
+          insightsRes,
+          cashflowRes,
         ] = await Promise.all([
           fetch('/api/analytics/overview'),
           fetch('/api/analytics/spending'),
@@ -167,6 +174,8 @@ export default function AnalyticsClient() {
           fetch('/api/analytics/journal'),
           fetch('/api/analytics/budget'),
           fetch('/api/analytics/savings'),
+          fetch('/api/analytics/insights'),
+          fetch('/api/analytics/cashflow'),
         ]);
 
         const now = new Date();
@@ -175,14 +184,7 @@ export default function AnalyticsClient() {
 
         const overview = overviewRes.ok
           ? ((await overviewRes.json()) as OverviewData)
-          : ({
-              totalSpentThisMonth: 0,
-              avgMoodThisMonth: null,
-              journalEntriesThisMonth: 0,
-              netWorth: 0,
-              journalStreak: 0,
-              upcomingReminders: 0,
-            } satisfies OverviewData);
+          : ({ totalSpentThisMonth: 0, avgMoodThisMonth: null, journalEntriesThisMonth: 0, netWorth: 0, journalStreak: 0, upcomingReminders: 0 } satisfies OverviewData);
 
         const spending = spendingRes.ok
           ? ((await spendingRes.json()) as SpendingData)
@@ -198,12 +200,7 @@ export default function AnalyticsClient() {
 
         const journal = journalRes.ok
           ? ((await journalRes.json()) as JournalData)
-          : ({
-              data: [],
-              totalEntries: 0,
-              avgPerWeek: 0,
-              longestStreak: 0,
-            } satisfies JournalData);
+          : ({ data: [], totalEntries: 0, avgPerWeek: 0, longestStreak: 0 } satisfies JournalData);
 
         const budget = budgetRes.ok
           ? ((await budgetRes.json()) as BudgetData)
@@ -213,7 +210,25 @@ export default function AnalyticsClient() {
           ? ((await savingsRes.json()) as SavingsData)
           : ({ data: [] } satisfies SavingsData);
 
-        setAllData({ overview, spending, netWorth, mood, journal, budget, savings });
+        const insightsData = insightsRes.ok
+          ? ((await insightsRes.json()) as { insights: Insight[] })
+          : { insights: [] };
+
+        const cashflowData = cashflowRes.ok
+          ? ((await cashflowRes.json()) as { data: CashFlowMonth[] })
+          : { data: [] };
+
+        setAllData({
+          overview,
+          spending,
+          netWorth,
+          mood,
+          journal,
+          budget,
+          savings,
+          insights: insightsData.insights,
+          cashflow: cashflowData.data,
+        });
       } catch (err) {
         console.error('[Analytics] fetch error:', err);
         setError('Failed to load analytics data. Please try again.');
@@ -230,7 +245,7 @@ export default function AnalyticsClient() {
   if (error) {
     return (
       <div className="mx-auto max-w-6xl">
-        <div className="rounded-xl border border-rose-800/50 bg-rose-950/20 p-6 text-center">
+        <div className="rounded-xl border border-rose-800/30 bg-rose-950/10 p-6 text-center">
           <p className="text-rose-400 text-sm">{error}</p>
           <button
             onClick={() => window.location.reload()}
@@ -245,47 +260,51 @@ export default function AnalyticsClient() {
 
   if (!allData) return null;
 
-  const { overview, spending, netWorth, mood, journal, budget, savings } = allData;
+  const { overview, spending, netWorth, mood, journal, budget, savings, insights, cashflow } = allData;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6 pb-8">
+
       {/* Header */}
-      <div className="relative overflow-hidden">
-        <div className="pointer-events-none absolute -top-8 right-0 h-32 w-64 rounded-full bg-indigo-600/10 blur-3xl" />
-        <h1 className="text-zinc-100 text-3xl font-semibold tracking-tight">Analytics</h1>
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-100">Analytics</h1>
         <p className="mt-1 text-sm text-zinc-500">
-          Your personal life stats — spending, mood, journaling, and savings at a glance.
+          Your personal life stats — spending, mood, journaling, and savings.
         </p>
       </div>
 
       {/* Overview stat cards */}
       <OverviewCards data={overview} />
 
-      {/* Row 1: Spending + Mood */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      {/* Insights */}
+      <InsightsPanel insights={insights} />
+
+      {/* Cash Flow + Spending */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <CashFlowChart data={cashflow} />
         <SpendingChart data={spending.data} categories={spending.categories} />
+      </div>
+
+      {/* Mood + Journal */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <MoodChart
           data={mood.data}
           avgMood={mood.avgMood}
           bestDay={mood.bestDay}
           worstDay={mood.worstDay}
         />
-      </div>
-
-      {/* Row 2: Journal frequency + Budget */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <JournalFrequencyChart
           data={journal.data}
           totalEntries={journal.totalEntries}
           avgPerWeek={journal.avgPerWeek}
           longestStreak={journal.longestStreak}
         />
-        <BudgetChart data={budget.data} month={budget.month} year={budget.year} />
       </div>
 
-      {/* Row 3: Savings goals + Net worth */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+      {/* Budget + Savings + Net Worth */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2 grid grid-cols-1 gap-4">
+          <BudgetChart data={budget.data} month={budget.month} year={budget.year} />
           <SavingsChart data={savings.data} />
         </div>
         <NetWorthCard
@@ -295,6 +314,7 @@ export default function AnalyticsClient() {
           savingsTarget={netWorth.savingsTarget}
         />
       </div>
+
     </div>
   );
 }
