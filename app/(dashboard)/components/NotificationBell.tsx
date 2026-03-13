@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 
 interface Notification {
@@ -61,6 +62,8 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const panelRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [panelStyle, setPanelStyle] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -110,14 +113,94 @@ export default function NotificationBell() {
   }, []);
 
   const handleBellClick = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPanelStyle({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right,
+      });
+    }
     setOpen((o) => !o);
     if (!open) void fetchNotifications();
   }, [open, fetchNotifications]);
 
+  const panel = open ? (
+    <div
+      ref={panelRef}
+      className="fixed w-80 rounded-xl bg-[#111114] border border-white/[0.06] shadow-2xl overflow-hidden"
+      style={{ top: panelStyle.top, right: panelStyle.right, zIndex: 9999 }}
+    >
+      {/* Panel header */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+        <span className="text-sm font-semibold text-white">Notifications</span>
+        {unreadCount > 0 && (
+          <button
+            onClick={() => void markAllRead()}
+            className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors duration-150"
+          >
+            Mark all read
+          </button>
+        )}
+      </div>
+
+      {/* List */}
+      <div className="max-h-96 overflow-y-auto">
+        {notifications.length === 0 ? (
+          <div className="flex flex-col items-center justify-center px-4 py-10 gap-3">
+            <svg className="h-8 w-8 text-zinc-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+            </svg>
+            <div className="text-center">
+              <p className="text-sm font-medium text-zinc-400">All caught up</p>
+              <p className="text-xs text-zinc-600 mt-0.5">No notifications yet</p>
+            </div>
+          </div>
+        ) : (
+          notifications.map((n) => {
+            const content = (
+              <div
+                className={[
+                  'flex gap-3 px-4 py-3 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors duration-150 cursor-pointer',
+                  !n.read ? 'bg-indigo-500/[0.03]' : '',
+                ].join(' ')}
+                onClick={() => {
+                  if (!n.read) void markRead(n.id);
+                }}
+              >
+                <NotifIcon type={n.type} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className={['text-sm leading-snug', !n.read ? 'font-medium text-zinc-100' : 'text-zinc-300'].join(' ')}>
+                      {n.title}
+                    </p>
+                    {!n.read && (
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" aria-hidden="true" />
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-xs text-zinc-500 leading-snug">{n.body}</p>
+                  <p className="mt-1 text-xs text-zinc-600">{timeAgo(n.createdAt)}</p>
+                </div>
+              </div>
+            );
+
+            return n.link ? (
+              <Link key={n.id} href={n.link} onClick={() => setOpen(false)}>
+                {content}
+              </Link>
+            ) : (
+              <div key={n.id}>{content}</div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  ) : null;
+
   return (
-    <div className="relative" ref={panelRef}>
+    <div className="relative">
       {/* Bell button */}
       <button
+        ref={buttonRef}
         onClick={handleBellClick}
         className="relative rounded-lg p-2 hover:bg-white/[0.05] transition-all duration-150 text-zinc-400 hover:text-zinc-200"
         aria-label="Notifications"
@@ -132,74 +215,8 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {/* Dropdown panel */}
-      {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 rounded-xl bg-[#111114] border border-white/[0.06] z-50 overflow-hidden">
-          {/* Panel header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
-            <span className="text-sm font-semibold text-white">Notifications</span>
-            {unreadCount > 0 && (
-              <button
-                onClick={() => void markAllRead()}
-                className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors duration-150"
-              >
-                Mark all read
-              </button>
-            )}
-          </div>
-
-          {/* List */}
-          <div className="max-h-96 overflow-y-auto">
-            {notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center px-4 py-10 gap-3">
-                <svg className="h-8 w-8 text-zinc-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-                </svg>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-zinc-400">All caught up</p>
-                  <p className="text-xs text-zinc-600 mt-0.5">No notifications yet</p>
-                </div>
-              </div>
-            ) : (
-              notifications.map((n) => {
-                const content = (
-                  <div
-                    className={[
-                      'flex gap-3 px-4 py-3 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors duration-150 cursor-pointer',
-                      !n.read ? 'bg-indigo-500/[0.03]' : '',
-                    ].join(' ')}
-                    onClick={() => {
-                      if (!n.read) void markRead(n.id);
-                    }}
-                  >
-                    <NotifIcon type={n.type} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className={['text-sm leading-snug', !n.read ? 'font-medium text-zinc-100' : 'text-zinc-300'].join(' ')}>
-                          {n.title}
-                        </p>
-                        {!n.read && (
-                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" aria-hidden="true" />
-                        )}
-                      </div>
-                      <p className="mt-0.5 text-xs text-zinc-500 leading-snug">{n.body}</p>
-                      <p className="mt-1 text-xs text-zinc-600">{timeAgo(n.createdAt)}</p>
-                    </div>
-                  </div>
-                );
-
-                return n.link ? (
-                  <Link key={n.id} href={n.link} onClick={() => setOpen(false)}>
-                    {content}
-                  </Link>
-                ) : (
-                  <div key={n.id}>{content}</div>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
+      {/* Render panel via portal so it escapes all stacking contexts */}
+      {typeof document !== 'undefined' && panel && createPortal(panel, document.body)}
     </div>
   );
 }
