@@ -106,13 +106,16 @@ export default function SidebarNav() {
               key={item.href}
               href={item.href}
               className={[
-                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150',
+                'relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors duration-150',
                 isActive
-                  ? 'bg-white/[0.06] text-zinc-100 font-medium'
+                  ? 'bg-white/[0.07] text-zinc-100 font-medium'
                   : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]',
               ].join(' ')}
               aria-current={isActive ? 'page' : undefined}
             >
+              {isActive && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-full bg-indigo-400" />
+              )}
               <span className="flex h-4 w-4 items-center justify-center shrink-0">
                 {item.icon}
               </span>
@@ -130,13 +133,16 @@ export default function SidebarNav() {
             <Link
               href="/assistant"
               className={[
-                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150',
+                'relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors duration-150',
                 isActive
-                  ? 'bg-white/[0.06] text-zinc-100 font-medium'
+                  ? 'bg-white/[0.07] text-zinc-100 font-medium'
                   : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]',
               ].join(' ')}
               aria-current={isActive ? 'page' : undefined}
             >
+              {isActive && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-full bg-indigo-400" />
+              )}
               <span className="flex h-4 w-4 items-center justify-center shrink-0">
                 <SparklesIcon />
               </span>

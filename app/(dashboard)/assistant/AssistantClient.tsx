@@ -17,12 +17,60 @@ interface Message {
 }
 
 const SUGGESTED_PROMPTS = [
-  "How's my budget looking this month?",
-  "Remind me to call the dentist tomorrow at 9am",
-  "Add a team meeting to my calendar for Friday 2pm–3pm",
-  "What's my mood trend lately?",
-  "Create a note: grocery list — milk, eggs, bread",
-  "How am I tracking on my savings goals?",
+  {
+    category: 'Budget',
+    prompt: "How's my budget looking this month?",
+    icon: (
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3" />
+      </svg>
+    ),
+  },
+  {
+    category: 'Reminder',
+    prompt: 'Remind me to call the dentist tomorrow at 9am',
+    icon: (
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+      </svg>
+    ),
+  },
+  {
+    category: 'Calendar',
+    prompt: 'Add a team meeting for Friday 2pm–3pm',
+    icon: (
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+      </svg>
+    ),
+  },
+  {
+    category: 'Analytics',
+    prompt: "What's my mood trend lately?",
+    icon: (
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+      </svg>
+    ),
+  },
+  {
+    category: 'Note',
+    prompt: 'Create a note: grocery list — milk, eggs, bread',
+    icon: (
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+      </svg>
+    ),
+  },
+  {
+    category: 'Goals',
+    prompt: 'How am I tracking on my savings goals?',
+    icon: (
+      <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 0 1-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 0 0 6.16-12.12A14.98 14.98 0 0 0 9.631 8.41m5.96 5.96a14.926 14.926 0 0 1-5.841 2.58m-.119-8.54a6 6 0 0 0-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 0 0-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 0 1-2.448-2.448 14.9 14.9 0 0 1 .06-.312m-2.24 2.39a4.493 4.493 0 0 0-1.757 4.306 4.493 4.493 0 0 0 4.306-1.758M16.5 9a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z" />
+      </svg>
+    ),
+  },
 ];
 
 const ACTION_LABELS: Record<string, string> = {
@@ -131,13 +179,13 @@ function SpinnerIcon() {
 function ActionPill({ action }: { action: Action }) {
   return (
     <div className={[
-      'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors',
+      'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
       action.done
-        ? 'bg-emerald-500/10 text-emerald-400'
-        : 'bg-indigo-500/10 text-indigo-400',
+        ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
+        : 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/20',
     ].join(' ')}>
       {action.done ? <CheckIcon /> : <SpinnerIcon />}
-      <span>{action.done ? (ACTION_DONE_LABELS[action.name] ?? action.name) : (ACTION_LABELS[action.name] ?? action.name)}…</span>
+      <span>{action.done ? (ACTION_DONE_LABELS[action.name] ?? action.name) : (ACTION_LABELS[action.name] ?? action.name)}{action.done ? '' : '…'}</span>
     </div>
   );
 }
@@ -229,7 +277,6 @@ export default function AssistantClient() {
                   if (m.id !== assistantId) return m;
                   const existing = (m.actions ?? []).find((a) => a.name === incomingAction.name);
                   if (existing) {
-                    // Update existing action (done state)
                     return {
                       ...m,
                       actions: (m.actions ?? []).map((a) =>
@@ -237,7 +284,6 @@ export default function AssistantClient() {
                       ),
                     };
                   }
-                  // Add new action
                   return { ...m, actions: [...(m.actions ?? []), incomingAction] };
                 })
               );
@@ -282,49 +328,74 @@ export default function AssistantClient() {
     <div className="flex h-[calc(100vh-3.5rem)] flex-col">
 
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] px-6 py-4">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400">
+      <div className="relative flex shrink-0 items-center justify-between px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 text-indigo-400 ring-1 ring-white/[0.08]">
             <SparklesIcon size={4} />
           </div>
           <div>
             <h1 className="text-sm font-semibold text-zinc-100">AI Assistant</h1>
-            <p className="text-xs text-zinc-500">Reads and writes across all your modules</p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              {isStreaming ? (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                  <p className="text-xs text-indigo-400">Thinking…</p>
+                </>
+              ) : (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  <p className="text-xs text-zinc-500">Active</p>
+                </>
+              )}
+            </div>
           </div>
         </div>
         {!isEmpty && (
           <button
             onClick={clearChat}
-            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-300 transition-colors duration-150"
+            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-300 transition-colors duration-150"
           >
             <TrashIcon />
             Clear
           </button>
         )}
+        {/* Gradient separator line */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-6">
         {isEmpty ? (
           <div className="mx-auto max-w-2xl">
-            <div className="mb-8 text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-400">
-                <SparklesIcon size={6} />
+            {/* Decorative gradient orb */}
+            <div className="relative mb-10 text-center">
+              <div
+                className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full opacity-20 blur-3xl"
+                style={{ background: 'radial-gradient(circle, #6366f1 0%, #8b5cf6 50%, transparent 70%)' }}
+              />
+              <div className="relative mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 text-indigo-400 ring-1 ring-white/[0.1] shadow-lg shadow-indigo-500/10">
+                <SparklesIcon size={8} />
               </div>
-              <h2 className="text-lg font-semibold text-zinc-100">What can I help you with?</h2>
-              <p className="mt-1 text-sm text-zinc-500">
+              <h2 className="text-2xl font-semibold text-zinc-100 tracking-tight">What can I help you with?</h2>
+              <p className="mt-2 text-sm text-zinc-500 max-w-md mx-auto leading-relaxed">
                 Ask questions or give commands — I can read your data and create events, reminders, notes, and journal entries.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {SUGGESTED_PROMPTS.map((prompt) => (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {SUGGESTED_PROMPTS.map(({ category, prompt, icon }) => (
                 <button
                   key={prompt}
                   onClick={() => void sendMessage(prompt)}
-                  className="rounded-xl border border-white/[0.06] bg-[#111114] px-4 py-3 text-left text-sm text-zinc-400 transition-colors duration-150 hover:bg-white/[0.04] hover:text-zinc-200"
+                  className="rounded-2xl border border-white/[0.06] bg-[#111114] p-4 text-left hover:bg-white/[0.06] hover:border-white/[0.1] transition-all duration-150 cursor-pointer group"
                 >
-                  {prompt}
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500/15 transition-colors">
+                      {icon}
+                    </span>
+                    <span className="text-xs font-medium text-indigo-400">{category}</span>
+                  </div>
+                  <p className="text-sm text-zinc-400 group-hover:text-zinc-300 leading-snug transition-colors">{prompt}</p>
                 </button>
               ))}
             </div>
@@ -335,24 +406,26 @@ export default function AssistantClient() {
               <div key={msg.id} className={['flex gap-3', msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'].join(' ')}>
                 {/* Avatar */}
                 <div className={[
-                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs',
-                  msg.role === 'user' ? 'bg-indigo-600 text-white font-semibold' : 'bg-white/[0.06] text-zinc-400',
+                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ring-1',
+                  msg.role === 'user'
+                    ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white ring-indigo-500/30'
+                    : 'bg-zinc-800 text-zinc-400 ring-white/[0.06]',
                 ].join(' ')}>
                   {msg.role === 'user' ? 'Y' : <SparklesIcon size={4} />}
                 </div>
 
                 {/* Bubble */}
                 <div className={[
-                  'max-w-[80%] rounded-xl px-4 py-3 text-sm',
+                  'max-w-[80%] rounded-2xl px-5 py-4 text-sm',
                   msg.role === 'user'
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-500/20'
                     : 'bg-[#111114] border border-white/[0.06] text-zinc-300',
                 ].join(' ')}>
                   {msg.role === 'assistant' ? (
                     <div className="space-y-1">
                       {/* Action pills */}
                       {msg.actions && msg.actions.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mb-2">
+                        <div className="flex flex-wrap gap-1.5 mb-3">
                           {msg.actions.map((action, i) => (
                             <ActionPill key={i} action={action} />
                           ))}
@@ -364,7 +437,7 @@ export default function AssistantClient() {
                       ) : null}
                       {/* Streaming cursor */}
                       {msg.streaming && !msg.content && (msg.actions ?? []).length === 0 && (
-                        <span className="inline-flex items-center gap-1 text-zinc-500 text-xs">
+                        <span className="inline-flex items-center gap-1.5 text-zinc-500 text-xs">
                           <SpinnerIcon />
                           Thinking…
                         </span>
@@ -381,7 +454,7 @@ export default function AssistantClient() {
             ))}
 
             {error && (
-              <div className="rounded-xl border border-rose-500/20 bg-rose-950/10 px-4 py-3 text-sm text-rose-400">
+              <div className="rounded-2xl border border-rose-500/20 bg-rose-950/10 px-5 py-4 text-sm text-rose-400">
                 {error}
               </div>
             )}
@@ -391,9 +464,9 @@ export default function AssistantClient() {
       </div>
 
       {/* Input */}
-      <div className="shrink-0 border-t border-white/[0.06] px-6 py-4">
+      <div className="shrink-0 border-t border-white/[0.06] px-6 py-5">
         <div className="mx-auto max-w-2xl">
-          <div className="flex items-end gap-3 rounded-xl border border-white/[0.06] bg-[#111114] px-4 py-3 focus-within:border-indigo-500/40 transition-colors duration-150">
+          <div className="flex items-end gap-3 rounded-2xl border border-white/[0.07] bg-[#111114] px-5 py-4 focus-within:border-indigo-500/40 focus-within:shadow-lg focus-within:shadow-indigo-500/5 transition-all duration-150">
             <textarea
               ref={inputRef}
               value={input}
@@ -413,14 +486,14 @@ export default function AssistantClient() {
             <button
               onClick={() => void sendMessage(input)}
               disabled={!input.trim() || isStreaming}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white transition-colors duration-150 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white transition-all duration-150 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-indigo-500/20"
               aria-label="Send"
             >
               <SendIcon />
             </button>
           </div>
-          <p className="mt-2 text-center text-xs text-zinc-600">
-            Enter to send · Shift+Enter for new line
+          <p className="mt-2.5 text-center text-xs text-zinc-600">
+            Powered by Claude · Enter to send · Shift+Enter for new line
           </p>
         </div>
       </div>

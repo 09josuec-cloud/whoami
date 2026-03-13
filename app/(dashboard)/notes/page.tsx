@@ -13,26 +13,17 @@ interface Note {
   updatedAt: string;
 }
 
-const NOTE_COLORS: { label: string; value: string; bg: string; border: string }[] = [
-  { label: 'Default', value: '', bg: 'bg-[#111114]', border: 'border-transparent' },
-  { label: 'Indigo', value: 'indigo', bg: 'bg-indigo-950/40', border: 'border-indigo-800/40' },
-  { label: 'Emerald', value: 'emerald', bg: 'bg-emerald-950/40', border: 'border-emerald-800/40' },
-  { label: 'Amber', value: 'amber', bg: 'bg-amber-950/40', border: 'border-amber-800/40' },
-  { label: 'Rose', value: 'rose', bg: 'bg-rose-950/40', border: 'border-rose-800/40' },
-  { label: 'Purple', value: 'purple', bg: 'bg-purple-950/40', border: 'border-purple-800/40' },
+const NOTE_COLORS: { label: string; value: string; bg: string; border: string; dot: string }[] = [
+  { label: 'Default',  value: '',        bg: 'bg-[#111114]',         border: 'border-white/[0.06]',    dot: 'bg-zinc-600' },
+  { label: 'Indigo',   value: 'indigo',  bg: 'bg-indigo-950/50',     border: 'border-indigo-700/40',   dot: 'bg-indigo-500' },
+  { label: 'Emerald',  value: 'emerald', bg: 'bg-emerald-950/50',    border: 'border-emerald-700/40',  dot: 'bg-emerald-500' },
+  { label: 'Amber',    value: 'amber',   bg: 'bg-amber-950/50',      border: 'border-amber-700/40',    dot: 'bg-amber-500' },
+  { label: 'Rose',     value: 'rose',    bg: 'bg-rose-950/50',       border: 'border-rose-700/40',     dot: 'bg-rose-500' },
+  { label: 'Purple',   value: 'purple',  bg: 'bg-purple-950/50',     border: 'border-purple-700/40',   dot: 'bg-purple-500' },
 ];
 
-const COLOR_DOT: Record<string, string> = {
-  indigo: 'bg-indigo-500',
-  emerald: 'bg-emerald-500',
-  amber: 'bg-amber-500',
-  rose: 'bg-rose-500',
-  purple: 'bg-purple-500',
-};
-
-function getNoteBg(color: string | null) {
-  const c = NOTE_COLORS.find((n) => n.value === (color ?? ''));
-  return c ? `${c.bg} ${c.border}` : 'bg-[#111114] border-transparent';
+function getColorConfig(color: string | null) {
+  return NOTE_COLORS.find((c) => c.value === (color ?? '')) ?? NOTE_COLORS[0];
 }
 
 function timeAgo(dateStr: string): string {
@@ -49,7 +40,7 @@ function timeAgo(dateStr: string): string {
 
 function PinIcon({ className }: { className?: string }) {
   return (
-    <svg className={className ?? 'h-3 w-3'} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <svg className={className ?? 'h-3.5 w-3.5'} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <path d="M16 12V4h1a1 1 0 0 0 0-2H7a1 1 0 0 0 0 2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
     </svg>
   );
@@ -63,13 +54,40 @@ function DocumentIcon({ className }: { className?: string }) {
   );
 }
 
+function SearchIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className ?? 'h-4 w-4'} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+    </svg>
+  );
+}
+
+function TrashIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className ?? 'h-4 w-4'} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+    </svg>
+  );
+}
+
+function XIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className ?? 'h-4 w-4'} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  );
+}
+
 export default function NotesPage() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
+
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
   const [activeNote, setActiveNote] = useState<Note | null>(null);
-  const [showNew, setShowNew] = useState(false);
+  const [isNew, setIsNew] = useState(false);
 
   // Editor state
   const [editTitle, setEditTitle] = useState('');
@@ -78,7 +96,12 @@ export default function NotesPage() {
   const [editColor, setEditColor] = useState('');
   const [editPinned, setEditPinned] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // ── Data fetching ──────────────────────────────────────────────────────────
 
   const fetchNotes = useCallback(async (q = '', tag = '') => {
     try {
@@ -95,46 +118,72 @@ export default function NotesPage() {
     }
   }, []);
 
-  useEffect(() => {
-    void fetchNotes();
-  }, [fetchNotes]);
+  useEffect(() => { void fetchNotes(); }, [fetchNotes]);
 
-  // Clear any pending auto-save timer on unmount to prevent state updates after unmount
   useEffect(() => {
-    return () => {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-    };
+    return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
   }, []);
 
   // Debounced search
   useEffect(() => {
-    const t = setTimeout(() => {
-      void fetchNotes(search, selectedTag);
-    }, 300);
+    const t = setTimeout(() => { void fetchNotes(search, selectedTag); }, 300);
     return () => clearTimeout(t);
   }, [search, selectedTag, fetchNotes]);
 
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [editContent, modalOpen]);
+
+  // Close modal on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModal(); };
+    if (modalOpen) window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [modalOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Derived state ──────────────────────────────────────────────────────────
+
   const allTags = Array.from(new Set(notes.flatMap((n) => n.tags))).sort();
+
+  // ── Modal helpers ──────────────────────────────────────────────────────────
 
   const openNote = (note: Note) => {
     setActiveNote(note);
-    setShowNew(false);
+    setIsNew(false);
     setEditTitle(note.title);
     setEditContent(note.content);
     setEditTags(note.tags.join(', '));
     setEditColor(note.color ?? '');
     setEditPinned(note.pinned);
+    setDeleteConfirm(false);
+    setModalOpen(true);
   };
 
   const openNew = () => {
     setActiveNote(null);
-    setShowNew(true);
+    setIsNew(true);
     setEditTitle('');
     setEditContent('');
     setEditTags('');
     setEditColor('');
     setEditPinned(false);
+    setDeleteConfirm(false);
+    setModalOpen(true);
   };
+
+  const closeModal = () => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    setModalOpen(false);
+    setActiveNote(null);
+    setIsNew(false);
+    setDeleteConfirm(false);
+  };
+
+  // ── API calls ──────────────────────────────────────────────────────────────
 
   const handleCreate = async () => {
     if (!editTitle.trim()) return;
@@ -155,8 +204,9 @@ export default function NotesPage() {
       if (res.ok) {
         const data = (await res.json()) as { note: Note };
         setNotes((prev) => [data.note, ...prev]);
-        setShowNew(false);
-        openNote(data.note);
+        // Transition to edit mode on the newly created note
+        setActiveNote(data.note);
+        setIsNew(false);
       }
     } finally {
       setSaving(false);
@@ -177,286 +227,384 @@ export default function NotesPage() {
           setNotes((prev) => prev.map((n) => (n.id === id ? data.note : n)));
           setActiveNote(data.note);
         }
-      }, 800);
+      }, 500);
     },
     []
   );
 
   const handleTitleChange = (val: string) => {
     setEditTitle(val);
-    if (activeNote) autoSave(activeNote.id, { title: val || 'Untitled' });
+    if (activeNote && !isNew) autoSave(activeNote.id, { title: val || 'Untitled' });
   };
 
   const handleContentChange = (val: string) => {
     setEditContent(val);
-    if (activeNote) autoSave(activeNote.id, { content: val });
+    if (activeNote && !isNew) autoSave(activeNote.id, { content: val });
   };
 
   const handleTagsBlur = () => {
-    if (!activeNote) return;
+    if (!activeNote || isNew) return;
     const tags = editTags.split(',').map((t) => t.trim()).filter(Boolean);
     autoSave(activeNote.id, { tags });
   };
 
   const handleColorChange = (val: string) => {
     setEditColor(val);
-    if (activeNote) autoSave(activeNote.id, { color: val || null });
+    if (activeNote && !isNew) autoSave(activeNote.id, { color: val || null });
   };
 
   const handlePinToggle = () => {
     const next = !editPinned;
     setEditPinned(next);
-    if (activeNote) autoSave(activeNote.id, { pinned: next });
+    if (activeNote && !isNew) autoSave(activeNote.id, { pinned: next });
   };
 
   const handleDelete = async (id: string) => {
     const res = await fetch(`/api/notes/${id}`, { method: 'DELETE' });
     if (res.ok) {
       setNotes((prev) => prev.filter((n) => n.id !== id));
-      if (activeNote?.id === id) {
-        setActiveNote(null);
-        setShowNew(false);
-      }
+      closeModal();
     }
   };
 
-  const isEditing = showNew || activeNote !== null;
-  const editorBg = getNoteBg(editColor || null);
+  // ── Card rendering ─────────────────────────────────────────────────────────
 
-  return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden rounded-xl bg-[#09090b]">
-      {/* Sidebar */}
-      <div className="flex w-72 shrink-0 flex-col border-r border-white/[0.06] bg-[#0e0e12]">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
-          <h1 className="text-sm font-semibold text-zinc-100">Notes</h1>
-          <button
-            onClick={openNew}
-            className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 transition-colors text-lg leading-none"
-            title="New note"
-          >
-            +
-          </button>
-        </div>
-
-        {/* Search */}
-        <div className="px-3 py-2 border-b border-white/[0.06]">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search notes…"
-            className="w-full rounded-lg bg-white/[0.04] px-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-600 outline-none ring-1 ring-white/[0.06] focus:ring-indigo-500"
-          />
-        </div>
-
-        {/* Tags filter */}
-        {allTags.length > 0 && (
-          <div className="flex flex-wrap gap-1 px-3 py-2 border-b border-white/[0.06]">
-            <button
-              onClick={() => setSelectedTag('')}
-              className={[
-                'rounded-md px-2 py-0.5 text-xs transition-colors',
-                selectedTag === '' ? 'bg-indigo-500/20 text-indigo-300' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200',
-              ].join(' ')}
-            >
-              All
-            </button>
-            {allTags.map((tag) => (
-              <button
-                key={tag}
-                onClick={() => setSelectedTag(selectedTag === tag ? '' : tag)}
-                className={[
-                  'rounded-md px-2 py-0.5 text-xs transition-colors',
-                  selectedTag === tag ? 'bg-indigo-500/20 text-indigo-300' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200',
-                ].join(' ')}
-              >
-                {tag}
-              </button>
-            ))}
+  const NoteCard = ({ note }: { note: Note }) => {
+    const cfg = getColorConfig(note.color);
+    return (
+      <div
+        onClick={() => openNote(note)}
+        className={[
+          'rounded-2xl border p-4 mb-4 break-inside-avoid cursor-pointer',
+          'transition-all duration-200 hover:scale-[1.015] hover:shadow-lg hover:shadow-black/30',
+          cfg.bg,
+          cfg.border,
+          'hover:border-white/[0.14]',
+        ].join(' ')}
+      >
+        {/* Top row */}
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <h3 className="text-sm font-semibold text-zinc-100 leading-snug line-clamp-2 flex-1 min-w-0">
+            {note.title || 'Untitled'}
+          </h3>
+          <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+            {note.pinned && (
+              <PinIcon className="h-3 w-3 text-amber-400" />
+            )}
+            {note.color && (
+              <span className={['h-2 w-2 rounded-full shrink-0', cfg.dot].join(' ')} />
+            )}
           </div>
+        </div>
+
+        {/* Content preview */}
+        {note.content && (
+          <p className="text-xs text-zinc-400 leading-relaxed line-clamp-6 whitespace-pre-wrap mb-3">
+            {note.content}
+          </p>
         )}
 
-        {/* Notes list */}
-        <div className="flex-1 overflow-y-auto">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/[0.06] border-t-indigo-500" />
-            </div>
-          ) : notes.length === 0 ? (
-            <div className="px-4 py-8 text-center">
-              <p className="text-xs text-zinc-500">
-                {search || selectedTag ? 'No notes match.' : 'No notes yet.'}
-              </p>
-              {!search && !selectedTag && (
-                <button onClick={openNew} className="mt-2 text-xs text-indigo-400 hover:text-indigo-300">
-                  + Create your first note
-                </button>
-              )}
-            </div>
-          ) : (
-            notes.map((note) => (
-              <button
-                key={note.id}
-                onClick={() => openNote(note)}
-                className={[
-                  'group w-full border-b border-white/[0.04] px-4 py-3 text-left transition-colors hover:bg-white/[0.04]',
-                  activeNote?.id === note.id ? 'bg-white/[0.06]' : '',
-                ].join(' ')}
+        {/* Bottom row */}
+        <div className="flex items-center justify-between gap-2 mt-auto pt-1">
+          <div className="flex flex-wrap gap-1 min-w-0">
+            {note.tags.slice(0, 3).map((tag) => (
+              <span
+                key={tag}
+                className="rounded-md bg-white/[0.06] px-1.5 py-0.5 text-[10px] text-zinc-400 leading-none"
               >
-                <div className="flex items-start gap-2">
-                  {note.color && (
-                    <span className={['mt-1 h-2 w-2 shrink-0 rounded-full', COLOR_DOT[note.color] ?? 'bg-zinc-500'].join(' ')} />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1">
-                      {note.pinned && <PinIcon className="h-3 w-3 shrink-0 text-amber-400" />}
-                      <p className="truncate text-xs font-medium text-zinc-200">{note.title}</p>
-                    </div>
-                    <p className="mt-0.5 line-clamp-2 text-xs text-zinc-500">
-                      {note.content || 'Empty note'}
-                    </p>
-                    <div className="mt-1 flex items-center gap-1.5">
-                      <span className="text-xs text-zinc-600">{timeAgo(note.updatedAt)}</span>
-                      {note.tags.slice(0, 2).map((tag) => (
-                        <span key={tag} className="rounded-md bg-white/[0.04] px-1 py-px text-xs text-zinc-500">{tag}</span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </button>
-            ))
-          )}
+                {tag}
+              </span>
+            ))}
+            {note.tags.length > 3 && (
+              <span className="text-[10px] text-zinc-600">+{note.tags.length - 3}</span>
+            )}
+          </div>
+          <span className="text-[10px] text-zinc-600 shrink-0">{timeAgo(note.updatedAt)}</span>
         </div>
+      </div>
+    );
+  };
 
-        {/* Note count */}
-        <div className="border-t border-white/[0.06] px-4 py-2">
-          <p className="text-xs text-zinc-600">{notes.length} {notes.length === 1 ? 'note' : 'notes'}</p>
+  // ── Modal overlay ──────────────────────────────────────────────────────────
+
+  const modalCfg = getColorConfig(editColor || null);
+  const tagChips = editTags
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean);
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
+  return (
+    <div className="min-h-full px-6 py-6">
+
+      {/* ── Top bar ── */}
+      <div className="flex items-center gap-3 mb-5">
+        <div>
+          <h1 className="text-2xl font-bold text-zinc-100 tracking-tight">Notes</h1>
+          <p className="text-sm text-zinc-500 mt-0.5">{notes.length} {notes.length === 1 ? 'note' : 'notes'}</p>
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          {/* Search */}
+          <div className="relative">
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500 pointer-events-none" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search notes…"
+              className="w-52 rounded-xl bg-white/[0.04] border border-white/[0.06] pl-8 pr-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-indigo-500/60 focus:bg-white/[0.06] transition-all"
+            />
+          </div>
+          {/* New Note */}
+          <button
+            onClick={openNew}
+            className="flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-sm font-medium text-white transition-colors shadow-lg shadow-indigo-900/30"
+          >
+            <span className="text-base leading-none">+</span>
+            New Note
+          </button>
         </div>
       </div>
 
-      {/* Editor pane */}
-      {isEditing ? (
-        <div className={['flex flex-1 flex-col overflow-hidden border-l border-white/[0.06]', editorBg].join(' ')}>
-          {/* Editor toolbar */}
-          <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-2">
-            <div className="flex items-center gap-2">
-              {/* Color picker */}
-              <div className="flex items-center gap-1">
+      {/* ── Tag filter chips ── */}
+      {allTags.length > 0 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 mb-5 scrollbar-hide">
+          <button
+            onClick={() => setSelectedTag('')}
+            className={[
+              'rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors shrink-0',
+              selectedTag === ''
+                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+                : 'bg-white/[0.04] text-zinc-400 border border-transparent hover:text-zinc-200',
+            ].join(' ')}
+          >
+            All
+          </button>
+          {allTags.map((tag) => (
+            <button
+              key={tag}
+              onClick={() => setSelectedTag(selectedTag === tag ? '' : tag)}
+              className={[
+                'rounded-lg px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors shrink-0',
+                selectedTag === tag
+                  ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+                  : 'bg-white/[0.04] text-zinc-400 border border-transparent hover:text-zinc-200',
+              ].join(' ')}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ── Masonry grid / states ── */}
+      {loading ? (
+        <div className="flex items-center justify-center py-32">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/[0.06] border-t-indigo-500" />
+        </div>
+      ) : notes.length === 0 ? (
+        /* Empty state */
+        <div className="flex flex-col items-center justify-center py-32 text-center">
+          <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-white/[0.04] border border-white/[0.06]">
+            <DocumentIcon className="h-10 w-10 text-zinc-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-zinc-300 mb-1">
+            {search || selectedTag ? 'No notes match' : 'No notes yet'}
+          </h3>
+          <p className="text-sm text-zinc-600 mb-6">
+            {search || selectedTag
+              ? 'Try adjusting your search or filter.'
+              : 'Capture thoughts, ideas, and anything you want to remember.'}
+          </p>
+          {!search && !selectedTag && (
+            <button
+              onClick={openNew}
+              className="flex items-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 px-5 py-2.5 text-sm font-medium text-white transition-colors shadow-lg shadow-indigo-900/30"
+            >
+              <span className="text-base leading-none">+</span>
+              Create your first note
+            </button>
+          )}
+        </div>
+      ) : (
+        /* Masonry grid */
+        <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4">
+          {/* Pinned first */}
+          {[...notes].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)).map((note) => (
+            <NoteCard key={note.id} note={note} />
+          ))}
+        </div>
+      )}
+
+      {/* ── Full-screen modal overlay ── */}
+      {modalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8"
+          style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', backgroundColor: 'rgba(0,0,0,0.7)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}
+        >
+          <div
+            className={[
+              'relative w-full max-w-2xl rounded-2xl border shadow-2xl shadow-black/60 flex flex-col',
+              'max-h-[90vh] overflow-hidden',
+              modalCfg.bg,
+              modalCfg.border,
+            ].join(' ')}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal header */}
+            <div className="flex items-center gap-3 px-5 pt-5 pb-3 border-b border-white/[0.06]">
+              {/* Color picker dots */}
+              <div className="flex items-center gap-1.5">
                 {NOTE_COLORS.map((c) => (
                   <button
                     key={c.value}
                     onClick={() => handleColorChange(c.value)}
                     title={c.label}
                     className={[
-                      'h-4 w-4 rounded-full border-2 transition-transform hover:scale-110',
-                      c.value === '' ? 'bg-white/[0.12]' : COLOR_DOT[c.value] ?? 'bg-zinc-500',
-                      editColor === c.value ? 'border-white scale-110' : 'border-transparent',
+                      'h-4 w-4 rounded-full border-2 transition-all hover:scale-110',
+                      c.dot,
+                      editColor === c.value
+                        ? 'border-white scale-125 shadow-md'
+                        : 'border-transparent opacity-60 hover:opacity-100',
                     ].join(' ')}
                   />
                 ))}
               </div>
 
-              {/* Pin toggle */}
-              <button
-                onClick={handlePinToggle}
-                className={['flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors', editPinned ? 'text-amber-400' : 'text-zinc-500 hover:text-zinc-300'].join(' ')}
-                title={editPinned ? 'Unpin' : 'Pin'}
-              >
-                <PinIcon className="h-3 w-3" />
-                {editPinned ? 'Pinned' : 'Pin'}
-              </button>
-            </div>
+              <div className="ml-auto flex items-center gap-1">
+                {/* Auto-save indicator */}
+                {activeNote && !isNew && (
+                  <span className="text-xs text-zinc-600 mr-2">
+                    {saving ? 'Saving…' : 'Auto-saved'}
+                  </span>
+                )}
 
-            <div className="flex items-center gap-2">
-              {activeNote && (
-                <span className="text-xs text-zinc-600">
-                  {saving ? 'Saving…' : 'Auto-saved'}
-                </span>
-              )}
-              {activeNote && (
+                {/* Pin toggle */}
                 <button
-                  onClick={() => void handleDelete(activeNote.id)}
-                  className="rounded-md p-1 text-zinc-600 hover:text-red-400 transition-colors"
-                  title="Delete note"
+                  onClick={handlePinToggle}
+                  title={editPinned ? 'Unpin' : 'Pin'}
+                  className={[
+                    'flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors',
+                    editPinned
+                      ? 'bg-amber-500/15 text-amber-400 border border-amber-500/25'
+                      : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.05]',
+                  ].join(' ')}
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
+                  <PinIcon className="h-3 w-3" />
+                  {editPinned ? 'Pinned' : 'Pin'}
                 </button>
+
+                {/* Delete */}
+                {activeNote && !isNew && (
+                  <button
+                    onClick={() => {
+                      if (deleteConfirm) void handleDelete(activeNote.id);
+                      else setDeleteConfirm(true);
+                    }}
+                    title={deleteConfirm ? 'Click again to confirm delete' : 'Delete note'}
+                    className={[
+                      'flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ml-1',
+                      deleteConfirm
+                        ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        : 'text-zinc-600 hover:text-red-400 hover:bg-red-500/10',
+                    ].join(' ')}
+                  >
+                    <TrashIcon className="h-3.5 w-3.5" />
+                    {deleteConfirm ? 'Confirm' : ''}
+                  </button>
+                )}
+
+                {/* Close */}
+                <button
+                  onClick={closeModal}
+                  className="flex items-center justify-center h-7 w-7 rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.06] transition-colors ml-1"
+                >
+                  <XIcon className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Title */}
+            <div className="px-5 pt-4">
+              <input
+                type="text"
+                value={editTitle}
+                onChange={(e) => handleTitleChange(e.target.value)}
+                placeholder="Note title…"
+                autoFocus
+                className="w-full bg-transparent text-xl font-semibold text-zinc-100 placeholder-zinc-600 outline-none"
+              />
+            </div>
+
+            {/* Tags input + chips */}
+            <div className="px-5 pt-2 pb-1">
+              <input
+                type="text"
+                value={editTags}
+                onChange={(e) => setEditTags(e.target.value)}
+                onBlur={handleTagsBlur}
+                placeholder="Add tags, comma separated…"
+                className="w-full bg-transparent text-xs text-zinc-500 placeholder-zinc-700 outline-none"
+              />
+              {tagChips.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {tagChips.map((chip) => (
+                    <span
+                      key={chip}
+                      className="rounded-md bg-white/[0.06] border border-white/[0.06] px-2 py-0.5 text-[11px] text-zinc-400"
+                    >
+                      {chip}
+                    </span>
+                  ))}
+                </div>
               )}
-              <button
-                onClick={() => { setActiveNote(null); setShowNew(false); }}
-                className="rounded-md p-1 text-zinc-600 hover:text-zinc-300 transition-colors"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </div>
-          </div>
 
-          {/* Title */}
-          <input
-            type="text"
-            value={editTitle}
-            onChange={(e) => handleTitleChange(e.target.value)}
-            placeholder="Note title…"
-            className="border-b border-white/[0.06] bg-transparent px-6 py-4 text-lg font-semibold text-zinc-100 placeholder-zinc-600 outline-none"
-          />
+            {/* Divider */}
+            <div className="mx-5 border-t border-white/[0.06] my-2" />
 
-          {/* Tags */}
-          <div className="border-b border-white/[0.06] px-6 py-2">
-            <input
-              type="text"
-              value={editTags}
-              onChange={(e) => setEditTags(e.target.value)}
-              onBlur={handleTagsBlur}
-              placeholder="Tags (comma separated)…"
-              className="w-full bg-transparent text-xs text-zinc-400 placeholder-zinc-600 outline-none"
-            />
-          </div>
-
-          {/* Content */}
-          <textarea
-            value={editContent}
-            onChange={(e) => handleContentChange(e.target.value)}
-            placeholder="Start writing…"
-            className="flex-1 resize-none bg-transparent px-6 py-4 text-sm text-zinc-200 placeholder-zinc-600 outline-none leading-relaxed"
-          />
-
-          {/* New note action bar */}
-          {showNew && (
-            <div className="border-t border-white/[0.06] px-4 py-3 flex justify-end gap-2">
-              <button
-                onClick={() => setShowNew(false)}
-                className="rounded-lg border border-white/[0.06] px-4 py-1.5 text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => void handleCreate()}
-                disabled={saving || !editTitle.trim()}
-                className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
-              >
-                {saving ? 'Creating…' : 'Create Note'}
-              </button>
+            {/* Content textarea */}
+            <div className="flex-1 overflow-y-auto px-5 pb-4">
+              <textarea
+                ref={textareaRef}
+                value={editContent}
+                onChange={(e) => { handleContentChange(e.target.value); }}
+                placeholder="Start writing…"
+                rows={10}
+                className="w-full resize-none bg-transparent text-sm text-zinc-300 placeholder-zinc-700 outline-none leading-relaxed min-h-48"
+                style={{ height: 'auto' }}
+              />
             </div>
-          )}
-        </div>
-      ) : (
-        <div className="flex flex-1 items-center justify-center text-center">
-          <div>
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-white/[0.04]">
-              <DocumentIcon className="h-7 w-7 text-zinc-500" />
+
+            {/* Footer */}
+            <div className="flex items-center justify-between gap-2 px-5 py-4 border-t border-white/[0.06]">
+              {activeNote && !isNew ? (
+                <p className="text-xs text-zinc-600">
+                  Created {new Date(activeNote.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                </p>
+              ) : (
+                <div />
+              )}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={closeModal}
+                  className="rounded-xl border border-white/[0.06] px-4 py-2 text-sm text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04] transition-colors"
+                >
+                  {isNew ? 'Cancel' : 'Close'}
+                </button>
+                {isNew && (
+                  <button
+                    onClick={() => void handleCreate()}
+                    disabled={saving || !editTitle.trim()}
+                    className="rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 px-5 py-2 text-sm font-medium text-white transition-colors shadow-lg shadow-indigo-900/30"
+                  >
+                    {saving ? 'Creating…' : 'Create Note'}
+                  </button>
+                )}
+              </div>
             </div>
-            <p className="text-sm font-medium text-zinc-400">Select a note or create a new one</p>
-            <button
-              onClick={openNew}
-              className="mt-3 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
-            >
-              + New Note
-            </button>
           </div>
         </div>
       )}

@@ -36,9 +36,9 @@ async function SignOutButton() {
     >
       <button
         type="submit"
-        className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-200 transition-all duration-150 w-full"
+        className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-zinc-600 hover:bg-white/[0.04] hover:text-zinc-400 transition-all duration-150 w-full"
       >
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15" />
         </svg>
         Sign out
@@ -66,13 +66,17 @@ export default async function DashboardLayout({
   return (
     <div className="flex h-screen bg-[#09090b] overflow-hidden">
       {/* Sidebar */}
-      <aside className="flex flex-col w-[220px] shrink-0 bg-[#0e0e12] border-r border-white/[0.06]">
+      <aside className="flex flex-col w-[240px] shrink-0 bg-[#0e0e12] border-r border-white/[0.06]">
         {/* Logo */}
-        <div className="flex items-center gap-2.5 px-4 py-4 border-b border-white/[0.06]">
-          <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white text-xs font-bold shrink-0">
-            W
+        <div className="flex items-center gap-3 px-4 py-5 border-b border-white/[0.06]">
+          <div className="relative h-8 w-8 rounded-xl overflow-hidden shrink-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-400 to-violet-600" />
+            <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-sm">W</div>
           </div>
-          <span className="text-sm font-semibold text-white">whoami</span>
+          <div>
+            <p className="text-sm font-bold text-white tracking-tight">whoami</p>
+            <p className="text-[10px] text-zinc-500">Personal OS</p>
+          </div>
         </div>
 
         {/* Navigation — client component for active state */}
@@ -81,11 +85,11 @@ export default async function DashboardLayout({
         {/* User footer */}
         <div className="border-t border-white/[0.06] p-3">
           <div className="flex items-center gap-2.5 rounded-lg px-2 py-2 mb-1">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-semibold text-white">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 ring-2 ring-white/[0.08] text-xs font-semibold text-white">
               {initials || "U"}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-zinc-200">
+              <p className="truncate text-sm font-medium text-zinc-100">
                 {userName}
               </p>
               {userEmail && (
@@ -104,13 +108,15 @@ export default async function DashboardLayout({
         {/* Header */}
         <header className="h-14 shrink-0 flex items-center justify-between px-6 border-b border-white/[0.06] bg-[#09090b]/80 backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-zinc-400">
+            <span className="text-sm font-medium text-zinc-400">
               {getGreeting()},{" "}
-              <span className="font-medium text-zinc-100">{firstName}</span>
+              <span className="text-zinc-100 font-semibold">{firstName}</span>
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-zinc-500 hidden sm:block">{formatDate()}</span>
+            <span className="hidden sm:block text-xs bg-white/[0.04] border border-white/[0.06] rounded-full px-3 py-1 text-zinc-500">
+              {formatDate()}
+            </span>
             <div className="h-4 w-px bg-white/[0.06]" aria-hidden="true" />
             <NotificationBell />
           </div>
