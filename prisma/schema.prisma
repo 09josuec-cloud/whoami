@@ -42,6 +42,9 @@ model User {
   reminders           Reminder[]
   calendarConnections CalendarConnection[]
   notes               Note[]
+  habits              Habit[]
+  habitLogs           HabitLog[]
+  healthMetrics       HealthMetric[]
 
   @@map("users")
 }
@@ -299,6 +302,60 @@ model Note {
   @@index([userId])
   @@index([userId, pinned])
   @@map("notes")
+}
+
+model Habit {
+  id          String     @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  icon        String?
+  color       String     @default("#6366f1")
+  frequency   String     @default("daily")   // "daily" | "weekly"
+  targetDays  String     @default("1,2,3,4,5,6,7") // comma-separated ISO weekday numbers (1=Mon..7=Sun)
+  archived    Boolean    @default(false)
+  order       Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs HabitLog[]
+
+  @@index([userId])
+  @@map("habits")
+}
+
+model HabitLog {
+  id        String   @id @default(cuid())
+  habitId   String
+  userId    String
+  date      String   // YYYY-MM-DD
+  note      String?
+  createdAt DateTime @default(now())
+
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date])
+  @@index([userId, date])
+  @@map("habit_logs")
+}
+
+model HealthMetric {
+  id        String   @id @default(cuid())
+  userId    String
+  date      String   // YYYY-MM-DD
+  type      String   // "steps" | "sleep" | "weight" | "water" | "calories" | "heart_rate"
+  value     Float
+  source    String   @default("manual") // "manual" | "apple_health" | "fitbit"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date, type])
+  @@index([userId, date])
+  @@map("health_metrics")
 }
 
 model CalendarConnection {

@@ -41,6 +41,15 @@ interface SavingsGoal {
   currentAmount: number;
 }
 
+interface HabitToday {
+  id: string;
+  name: string;
+  icon: string | null;
+  color: string;
+  todayCompleted: boolean;
+  currentStreak: number;
+}
+
 interface DashboardData {
   accounts: BankAccount[];
   recentTxs: Transaction[];
@@ -48,6 +57,7 @@ interface DashboardData {
   spending: Record<string, number>;
   cashflow: CashflowEntry[];
   goals: SavingsGoal[];
+  habitsToday: { habits: HabitToday[]; completedCount: number; totalCount: number };
 }
 
 function fmt(n: number) {
@@ -143,12 +153,13 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
       const month = now.getMonth() + 1;
       const year = now.getFullYear();
 
-      const [accountsRes, txsRes, budgetsRes, cashflowRes, goalsRes] = await Promise.all([
+      const [accountsRes, txsRes, budgetsRes, cashflowRes, goalsRes, habitsRes] = await Promise.all([
         fetch('/api/plaid/accounts'),
         fetch(`/api/plaid/transactions?month=${month}&year=${year}`),
         fetch(`/api/budget?month=${month}&year=${year}`),
         fetch('/api/budget/cashflow'),
         fetch('/api/savings-goals'),
+        fetch('/api/habits/today'),
       ]);
 
       const accountsData = accountsRes.ok ? ((await accountsRes.json()) as { accounts: BankAccount[] }) : { accounts: [] };
@@ -156,6 +167,9 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
       const budgetsData = budgetsRes.ok ? ((await budgetsRes.json()) as { budgets: Budget[] }) : { budgets: [] };
       const cashflowData = cashflowRes.ok ? ((await cashflowRes.json()) as { cashflow: CashflowEntry[] }) : { cashflow: [] };
       const goalsData = goalsRes.ok ? ((await goalsRes.json()) as { goals: SavingsGoal[] }) : { goals: [] };
+      const habitsData = habitsRes.ok
+        ? ((await habitsRes.json()) as { habits: HabitToday[]; completedCount: number; totalCount: number })
+        : { habits: [], completedCount: 0, totalCount: 0 };
 
       const spending: Record<string, number> = {};
       for (const tx of txsData.transactions) {
@@ -171,6 +185,7 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
         spending,
         cashflow: cashflowData.cashflow,
         goals: goalsData.goals.slice(0, 3),
+        habitsToday: habitsData,
       });
     } finally {
       setLoading(false);
@@ -511,6 +526,51 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
           )}
         </div>
       </div>
+
+      {/* ── Habits Today Widget ── */}
+      {(data?.habitsToday.totalCount ?? 0) > 0 && (
+        <div className="rounded-xl bg-[#111114] border border-white/[0.06] p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Today&apos;s Habits</p>
+              <p className="mt-0.5 text-sm font-medium text-zinc-300">
+                {data?.habitsToday.completedCount ?? 0} of {data?.habitsToday.totalCount ?? 0} completed
+              </p>
+            </div>
+            <Link href="/habits" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">All habits →</Link>
+          </div>
+          {/* Progress bar */}
+          <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
+            <div
+              className="h-full rounded-full bg-indigo-500 transition-all duration-500"
+              style={{ width: `${Math.round(((data?.habitsToday.completedCount ?? 0) / Math.max(data?.habitsToday.totalCount ?? 1, 1)) * 100)}%` }}
+            />
+          </div>
+          {/* Habit pills */}
+          <div className="flex flex-wrap gap-2">
+            {(data?.habitsToday.habits ?? []).slice(0, 8).map((h) => (
+              <div
+                key={h.id}
+                className={[
+                  'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all',
+                  h.todayCompleted
+                    ? 'border-transparent text-zinc-300'
+                    : 'border-white/[0.06] bg-white/[0.04] text-zinc-500',
+                ].join(' ')}
+                style={h.todayCompleted ? { backgroundColor: `${h.color}20`, borderColor: `${h.color}40`, color: h.color } : {}}
+              >
+                {h.icon && <span>{h.icon}</span>}
+                {h.name}
+                {h.todayCompleted && (
+                  <svg className="h-3 w-3 ml-0.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Top Spending + Recent Transactions ── */}
       <div className="grid grid-cols-2 gap-3">
