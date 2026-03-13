@@ -124,13 +124,26 @@ export default function SidebarNav() {
 
       <div className="mt-auto px-2">
         <div className="h-px bg-white/[0.06] mx-1 mb-2" />
-        <div className="flex items-center gap-3 px-3 py-2 text-sm cursor-not-allowed rounded-lg opacity-40">
-          <span className="flex h-4 w-4 items-center justify-center shrink-0 text-zinc-500">
-            <SparklesIcon />
-          </span>
-          <span className="text-zinc-500">AI Assistant</span>
-          <span className="ml-auto rounded-md bg-white/[0.06] px-1.5 py-0.5 text-xs text-zinc-500">Soon</span>
-        </div>
+        {(() => {
+          const isActive = pathname === '/assistant' || pathname.startsWith('/assistant/');
+          return (
+            <Link
+              href="/assistant"
+              className={[
+                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors duration-150',
+                isActive
+                  ? 'bg-white/[0.06] text-zinc-100 font-medium'
+                  : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]',
+              ].join(' ')}
+              aria-current={isActive ? 'page' : undefined}
+            >
+              <span className="flex h-4 w-4 items-center justify-center shrink-0">
+                <SparklesIcon />
+              </span>
+              AI Assistant
+            </Link>
+          );
+        })()}
       </div>
     </nav>
   );
