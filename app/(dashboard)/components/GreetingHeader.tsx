@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useEffect } from 'react';
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -18,20 +18,29 @@ function formatDate() {
 }
 
 export default function GreetingHeader({ firstName }: { firstName: string }) {
-  // Computed once on client mount — uses the user's local timezone
-  const greeting = useMemo(() => getGreeting(), []);
-  const date = useMemo(() => formatDate(), []);
+  const [greeting, setGreeting] = useState('');
+
+  // Run only on the client after hydration so we get the user's local timezone
+  useEffect(() => {
+    setGreeting(getGreeting());
+  }, []);
 
   return (
     <span className="text-sm font-medium text-zinc-400">
-      {greeting},{' '}
+      {greeting && <>{greeting}, </>}
       <span className="text-zinc-100 font-semibold">{firstName}</span>
     </span>
   );
 }
 
 export function DateBadge() {
-  const date = useMemo(() => formatDate(), []);
+  const [date, setDate] = useState('');
+
+  useEffect(() => {
+    setDate(formatDate());
+  }, []);
+
+  if (!date) return null;
   return (
     <span className="hidden sm:block text-xs bg-white/[0.04] border border-white/[0.06] rounded-full px-3 py-1 text-zinc-500">
       {date}
