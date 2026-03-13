@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { registerSchema } from "@/src/lib/validations";
 
+
 type FieldErrors = Partial<
   Record<"name" | "email" | "password" | "confirmPassword", string>
 >;
@@ -110,6 +111,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword]     = useState(false);
   const [showConfirm, setShowConfirm]       = useState(false);
+  const [agreedToTerms, setAgreedToTerms]   = useState(false);
   const [fieldErrors, setFieldErrors]       = useState<FieldErrors>({});
   const [serverError, setServerError]       = useState("");
   const [loading, setLoading]               = useState(false);
@@ -135,6 +137,10 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!validate()) return;
+    if (!agreedToTerms) {
+      setServerError("You must agree to the Terms of Service and Privacy Policy to continue.");
+      return;
+    }
 
     setLoading(true);
     setServerError("");
@@ -333,10 +339,48 @@ export default function RegisterPage() {
           )}
         </div>
 
+        {/* Terms agreement */}
+        <label className="flex items-start gap-3 cursor-pointer group">
+          <div className="relative mt-0.5 shrink-0">
+            <input
+              type="checkbox"
+              className="sr-only"
+              checked={agreedToTerms}
+              onChange={(e) => {
+                setAgreedToTerms(e.target.checked);
+                if (serverError) setServerError("");
+              }}
+              disabled={loading}
+            />
+            <div className={[
+              "h-4 w-4 rounded border transition-colors",
+              agreedToTerms
+                ? "bg-indigo-600 border-indigo-600"
+                : "bg-transparent border-white/20 group-hover:border-white/40",
+            ].join(" ")}>
+              {agreedToTerms && (
+                <svg className="h-4 w-4 text-white p-0.5" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              )}
+            </div>
+          </div>
+          <span className="text-xs text-zinc-400 leading-relaxed">
+            I agree to the{" "}
+            <Link href="/terms" target="_blank" className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2 transition-colors">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" target="_blank" className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2 transition-colors">
+              Privacy Policy
+            </Link>
+          </span>
+        </label>
+
         {/* Submit */}
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !agreedToTerms}
           className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 text-sm font-semibold text-white hover:bg-indigo-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (

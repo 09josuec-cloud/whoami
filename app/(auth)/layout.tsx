@@ -172,6 +172,15 @@ export default function AuthLayout({
         <div className="relative z-10 w-full max-w-sm">
           {children}
         </div>
+
+        {/* Copyright + legal links */}
+        <div className="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-4 px-6">
+          <p className="text-[11px] text-zinc-700">© {new Date().getFullYear()} whoami.company</p>
+          <span className="text-zinc-800">·</span>
+          <Link href="/terms" className="text-[11px] text-zinc-700 hover:text-zinc-400 transition-colors">Terms</Link>
+          <span className="text-zinc-800">·</span>
+          <Link href="/privacy" className="text-[11px] text-zinc-700 hover:text-zinc-400 transition-colors">Privacy</Link>
+        </div>
       </div>
     </div>
   );
