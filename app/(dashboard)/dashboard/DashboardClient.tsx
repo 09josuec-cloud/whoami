@@ -50,6 +50,30 @@ interface HabitToday {
   currentStreak: number;
 }
 
+interface LifeStats {
+  journalStreak: number;
+  avgMood: number | null;
+  todaySteps: number | null;
+  upcomingReminders: number;
+}
+
+interface UpcomingEvent {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  allDay: boolean;
+  color: string | null;
+  location: string | null;
+}
+
+interface UpcomingReminder {
+  id: string;
+  title: string;
+  dueAt: string;
+  notes: string | null;
+}
+
 interface DashboardData {
   accounts: BankAccount[];
   recentTxs: Transaction[];
@@ -58,6 +82,8 @@ interface DashboardData {
   cashflow: CashflowEntry[];
   goals: SavingsGoal[];
   habitsToday: { habits: HabitToday[]; completedCount: number; totalCount: number };
+  lifeStats: LifeStats;
+  upcoming: { events: UpcomingEvent[]; reminders: UpcomingReminder[] };
 }
 
 function fmt(n: number) {
@@ -179,13 +205,15 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
       const month = now.getMonth() + 1;
       const year = now.getFullYear();
 
-      const [accountsRes, txsRes, budgetsRes, cashflowRes, goalsRes, habitsRes] = await Promise.all([
+      const [accountsRes, txsRes, budgetsRes, cashflowRes, goalsRes, habitsRes, lifeStatsRes, upcomingRes] = await Promise.all([
         fetch('/api/plaid/accounts'),
         fetch(`/api/plaid/transactions?month=${month}&year=${year}`),
         fetch(`/api/budget?month=${month}&year=${year}`),
         fetch('/api/budget/cashflow'),
         fetch('/api/savings-goals'),
         fetch('/api/habits/today'),
+        fetch('/api/dashboard/life-stats'),
+        fetch('/api/dashboard/upcoming'),
       ]);
 
       const accountsData = accountsRes.ok ? ((await accountsRes.json()) as { accounts: BankAccount[] }) : { accounts: [] };
@@ -196,6 +224,12 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
       const habitsData = habitsRes.ok
         ? ((await habitsRes.json()) as { habits: HabitToday[]; completedCount: number; totalCount: number })
         : { habits: [], completedCount: 0, totalCount: 0 };
+      const lifeStats = lifeStatsRes.ok
+        ? ((await lifeStatsRes.json()) as LifeStats)
+        : { journalStreak: 0, avgMood: null, todaySteps: null, upcomingReminders: 0 };
+      const upcomingData = upcomingRes.ok
+        ? ((await upcomingRes.json()) as { events: UpcomingEvent[]; reminders: UpcomingReminder[] })
+        : { events: [], reminders: [] };
 
       const spending: Record<string, number> = {};
       for (const tx of txsData.transactions) {
@@ -212,6 +246,8 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
         cashflow: cashflowData.cashflow,
         goals: goalsData.goals.slice(0, 3),
         habitsToday: habitsData,
+        lifeStats,
+        upcoming: upcomingData,
       });
     } finally {
       setLoading(false);
@@ -245,6 +281,9 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
   const netCash = monthlyIncome - monthlySpending;
   const prevSpending = prevCashflow?.spending ?? 0;
   const spendingDelta = prevSpending > 0 ? ((monthlySpending - prevSpending) / prevSpending) * 100 : 0;
+
+  const lifeStats = data?.lifeStats ?? { journalStreak: 0, avgMood: null, todaySteps: null, upcomingReminders: 0 };
+  const upcoming = data?.upcoming ?? { events: [], reminders: [] };
 
   const topSpending = Object.entries(data?.spending ?? {})
     .filter(([cat]) => cat !== 'Income' && cat !== 'Transfer')
@@ -388,6 +427,94 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
           valueColor={netCash >= 0 ? 'text-emerald-400' : 'text-rose-400'}
           trend={null}
         />
+      </div>
+
+      {/* ── Life Today ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Journal Streak */}
+        <Link href="/journal" className="group rounded-xl bg-[#111114] border border-white/[0.06] p-4 hover:border-indigo-500/20 hover:bg-indigo-500/[0.03] transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Journal</span>
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-500/10">
+              <svg className="h-3.5 w-3.5 text-amber-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z" />
+              </svg>
+            </div>
+          </div>
+          <p className="text-2xl font-bold tabular-nums text-zinc-100">
+            {lifeStats.journalStreak}<span className="text-sm font-medium text-zinc-500 ml-1">day{lifeStats.journalStreak !== 1 ? 's' : ''}</span>
+          </p>
+          <p className="mt-1 text-xs text-zinc-600">
+            {lifeStats.journalStreak > 0 ? 'streak 🔥' : 'no streak yet'}
+          </p>
+        </Link>
+
+        {/* Mood */}
+        <Link href="/journal" className="group rounded-xl bg-[#111114] border border-white/[0.06] p-4 hover:border-violet-500/20 hover:bg-violet-500/[0.03] transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Mood</span>
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-violet-500/10">
+              <svg className="h-3.5 w-3.5 text-violet-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 0 1-6.364 0M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75Zm-.375 0h.008v.015h-.008V9.75Z" />
+              </svg>
+            </div>
+          </div>
+          {lifeStats.avgMood !== null ? (
+            <>
+              <p className="text-2xl font-bold tabular-nums text-zinc-100">
+                {lifeStats.avgMood.toFixed(1)}<span className="text-sm font-medium text-zinc-500 ml-1">/ 10</span>
+              </p>
+              <p className="mt-1 text-xs text-zinc-600">avg last 30 days</p>
+            </>
+          ) : (
+            <>
+              <p className="text-2xl font-bold text-zinc-700">—</p>
+              <p className="mt-1 text-xs text-zinc-600">no entries yet</p>
+            </>
+          )}
+        </Link>
+
+        {/* Steps */}
+        <Link href="/habits" className="group rounded-xl bg-[#111114] border border-white/[0.06] p-4 hover:border-emerald-500/20 hover:bg-emerald-500/[0.03] transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Steps</span>
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-500/10">
+              <svg className="h-3.5 w-3.5 text-emerald-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 0 1 21.75 8.25Z" />
+              </svg>
+            </div>
+          </div>
+          {lifeStats.todaySteps !== null ? (
+            <>
+              <p className="text-2xl font-bold tabular-nums text-zinc-100">
+                {lifeStats.todaySteps.toLocaleString()}
+              </p>
+              <p className="mt-1 text-xs text-zinc-600">today</p>
+            </>
+          ) : (
+            <>
+              <p className="text-2xl font-bold text-zinc-700">—</p>
+              <p className="mt-1 text-xs text-zinc-600">log in Habits →</p>
+            </>
+          )}
+        </Link>
+
+        {/* Upcoming Reminders */}
+        <Link href="/calendar" className="group rounded-xl bg-[#111114] border border-white/[0.06] p-4 hover:border-rose-500/20 hover:bg-rose-500/[0.03] transition-all">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Reminders</span>
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-rose-500/10">
+              <svg className="h-3.5 w-3.5 text-rose-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+              </svg>
+            </div>
+          </div>
+          <p className="text-2xl font-bold tabular-nums text-zinc-100">
+            {lifeStats.upcomingReminders}
+          </p>
+          <p className="mt-1 text-xs text-zinc-600">due this week</p>
+        </Link>
       </div>
 
       {/* ── Cash Flow + Accounts ── */}
@@ -642,6 +769,92 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ── What's On ── */}
+      {(upcoming.events.length > 0 || upcoming.reminders.length > 0) && (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+
+          {/* Upcoming Events */}
+          <div className="rounded-xl bg-[#111114] border border-white/[0.06] p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Upcoming Events</p>
+                <p className="mt-0.5 text-sm font-medium text-zinc-300">Next 3 days</p>
+              </div>
+              <Link href="/calendar" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">Calendar →</Link>
+            </div>
+            {upcoming.events.length === 0 ? (
+              <p className="text-sm text-zinc-600">Nothing scheduled — enjoy the calm.</p>
+            ) : (
+              <div className="space-y-2">
+                {upcoming.events.map((ev) => {
+                  const start = new Date(ev.start);
+                  const isToday = start.toDateString() === new Date().toDateString();
+                  const isTomorrow = start.toDateString() === new Date(Date.now() + 86400000).toDateString();
+                  const dayLabel = isToday ? 'Today' : isTomorrow ? 'Tomorrow' : start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                  const timeLabel = ev.allDay ? 'All day' : start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                  const accentColors: Record<string, string> = {
+                    indigo: '#6366f1', violet: '#8b5cf6', rose: '#f43f5e',
+                    emerald: '#10b981', amber: '#f59e0b', sky: '#0ea5e9',
+                  };
+                  const accent = accentColors[ev.color ?? 'indigo'] ?? '#6366f1';
+                  return (
+                    <div key={ev.id} className="flex items-start gap-3 rounded-lg px-3 py-2.5 hover:bg-white/[0.03] transition-colors">
+                      <div className="mt-0.5 h-8 w-1 shrink-0 rounded-full" style={{ backgroundColor: accent }} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-zinc-200">{ev.title}</p>
+                        <p className="text-xs text-zinc-500 mt-0.5">
+                          <span className={isToday ? 'text-indigo-400 font-medium' : ''}>{dayLabel}</span>
+                          {' · '}{timeLabel}
+                          {ev.location && <span className="text-zinc-600"> · {ev.location}</span>}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Due Reminders */}
+          <div className="rounded-xl bg-[#111114] border border-white/[0.06] p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Reminders</p>
+                <p className="mt-0.5 text-sm font-medium text-zinc-300">Due this week</p>
+              </div>
+              <Link href="/calendar" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">All →</Link>
+            </div>
+            {upcoming.reminders.length === 0 ? (
+              <p className="text-sm text-zinc-600">All clear — nothing due soon.</p>
+            ) : (
+              <div className="space-y-2">
+                {upcoming.reminders.map((r) => {
+                  const due = new Date(r.dueAt);
+                  const now2 = new Date();
+                  const isToday = due.toDateString() === now2.toDateString();
+                  const isTomorrow = due.toDateString() === new Date(Date.now() + 86400000).toDateString();
+                  const dayLabel = isToday ? 'Today' : isTomorrow ? 'Tomorrow' : due.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                  const timeLabel = due.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                  return (
+                    <div key={r.id} className="flex items-start gap-3 rounded-lg px-3 py-2.5 hover:bg-white/[0.03] transition-colors">
+                      <div className={['mt-1 h-2 w-2 shrink-0 rounded-full', isToday ? 'bg-rose-400' : 'bg-zinc-600'].join(' ')} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-zinc-200">{r.title}</p>
+                        <p className="text-xs mt-0.5">
+                          <span className={isToday ? 'text-rose-400 font-medium' : 'text-zinc-500'}>{dayLabel}</span>
+                          <span className="text-zinc-600"> · {timeLabel}</span>
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
         </div>
       )}
 
