@@ -46,8 +46,9 @@ export async function createNotification(input: CreateNotificationInput) {
         refId: input.refId,
       },
     });
-  } catch {
-    // Swallow unique constraint violations silently
+  } catch (err) {
+    // Log non-PII diagnostic; unique constraint violations are expected and non-fatal
+    console.error('[notifications] createNotification failed:', err instanceof Error ? err.message : 'unknown error');
   }
 }
 
@@ -199,8 +200,8 @@ export async function generateGoalNotification(
       link: '/budget',
       refId: `goal_complete:${goalId}`,
     });
-  } else if (pct >= 0.5 && pct < 0.55) {
-    // 50% milestone (only once)
+  } else if (pct >= 0.5 && pct < 1.0) {
+    // 50% milestone — fires any time between 50–99%, refId prevents duplicates
     await createNotification({
       userId,
       type: 'goal_milestone',
@@ -209,8 +210,10 @@ export async function generateGoalNotification(
       link: '/budget',
       refId: `goal_50:${goalId}`,
     });
-  } else if (pct >= 0.75 && pct < 0.8) {
-    // 75% milestone (only once)
+  }
+
+  if (pct >= 0.75 && pct < 1.0) {
+    // 75% milestone — fires any time between 75–99%, refId prevents duplicates
     await createNotification({
       userId,
       type: 'goal_milestone',

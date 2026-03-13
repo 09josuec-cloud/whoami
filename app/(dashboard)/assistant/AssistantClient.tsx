@@ -2,39 +2,55 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 
+interface Action {
+  name: string;
+  result?: string;
+  done: boolean;
+}
+
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   streaming?: boolean;
+  actions?: Action[];
 }
 
 const SUGGESTED_PROMPTS = [
   "How's my budget looking this month?",
-  "What's my current journal streak?",
-  "Do I have any overdue reminders?",
+  "Remind me to call the dentist tomorrow at 9am",
+  "Add a team meeting to my calendar for Friday 2pm–3pm",
+  "What's my mood trend lately?",
+  "Create a note: grocery list — milk, eggs, bread",
   "How am I tracking on my savings goals?",
-  "What's my mood been like lately?",
-  "Summarize my financial health",
 ];
 
-// ── Simple markdown renderer (bold, italic, inline code, lists) ──────────────
+const ACTION_LABELS: Record<string, string> = {
+  create_calendar_event: 'Adding to calendar',
+  create_reminder: 'Creating reminder',
+  create_note: 'Saving note',
+  create_journal_entry: 'Writing journal entry',
+};
+
+const ACTION_DONE_LABELS: Record<string, string> = {
+  create_calendar_event: 'Added to calendar',
+  create_reminder: 'Reminder created',
+  create_note: 'Note saved',
+  create_journal_entry: 'Journal entry saved',
+};
+
+// ── Markdown renderer ─────────────────────────────────────────────────────────
 
 function renderMarkdown(text: string): React.ReactNode[] {
   const lines = text.split('\n');
   const nodes: React.ReactNode[] = [];
   let key = 0;
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i] ?? '';
-
-    // Horizontal rule
+  for (const line of lines) {
     if (/^──/.test(line)) {
       nodes.push(<hr key={key++} className="border-white/[0.06] my-3" />);
       continue;
     }
-
-    // List item
     if (/^(\s*)[•\-\*] /.test(line)) {
       nodes.push(
         <div key={key++} className="flex gap-2 my-0.5">
@@ -44,14 +60,10 @@ function renderMarkdown(text: string): React.ReactNode[] {
       );
       continue;
     }
-
-    // Empty line = spacer
     if (line.trim() === '') {
       nodes.push(<div key={key++} className="h-2" />);
       continue;
     }
-
-    // Normal paragraph
     nodes.push(<p key={key++} className="leading-relaxed">{renderInline(line)}</p>);
   }
 
@@ -59,27 +71,19 @@ function renderMarkdown(text: string): React.ReactNode[] {
 }
 
 function renderInline(text: string): React.ReactNode {
-  // Split on bold (**...**), italic (*...*), and inline code (`...`)
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
   return parts.map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
+    if (part.startsWith('**') && part.endsWith('**'))
       return <strong key={i} className="font-semibold text-zinc-100">{part.slice(2, -2)}</strong>;
-    }
-    if (part.startsWith('*') && part.endsWith('*')) {
+    if (part.startsWith('*') && part.endsWith('*'))
       return <em key={i} className="italic">{part.slice(1, -1)}</em>;
-    }
-    if (part.startsWith('`') && part.endsWith('`')) {
-      return (
-        <code key={i} className="rounded bg-white/[0.06] px-1 py-0.5 text-xs font-mono text-indigo-300">
-          {part.slice(1, -1)}
-        </code>
-      );
-    }
+    if (part.startsWith('`') && part.endsWith('`'))
+      return <code key={i} className="rounded bg-white/[0.06] px-1 py-0.5 text-xs font-mono text-indigo-300">{part.slice(1, -1)}</code>;
     return <span key={i}>{part}</span>;
   });
 }
 
-// ── Icons ────────────────────────────────────────────────────────────────────
+// ── Icons ─────────────────────────────────────────────────────────────────────
 
 function SendIcon() {
   return (
@@ -89,9 +93,9 @@ function SendIcon() {
   );
 }
 
-function SparklesIcon() {
+function SparklesIcon({ size = 5 }: { size?: number }) {
   return (
-    <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+    <svg className={`h-${size} w-${size}`} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z" />
     </svg>
   );
@@ -102,6 +106,39 @@ function TrashIcon() {
     <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
     </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+    </svg>
+  );
+}
+
+function SpinnerIcon() {
+  return (
+    <svg className="h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
+}
+
+// ── Action pill component ─────────────────────────────────────────────────────
+
+function ActionPill({ action }: { action: Action }) {
+  return (
+    <div className={[
+      'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors',
+      action.done
+        ? 'bg-emerald-500/10 text-emerald-400'
+        : 'bg-indigo-500/10 text-indigo-400',
+    ].join(' ')}>
+      {action.done ? <CheckIcon /> : <SpinnerIcon />}
+      <span>{action.done ? (ACTION_DONE_LABELS[action.name] ?? action.name) : (ACTION_LABELS[action.name] ?? action.name)}…</span>
+    </div>
   );
 }
 
@@ -127,7 +164,7 @@ export default function AssistantClient() {
     setError(null);
     const userMsg: Message = { id: crypto.randomUUID(), role: 'user', content };
     const assistantId = crypto.randomUUID();
-    const assistantMsg: Message = { id: assistantId, role: 'assistant', content: '', streaming: true };
+    const assistantMsg: Message = { id: assistantId, role: 'assistant', content: '', streaming: true, actions: [] };
 
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
     setInput('');
@@ -169,13 +206,40 @@ export default function AssistantClient() {
           if (data === '[DONE]') break;
 
           try {
-            const parsed = JSON.parse(data) as { text?: string; error?: string };
+            const parsed = JSON.parse(data) as {
+              text?: string;
+              action?: Action;
+              error?: string;
+            };
+
             if (parsed.error) throw new Error(parsed.error);
+
             if (parsed.text) {
               setMessages((prev) =>
                 prev.map((m) =>
                   m.id === assistantId ? { ...m, content: m.content + parsed.text } : m
                 )
+              );
+            }
+
+            if (parsed.action) {
+              const incomingAction = parsed.action;
+              setMessages((prev) =>
+                prev.map((m) => {
+                  if (m.id !== assistantId) return m;
+                  const existing = (m.actions ?? []).find((a) => a.name === incomingAction.name);
+                  if (existing) {
+                    // Update existing action (done state)
+                    return {
+                      ...m,
+                      actions: (m.actions ?? []).map((a) =>
+                        a.name === incomingAction.name ? { ...a, ...incomingAction } : a
+                      ),
+                    };
+                  }
+                  // Add new action
+                  return { ...m, actions: [...(m.actions ?? []), incomingAction] };
+                })
               );
             }
           } catch {
@@ -221,11 +285,11 @@ export default function AssistantClient() {
       <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] px-6 py-4">
         <div className="flex items-center gap-2.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400">
-            <SparklesIcon />
+            <SparklesIcon size={4} />
           </div>
           <div>
             <h1 className="text-sm font-semibold text-zinc-100">AI Assistant</h1>
-            <p className="text-xs text-zinc-500">Knows your budget, journal, calendar, and goals</p>
+            <p className="text-xs text-zinc-500">Reads and writes across all your modules</p>
           </div>
         </div>
         {!isEmpty && (
@@ -243,18 +307,16 @@ export default function AssistantClient() {
       <div className="flex-1 overflow-y-auto px-6 py-6">
         {isEmpty ? (
           <div className="mx-auto max-w-2xl">
-            {/* Welcome */}
             <div className="mb-8 text-center">
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-400">
-                <SparklesIcon />
+                <SparklesIcon size={6} />
               </div>
               <h2 className="text-lg font-semibold text-zinc-100">What can I help you with?</h2>
               <p className="mt-1 text-sm text-zinc-500">
-                I have access to your financial data, journal, calendar, reminders, and goals.
+                Ask questions or give commands — I can read your data and create events, reminders, notes, and journal entries.
               </p>
             </div>
 
-            {/* Suggested prompts */}
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {SUGGESTED_PROMPTS.map((prompt) => (
                 <button
@@ -273,12 +335,10 @@ export default function AssistantClient() {
               <div key={msg.id} className={['flex gap-3', msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'].join(' ')}>
                 {/* Avatar */}
                 <div className={[
-                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
-                  msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-white/[0.06] text-zinc-400',
+                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs',
+                  msg.role === 'user' ? 'bg-indigo-600 text-white font-semibold' : 'bg-white/[0.06] text-zinc-400',
                 ].join(' ')}>
-                  {msg.role === 'user' ? 'Y' : (
-                    <SparklesIcon />
-                  )}
+                  {msg.role === 'user' ? 'Y' : <SparklesIcon size={4} />}
                 </div>
 
                 {/* Bubble */}
@@ -289,9 +349,27 @@ export default function AssistantClient() {
                     : 'bg-[#111114] border border-white/[0.06] text-zinc-300',
                 ].join(' ')}>
                   {msg.role === 'assistant' ? (
-                    <div className="space-y-0.5">
-                      {msg.content ? renderMarkdown(msg.content) : null}
-                      {msg.streaming && (
+                    <div className="space-y-1">
+                      {/* Action pills */}
+                      {msg.actions && msg.actions.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                          {msg.actions.map((action, i) => (
+                            <ActionPill key={i} action={action} />
+                          ))}
+                        </div>
+                      )}
+                      {/* Text */}
+                      {msg.content ? (
+                        <div className="space-y-0.5">{renderMarkdown(msg.content)}</div>
+                      ) : null}
+                      {/* Streaming cursor */}
+                      {msg.streaming && !msg.content && (msg.actions ?? []).length === 0 && (
+                        <span className="inline-flex items-center gap-1 text-zinc-500 text-xs">
+                          <SpinnerIcon />
+                          Thinking…
+                        </span>
+                      )}
+                      {msg.streaming && msg.content && (
                         <span className="inline-block h-4 w-0.5 animate-pulse bg-indigo-400 align-middle ml-0.5" />
                       )}
                     </div>
@@ -321,7 +399,7 @@ export default function AssistantClient() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask anything about your data…"
+              placeholder="Ask anything or give a command…"
               rows={1}
               disabled={isStreaming}
               className="flex-1 resize-none bg-transparent text-sm text-zinc-200 placeholder-zinc-600 outline-none disabled:opacity-50 max-h-40 leading-relaxed"
@@ -342,7 +420,7 @@ export default function AssistantClient() {
             </button>
           </div>
           <p className="mt-2 text-center text-xs text-zinc-600">
-            Press Enter to send · Shift+Enter for new line
+            Enter to send · Shift+Enter for new line
           </p>
         </div>
       </div>
