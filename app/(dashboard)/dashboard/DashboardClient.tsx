@@ -65,23 +65,6 @@ function fmtCompact(n: number) {
   return fmtFull(n);
 }
 
-const categoryEmoji: Record<string, string> = {
-  'Food & Dining': '🍽️',
-  Shopping: '🛍️',
-  Transportation: '🚗',
-  Entertainment: '🎬',
-  Subscriptions: '📱',
-  'Bills & Utilities': '⚡',
-  Healthcare: '💊',
-  'Personal Care': '💆',
-  Travel: '✈️',
-  Education: '📚',
-  'Home & Garden': '🏡',
-  Income: '💰',
-  Transfer: '↔️',
-  Other: '📦',
-};
-
 const categoryColor: Record<string, string> = {
   'Food & Dining': '#f97316',
   Shopping: '#8b5cf6',
@@ -96,6 +79,38 @@ const categoryColor: Record<string, string> = {
   'Home & Garden': '#84cc16',
   Other: '#71717a',
 };
+
+// SVG icon paths (Heroicons 2 outline)
+const ICON_PATHS: Record<string, string> = {
+  'Food & Dining': 'M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z',
+  Shopping: 'M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z',
+  Transportation: 'M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12',
+  Entertainment: 'M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-7.5A1.125 1.125 0 0112 19.5m9.75-14.375c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125m19.5 0v1.5c0 .621-.504 1.125-1.125 1.125M2.25 5.625v1.5c0 .621.504 1.125 1.125 1.125m0 0h17.25',
+  Subscriptions: 'M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 20.25h3',
+  'Bills & Utilities': 'M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z',
+  Healthcare: 'M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z',
+  'Personal Care': 'M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z',
+  Travel: 'M6 12 3.269 3.125A59.769 59.769 0 0121.485 12 59.768 59.768 0 013.27 20.875L5.999 12zm0 0h7.5',
+  Education: 'M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25',
+  'Home & Garden': 'M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25',
+  Income: 'M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941',
+  Transfer: 'M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5',
+  Other: 'M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z',
+};
+
+function CategoryIcon({ category, size = 16, className = '', color }: { category: string; size?: number; className?: string; color?: string }) {
+  const path = ICON_PATHS[category] ?? ICON_PATHS.Other;
+  return (
+    <svg
+      width={size} height={size} viewBox="0 0 24 24"
+      fill="none" stroke={color ?? 'currentColor'} strokeWidth={1.5}
+      strokeLinecap="round" strokeLinejoin="round"
+      className={className} aria-hidden="true"
+    >
+      <path d={path} />
+    </svg>
+  );
+}
 
 // Mini SVG ring gauge
 function RingGauge({ pct, color, size = 36 }: { pct: number; color: string; size?: number }) {
@@ -206,38 +221,57 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
       {/* ── Greeting ── */}
       <div className="flex items-end justify-between pt-1">
         <div>
-          <p className="text-xs font-medium text-zinc-500">{monthName}</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-zinc-100">
-            Good to see you, {firstName}
+          <p className="text-xs font-medium uppercase tracking-widest text-zinc-600">{monthName}</p>
+          <h1 className="mt-1.5 text-3xl font-bold tracking-tight text-zinc-100">
+            Good to see you, <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">{firstName}</span>
           </h1>
         </div>
         <Link
           href="/budget"
-          className="rounded-lg bg-white/[0.06] px-4 py-2 text-xs font-medium text-zinc-400 hover:bg-white/[0.1] hover:text-zinc-200 transition-colors"
+          className="group flex items-center gap-1.5 rounded-xl border border-white/[0.06] bg-white/[0.04] px-4 py-2 text-xs font-medium text-zinc-400 hover:border-indigo-500/30 hover:bg-indigo-500/[0.06] hover:text-indigo-300 transition-all duration-150"
         >
-          Full report →
+          Full report
+          <svg className="h-3 w-3 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+          </svg>
         </Link>
       </div>
 
       {/* ── Net Worth Hero ── */}
-      <div className="relative overflow-hidden rounded-xl bg-[#111114] border border-white/[0.06] p-7">
-        {/* Subtle glow — single, intentional */}
-        <div className="pointer-events-none absolute -top-16 -left-8 h-56 w-72 rounded-full bg-indigo-600/10 blur-3xl" />
+      <div className="relative overflow-hidden rounded-2xl bg-[#111114] border border-white/[0.06] p-8">
+        {/* Glow orbs */}
+        <div className="pointer-events-none absolute -top-16 -left-8 h-64 w-80 rounded-full bg-indigo-600/[0.12] blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-12 right-0 h-48 w-64 rounded-full bg-violet-600/[0.08] blur-3xl" />
+        {/* Dot grid overlay */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.025]"
+          style={{
+            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+          aria-hidden="true"
+        />
         <div className="relative flex items-end justify-between">
           <div>
-            <p className="text-xs font-medium text-zinc-500">Net Worth</p>
-            <p className="mt-2 bg-gradient-to-r from-white to-zinc-300 bg-clip-text text-5xl font-semibold tracking-tight text-transparent tabular-nums">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="text-xs font-medium uppercase tracking-widest text-zinc-600">Net Worth</span>
+            </div>
+            <p className="bg-gradient-to-r from-white via-zinc-100 to-zinc-400 bg-clip-text text-5xl font-bold tracking-tight text-transparent tabular-nums">
               {fmt(netWorth)}
             </p>
-            <p className="mt-2 text-xs text-zinc-500">
+            <p className="mt-2.5 text-xs text-zinc-600">
               Across {accounts.length} linked {accounts.length === 1 ? 'account' : 'accounts'}
             </p>
           </div>
-          <div className="hidden sm:flex flex-col items-end gap-1 pb-1">
-            <span className="text-xs font-medium text-zinc-500">This month</span>
-            <span className={['text-sm font-semibold tabular-nums', netCash >= 0 ? 'text-emerald-400' : 'text-rose-400'].join(' ')}>
+          <div className="hidden sm:flex flex-col items-end gap-2 pb-1">
+            <span className="text-xs font-medium text-zinc-600">This month</span>
+            <div className={[
+              'flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-semibold tabular-nums',
+              netCash >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400',
+            ].join(' ')}>
+              <span>{netCash >= 0 ? '↑' : '↓'}</span>
               {netCash >= 0 ? '+' : ''}{fmt(netCash)}
-            </span>
+            </div>
           </div>
         </div>
       </div>
@@ -405,8 +439,9 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
                         <div className="flex items-center gap-2 min-w-0">
                           <RingGauge pct={pct} color={ringColor} size={30} />
                           <div className="min-w-0">
-                            <p className="truncate text-xs font-medium text-zinc-200">
-                              {categoryEmoji[b.category] ?? '📦'} {b.category}
+                            <p className="flex items-center gap-1.5 truncate text-xs font-medium text-zinc-200">
+                              <CategoryIcon category={b.category} size={12} className="shrink-0 text-zinc-500" />
+                              {b.category}
                             </p>
                             {over && <span className="text-xs font-medium text-rose-400">Over budget</span>}
                             {warn && !over && <span className="text-xs font-medium text-amber-400">Almost there</span>}
@@ -495,7 +530,7 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
                   <div key={cat}>
                     <div className="mb-1.5 flex items-center justify-between">
                       <span className="flex items-center gap-2 text-xs text-zinc-400">
-                        <span>{categoryEmoji[cat] ?? '📦'}</span>
+                        <span className="shrink-0" style={{ color: color }}><CategoryIcon category={cat} size={13} /></span>
                         {cat}
                       </span>
                       <span className="text-xs font-semibold tabular-nums text-zinc-200">{fmtCompact(amount)}</span>
@@ -526,8 +561,16 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={tx.logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
                   ) : (
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-sm">
-                      {categoryEmoji[tx.category ?? ''] ?? '📦'}
+                    <div
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                      style={{ backgroundColor: `${categoryColor[tx.category ?? ''] ?? '#71717a'}18` }}
+                    >
+                      <CategoryIcon
+                        category={tx.category ?? 'Other'}
+                        size={15}
+                        className="opacity-80"
+                        color={categoryColor[tx.category ?? ''] ?? '#71717a'}
+                      />
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
@@ -564,16 +607,19 @@ function StatCard({
   const isNegative = trend !== null && (trendInvert ? trend > 0 : trend < 0);
 
   return (
-    <div className="rounded-xl bg-[#111114] border border-white/[0.06] p-5">
-      <p className="text-xs font-medium text-zinc-500">{label}</p>
-      <p className={['mt-2 text-3xl font-semibold tracking-tight tabular-nums', valueColor].join(' ')}>{value}</p>
-      <div className="mt-1.5 flex items-center gap-1.5">
+    <div className="relative overflow-hidden rounded-xl bg-[#111114] border border-white/[0.06] p-5">
+      <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">{label}</p>
+      <p className={['mt-2.5 text-3xl font-bold tracking-tight tabular-nums', valueColor].join(' ')}>{value}</p>
+      <div className="mt-2 flex items-center gap-1.5">
         {trend !== null && (
-          <span className={['text-xs font-medium rounded-md px-1 py-0.5', isPositive ? 'bg-emerald-500/10 text-emerald-400' : isNegative ? 'bg-rose-500/10 text-rose-400' : 'text-zinc-500'].join(' ')}>
+          <span className={[
+            'text-xs font-semibold rounded-lg px-1.5 py-0.5',
+            isPositive ? 'bg-emerald-500/10 text-emerald-400' : isNegative ? 'bg-rose-500/10 text-rose-400' : 'text-zinc-500',
+          ].join(' ')}>
             {isPositive ? '↓' : '↑'} {Math.abs(trend).toFixed(0)}%
           </span>
         )}
-        <p className="text-xs text-zinc-500">{sub}</p>
+        <p className="text-xs text-zinc-600">{sub}</p>
       </div>
     </div>
   );

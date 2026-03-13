@@ -326,7 +326,7 @@ export default function BudgetClient() {
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-zinc-100 text-3xl font-semibold tracking-tight">Budget</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-100">Budget</h1>
           <p className="mt-0.5 text-sm text-zinc-500">
             Track spending, subscriptions, and savings goals
           </p>
@@ -449,16 +449,16 @@ export default function BudgetClient() {
           </div>
 
           {/* Tabs */}
-          <div className="flex items-center gap-1 border-b border-white/[0.06]">
+          <div className="flex items-center gap-1 rounded-xl bg-white/[0.04] p-1 border border-white/[0.06]">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={[
-                  'px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px',
+                  'flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-150',
                   activeTab === tab.id
-                    ? 'border-indigo-500 text-indigo-400'
-                    : 'border-transparent text-zinc-500 hover:text-zinc-300',
+                    ? 'bg-[#1c1c1f] text-zinc-100 shadow-sm'
+                    : 'text-zinc-500 hover:text-zinc-300',
                 ].join(' ')}
               >
                 {tab.label}

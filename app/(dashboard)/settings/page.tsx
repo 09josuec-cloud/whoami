@@ -2,14 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { Button } from '@/src/components/ui/button';
-import { Input } from '@/src/components/ui/input';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/src/components/ui/card';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -28,7 +20,63 @@ type CalendarStatus = { connected: boolean; lastSynced?: string | null } | null;
 type PlaidAccounts = { accounts: unknown[] } | null;
 
 // ---------------------------------------------------------------------------
-// BackupCodesModal (unchanged from original)
+// Shared inline style helpers
+// ---------------------------------------------------------------------------
+
+const inputCls =
+  'w-full rounded-xl bg-white/[0.06] border border-white/[0.08] px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+
+const btnPrimary =
+  'inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+
+const btnSecondary =
+  'inline-flex items-center justify-center gap-2 bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+
+const btnDanger =
+  'inline-flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+
+const btnSmPrimary =
+  'inline-flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+
+const btnSmSecondary =
+  'inline-flex items-center justify-center gap-1.5 bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 rounded-lg px-3 py-2 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+
+const btnSmDanger =
+  'inline-flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg px-3 py-2 text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+
+const cardCls = 'rounded-xl bg-[#111114] border border-white/[0.06] p-5';
+
+function Spinner() {
+  return (
+    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent opacity-70" />
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Inline label + input combo
+// ---------------------------------------------------------------------------
+
+interface FieldProps {
+  label: string;
+  error?: string;
+  children: React.ReactNode;
+}
+function Field({ label, error, children }: FieldProps) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-xs font-medium text-zinc-400">{label}</label>
+      {children}
+      {error && (
+        <p className="text-xs text-red-400" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// BackupCodesModal
 // ---------------------------------------------------------------------------
 
 interface BackupCodesModalProps {
@@ -38,16 +86,32 @@ interface BackupCodesModalProps {
 
 function BackupCodesModal({ codes, onClose }: BackupCodesModalProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-xl bg-[#111114] border border-white/[0.06] p-6 shadow-sm shadow-black/20">
-        <h3 className="text-lg font-semibold text-zinc-100">
-          Save your backup codes
-        </h3>
-        <p className="mt-1 text-sm text-zinc-400">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-xl bg-[#111114] border border-white/[0.06] p-6 shadow-xl shadow-black/40">
+        <div className="mb-1 flex items-center gap-2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 text-indigo-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+            />
+          </svg>
+          <h3 className="text-base font-semibold text-zinc-100">
+            Save your backup codes
+          </h3>
+        </div>
+        <p className="mb-4 text-sm text-zinc-400">
           Store these in a safe place. Each code can only be used once.
         </p>
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {codes.map((code) => (
             <div
               key={code}
@@ -59,19 +123,23 @@ function BackupCodesModal({ codes, onClose }: BackupCodesModalProps) {
         </div>
 
         <div className="mt-6 flex gap-3">
-          <Button
-            variant="secondary"
-            className="flex-1"
+          <button
+            type="button"
+            className={btnSecondary + ' flex-1'}
             onClick={() => {
               const text = codes.join('\n');
               void navigator.clipboard.writeText(text);
             }}
           >
             Copy all
-          </Button>
-          <Button className="flex-1" onClick={onClose}>
+          </button>
+          <button
+            type="button"
+            className={btnPrimary + ' flex-1'}
+            onClick={onClose}
+          >
             I&apos;ve saved them
-          </Button>
+          </button>
         </div>
       </div>
     </div>
@@ -79,15 +147,55 @@ function BackupCodesModal({ codes, onClose }: BackupCodesModalProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Tab bar
+// Tab icons
 // ---------------------------------------------------------------------------
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'general', label: 'General' },
-  { id: 'security', label: 'Security' },
-  { id: 'journal', label: 'Journal' },
-  { id: 'calendar', label: 'Calendar' },
-  { id: 'connections', label: 'Connections' },
+function IconUser() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+    </svg>
+  );
+}
+
+function IconShield() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+    </svg>
+  );
+}
+
+function IconBook() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+    </svg>
+  );
+}
+
+function IconCalendar() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+    </svg>
+  );
+}
+
+function IconLink() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+    </svg>
+  );
+}
+
+const TAB_META: { id: Tab; label: string; icon: React.ReactNode }[] = [
+  { id: 'general', label: 'General', icon: <IconUser /> },
+  { id: 'security', label: 'Security', icon: <IconShield /> },
+  { id: 'journal', label: 'Journal', icon: <IconBook /> },
+  { id: 'calendar', label: 'Calendar', icon: <IconCalendar /> },
+  { id: 'connections', label: 'Connections', icon: <IconLink /> },
 ];
 
 // ---------------------------------------------------------------------------
@@ -111,17 +219,17 @@ function GeneralTab({ email, name, createdAt }: GeneralTabProps) {
     : '—';
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Account</CardTitle>
-        <CardDescription>Your account information.</CardDescription>
-      </CardHeader>
+    <div className={cardCls}>
+      <div className="mb-4">
+        <p className="text-sm font-semibold text-zinc-100">Account</p>
+        <p className="text-xs text-zinc-500">Your account information.</p>
+      </div>
 
       <div className="flex items-center gap-5">
-        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-indigo-600 text-2xl font-semibold text-white">
+        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-2xl font-semibold text-white shadow-lg shadow-indigo-500/20">
           {initial}
         </div>
-        <div className="space-y-2">
+        <div className="space-y-3">
           {name && (
             <div>
               <p className="text-base font-medium text-zinc-100">{name}</p>
@@ -134,16 +242,16 @@ function GeneralTab({ email, name, createdAt }: GeneralTabProps) {
           </div>
           <div>
             <p className="text-sm text-zinc-300">{connectedSince}</p>
-            <p className="text-xs text-zinc-500">Connected since</p>
+            <p className="text-xs text-zinc-500">Member since</p>
           </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// SecurityTab (2FA — identical logic from original settings page)
+// SecurityTab
 // ---------------------------------------------------------------------------
 
 function SecurityTab() {
@@ -280,13 +388,11 @@ function SecurityTab() {
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Two-Factor Authentication</CardTitle>
-          <CardDescription>
-            Add an extra layer of security to your account.
-          </CardDescription>
-        </CardHeader>
+      <div className={cardCls}>
+        <div className="mb-5">
+          <p className="text-sm font-semibold text-zinc-100">Two-Factor Authentication</p>
+          <p className="text-xs text-zinc-500">Add an extra layer of security to your account.</p>
+        </div>
 
         {twoFactorEnabled ? (
           <div className="space-y-4">
@@ -303,16 +409,16 @@ function SecurityTab() {
             </div>
 
             {!showDisable ? (
-              <Button
-                variant="danger"
-                size="sm"
+              <button
+                type="button"
+                className={btnDanger}
                 onClick={() => setShowDisable(true)}
               >
                 Disable two-factor authentication
-              </Button>
+              </button>
             ) : (
-              <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-4">
-                <p className="mb-3 text-sm text-red-400">
+              <div className="rounded-xl border border-red-500/20 bg-red-500/[0.04] p-4">
+                <p className="mb-4 text-sm text-red-400">
                   Enter your current 6-digit code to disable 2FA.
                 </p>
                 <form
@@ -320,25 +426,25 @@ function SecurityTab() {
                   noValidate
                   className="flex flex-col gap-3"
                 >
-                  <Input
-                    label="Verification code"
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    placeholder="000000"
-                    maxLength={6}
-                    value={disableCode}
-                    onChange={(e) =>
-                      setDisableCode(e.target.value.replace(/\D/g, ''))
-                    }
-                    error={disableError}
-                    disabled={disableLoading}
-                  />
+                  <Field label="Verification code" error={disableError}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      placeholder="000000"
+                      maxLength={6}
+                      value={disableCode}
+                      onChange={(e) =>
+                        setDisableCode(e.target.value.replace(/\D/g, ''))
+                      }
+                      disabled={disableLoading}
+                      className={inputCls}
+                    />
+                  </Field>
                   <div className="flex gap-2">
-                    <Button
+                    <button
                       type="button"
-                      variant="ghost"
-                      size="sm"
+                      className={btnSmSecondary}
                       onClick={() => {
                         setShowDisable(false);
                         setDisableCode('');
@@ -346,16 +452,15 @@ function SecurityTab() {
                       }}
                     >
                       Cancel
-                    </Button>
-                    <Button
+                    </button>
+                    <button
                       type="submit"
-                      variant="danger"
-                      size="sm"
-                      loading={disableLoading}
-                      disabled={disableCode.length !== 6}
+                      className={btnSmDanger}
+                      disabled={disableLoading || disableCode.length !== 6}
                     >
+                      {disableLoading && <Spinner />}
                       Confirm disable
-                    </Button>
+                    </button>
                   </div>
                 </form>
               </div>
@@ -369,13 +474,15 @@ function SecurityTab() {
                   Use an authenticator app like Google Authenticator, Authy, or
                   1Password to generate time-based codes.
                 </p>
-                <Button
+                <button
+                  type="button"
+                  className={btnPrimary}
                   onClick={handleSetup2FA}
-                  loading={setupLoading}
                   disabled={setupLoading}
                 >
+                  {setupLoading && <Spinner />}
                   Enable two-factor authentication
-                </Button>
+                </button>
                 {enableError && !setupData && (
                   <p className="mt-2 text-sm text-red-400">{enableError}</p>
                 )}
@@ -406,7 +513,7 @@ function SecurityTab() {
                     <summary className="cursor-pointer text-xs text-zinc-500 hover:text-zinc-400">
                       Can&apos;t scan? Show secret key
                     </summary>
-                    <p className="mt-1 rounded border border-white/[0.06] bg-white/[0.04] px-3 py-2 font-mono text-xs tracking-widest text-zinc-300">
+                    <p className="mt-1 rounded-lg border border-white/[0.06] bg-white/[0.04] px-3 py-2 font-mono text-xs tracking-widest text-zinc-300">
                       {setupData.secret}
                     </p>
                   </details>
@@ -427,25 +534,25 @@ function SecurityTab() {
                     noValidate
                     className="flex flex-col gap-3"
                   >
-                    <Input
-                      label="Verification code"
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      placeholder="000000"
-                      maxLength={6}
-                      value={enableCode}
-                      onChange={(e) =>
-                        setEnableCode(e.target.value.replace(/\D/g, ''))
-                      }
-                      error={enableError}
-                      disabled={enableLoading}
-                    />
+                    <Field label="Verification code" error={enableError}>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        placeholder="000000"
+                        maxLength={6}
+                        value={enableCode}
+                        onChange={(e) =>
+                          setEnableCode(e.target.value.replace(/\D/g, ''))
+                        }
+                        disabled={enableLoading}
+                        className={inputCls}
+                      />
+                    </Field>
                     <div className="flex gap-2">
-                      <Button
+                      <button
                         type="button"
-                        variant="ghost"
-                        size="sm"
+                        className={btnSmSecondary}
                         onClick={() => {
                           setSetupData(null);
                           setEnableCode('');
@@ -453,14 +560,15 @@ function SecurityTab() {
                         }}
                       >
                         Cancel
-                      </Button>
-                      <Button
+                      </button>
+                      <button
                         type="submit"
-                        loading={enableLoading}
-                        disabled={enableCode.length !== 6}
+                        className={btnSmPrimary}
+                        disabled={enableLoading || enableCode.length !== 6}
                       >
+                        {enableLoading && <Spinner />}
                         Enable 2FA
-                      </Button>
+                      </button>
                     </div>
                   </form>
                 </div>
@@ -468,7 +576,7 @@ function SecurityTab() {
             )}
           </div>
         )}
-      </Card>
+      </div>
 
       {backupCodes && (
         <BackupCodesModal
@@ -632,13 +740,13 @@ function JournalTab() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Journal PIN</CardTitle>
-        <CardDescription>
+    <div className={cardCls}>
+      <div className="mb-5">
+        <p className="text-sm font-semibold text-zinc-100">Journal PIN</p>
+        <p className="text-xs text-zinc-500">
           Protect your journal entries with a numeric PIN.
-        </CardDescription>
-      </CardHeader>
+        </p>
+      </div>
 
       {!hasPin ? (
         /* No PIN set */
@@ -648,50 +756,56 @@ function JournalTab() {
               <p className="text-sm text-zinc-400">
                 No PIN set. You can lock journal entries with a PIN.
               </p>
-              <Button size="sm" onClick={() => setMode('set')}>
+              <button
+                type="button"
+                className={btnSmPrimary}
+                onClick={() => setMode('set')}
+              >
                 Set PIN
-              </Button>
+              </button>
             </div>
           ) : (
             <form onSubmit={handleSetPin} noValidate className="space-y-4">
-              <Input
-                label="New PIN (4–6 digits)"
-                type="password"
-                inputMode="numeric"
-                placeholder="••••"
-                maxLength={6}
-                value={newPin}
-                onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
-                disabled={setPinLoading}
-              />
-              <Input
-                label="Confirm PIN"
-                type="password"
-                inputMode="numeric"
-                placeholder="••••"
-                maxLength={6}
-                value={confirmPin}
-                onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
-                error={setPinError}
-                disabled={setPinLoading}
-              />
+              <Field label="New PIN (4–6 digits)">
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  placeholder="••••"
+                  maxLength={6}
+                  value={newPin}
+                  onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
+                  disabled={setPinLoading}
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="Confirm PIN" error={setPinError}>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  placeholder="••••"
+                  maxLength={6}
+                  value={confirmPin}
+                  onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
+                  disabled={setPinLoading}
+                  className={inputCls}
+                />
+              </Field>
               <div className="flex gap-2">
-                <Button
+                <button
                   type="button"
-                  variant="ghost"
-                  size="sm"
+                  className={btnSmSecondary}
                   onClick={resetForms}
                 >
                   Cancel
-                </Button>
-                <Button
+                </button>
+                <button
                   type="submit"
-                  size="sm"
-                  loading={setPinLoading}
-                  disabled={newPin.length < 4 || confirmPin.length < 4}
+                  className={btnSmPrimary}
+                  disabled={setPinLoading || newPin.length < 4 || confirmPin.length < 4}
                 >
+                  {setPinLoading && <Spinner />}
                   Save PIN
-                </Button>
+                </button>
               </div>
             </form>
           )}
@@ -713,12 +827,20 @@ function JournalTab() {
 
           {mode === 'idle' && (
             <div className="flex gap-2">
-              <Button size="sm" variant="secondary" onClick={() => setMode('change')}>
+              <button
+                type="button"
+                className={btnSmSecondary}
+                onClick={() => setMode('change')}
+              >
                 Change PIN
-              </Button>
-              <Button size="sm" variant="danger" onClick={() => setMode('remove')}>
+              </button>
+              <button
+                type="button"
+                className={btnSmDanger}
+                onClick={() => setMode('remove')}
+              >
                 Remove PIN
-              </Button>
+              </button>
             </div>
           )}
 
@@ -726,67 +848,72 @@ function JournalTab() {
             <form
               onSubmit={handleChangePin}
               noValidate
-              className="space-y-4 rounded-lg border border-white/[0.06] bg-white/[0.04] p-4"
+              className="space-y-4 rounded-xl border border-white/[0.06] bg-white/[0.03] p-4"
             >
-              <p className="text-sm font-medium text-zinc-200">Change PIN</p>
-              <Input
-                label="Current PIN"
-                type="password"
-                inputMode="numeric"
-                placeholder="••••"
-                maxLength={6}
-                value={currentPinChange}
-                onChange={(e) =>
-                  setCurrentPinChange(e.target.value.replace(/\D/g, ''))
-                }
-                disabled={changePinLoading}
-              />
-              <Input
-                label="New PIN (4–6 digits)"
-                type="password"
-                inputMode="numeric"
-                placeholder="••••"
-                maxLength={6}
-                value={changedPin}
-                onChange={(e) =>
-                  setChangedPin(e.target.value.replace(/\D/g, ''))
-                }
-                disabled={changePinLoading}
-              />
-              <Input
-                label="Confirm new PIN"
-                type="password"
-                inputMode="numeric"
-                placeholder="••••"
-                maxLength={6}
-                value={confirmChangedPin}
-                onChange={(e) =>
-                  setConfirmChangedPin(e.target.value.replace(/\D/g, ''))
-                }
-                error={changePinError}
-                disabled={changePinLoading}
-              />
+              <p className="text-sm font-semibold text-zinc-100">Change PIN</p>
+              <Field label="Current PIN">
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  placeholder="••••"
+                  maxLength={6}
+                  value={currentPinChange}
+                  onChange={(e) =>
+                    setCurrentPinChange(e.target.value.replace(/\D/g, ''))
+                  }
+                  disabled={changePinLoading}
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="New PIN (4–6 digits)">
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  placeholder="••••"
+                  maxLength={6}
+                  value={changedPin}
+                  onChange={(e) =>
+                    setChangedPin(e.target.value.replace(/\D/g, ''))
+                  }
+                  disabled={changePinLoading}
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="Confirm new PIN" error={changePinError}>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  placeholder="••••"
+                  maxLength={6}
+                  value={confirmChangedPin}
+                  onChange={(e) =>
+                    setConfirmChangedPin(e.target.value.replace(/\D/g, ''))
+                  }
+                  disabled={changePinLoading}
+                  className={inputCls}
+                />
+              </Field>
               <div className="flex gap-2">
-                <Button
+                <button
                   type="button"
-                  variant="ghost"
-                  size="sm"
+                  className={btnSmSecondary}
                   onClick={resetForms}
                 >
                   Cancel
-                </Button>
-                <Button
+                </button>
+                <button
                   type="submit"
-                  size="sm"
-                  loading={changePinLoading}
+                  className={btnSmPrimary}
                   disabled={
+                    changePinLoading ||
                     currentPinChange.length < 4 ||
                     changedPin.length < 4 ||
                     confirmChangedPin.length < 4
                   }
                 >
+                  {changePinLoading && <Spinner />}
                   Update PIN
-                </Button>
+                </button>
               </div>
             </form>
           )}
@@ -795,49 +922,48 @@ function JournalTab() {
             <form
               onSubmit={handleRemovePin}
               noValidate
-              className="space-y-4 rounded-lg border border-red-500/20 bg-red-500/5 p-4"
+              className="space-y-4 rounded-xl border border-red-500/20 bg-red-500/[0.04] p-4"
             >
               <p className="text-sm text-red-400">
                 Enter your current PIN to remove it. All locked entries will be
                 unlocked.
               </p>
-              <Input
-                label="Current PIN"
-                type="password"
-                inputMode="numeric"
-                placeholder="••••"
-                maxLength={6}
-                value={currentPinRemove}
-                onChange={(e) =>
-                  setCurrentPinRemove(e.target.value.replace(/\D/g, ''))
-                }
-                error={removePinError}
-                disabled={removePinLoading}
-              />
+              <Field label="Current PIN" error={removePinError}>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  placeholder="••••"
+                  maxLength={6}
+                  value={currentPinRemove}
+                  onChange={(e) =>
+                    setCurrentPinRemove(e.target.value.replace(/\D/g, ''))
+                  }
+                  disabled={removePinLoading}
+                  className={inputCls}
+                />
+              </Field>
               <div className="flex gap-2">
-                <Button
+                <button
                   type="button"
-                  variant="ghost"
-                  size="sm"
+                  className={btnSmSecondary}
                   onClick={resetForms}
                 >
                   Cancel
-                </Button>
-                <Button
+                </button>
+                <button
                   type="submit"
-                  variant="danger"
-                  size="sm"
-                  loading={removePinLoading}
-                  disabled={currentPinRemove.length < 4}
+                  className={btnSmDanger}
+                  disabled={removePinLoading || currentPinRemove.length < 4}
                 >
+                  {removePinLoading && <Spinner />}
                   Remove PIN
-                </Button>
+                </button>
               </div>
             </form>
           )}
         </div>
       )}
-    </Card>
+    </div>
   );
 }
 
@@ -981,24 +1107,32 @@ function CalendarTab() {
       : 'Never';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Google Calendar */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Google Calendar</CardTitle>
-          <CardDescription>
+      <div className={cardCls}>
+        <div className="mb-5">
+          <p className="text-sm font-semibold text-zinc-100">Google Calendar</p>
+          <p className="text-xs text-zinc-500">
             Sync your Google Calendar events into Whoami.
-          </CardDescription>
-        </CardHeader>
+          </p>
+        </div>
 
         {calendarError && (
-          <p className="mb-4 text-sm text-red-400">{calendarError}</p>
+          <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/[0.08] px-4 py-3 text-sm text-red-400">
+            {calendarError}
+          </div>
         )}
 
         {!status?.connected ? (
-          <Button onClick={handleConnect} loading={connectLoading}>
+          <button
+            type="button"
+            className={btnPrimary}
+            onClick={handleConnect}
+            disabled={connectLoading}
+          >
+            {connectLoading && <Spinner />}
             Connect Google Calendar
-          </Button>
+          </button>
         ) : (
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-3">
@@ -1013,37 +1147,46 @@ function CalendarTab() {
               </p>
             </div>
             {syncSuccess && (
-              <p className="text-sm text-green-400">{syncSuccess}</p>
+              <div className="rounded-xl border border-green-500/20 bg-green-500/[0.08] px-4 py-3 text-sm text-green-400">
+                {syncSuccess}
+              </div>
             )}
             <div className="flex gap-2">
-              <Button size="sm" onClick={handleSync} loading={syncLoading}>
-                Sync Now
-              </Button>
-              <Button
-                size="sm"
-                variant="danger"
-                onClick={handleDisconnect}
-                loading={disconnectLoading}
+              <button
+                type="button"
+                className={btnSmPrimary}
+                onClick={handleSync}
+                disabled={syncLoading}
               >
+                {syncLoading && <Spinner />}
+                Sync Now
+              </button>
+              <button
+                type="button"
+                className={btnSmDanger}
+                onClick={handleDisconnect}
+                disabled={disconnectLoading}
+              >
+                {disconnectLoading && <Spinner />}
                 Disconnect
-              </Button>
+              </button>
             </div>
           </div>
         )}
-      </Card>
+      </div>
 
       {/* iCal Import */}
-      <Card>
-        <CardHeader>
-          <CardTitle>iCal Import</CardTitle>
-          <CardDescription>
+      <div className={cardCls}>
+        <div className="mb-5">
+          <p className="text-sm font-semibold text-zinc-100">iCal Import</p>
+          <p className="text-xs text-zinc-500">
             Import events from an .ics file exported from any calendar app.
-          </CardDescription>
-        </CardHeader>
+          </p>
+        </div>
 
         <form onSubmit={handleIcsImport} className="space-y-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-zinc-300">
+            <label className="text-xs font-medium text-zinc-400">
               Select .ics file
             </label>
             <input
@@ -1057,9 +1200,9 @@ function CalendarTab() {
                 setIcsSuccess('');
               }}
               className={[
-                'w-full rounded-lg border border-white/[0.06] bg-white/[0.04] px-3 py-2 text-sm text-zinc-300',
-                'file:mr-3 file:rounded file:border-0 file:bg-indigo-600 file:px-3 file:py-1 file:text-xs file:font-medium file:text-white',
-                'hover:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-indigo-500',
+                'w-full rounded-xl border border-white/[0.08] bg-white/[0.06] px-3 py-2.5 text-sm text-zinc-300 outline-none',
+                'file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-3 file:py-1 file:text-xs file:font-semibold file:text-white',
+                'hover:border-white/[0.12] focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/40 transition-colors',
                 'disabled:cursor-not-allowed disabled:opacity-50',
               ].join(' ')}
             />
@@ -1069,19 +1212,21 @@ function CalendarTab() {
               </p>
             )}
             {icsSuccess && (
-              <p className="text-xs text-green-400">{icsSuccess}</p>
+              <div className="rounded-xl border border-green-500/20 bg-green-500/[0.08] px-4 py-3 text-sm text-green-400">
+                {icsSuccess}
+              </div>
             )}
           </div>
-          <Button
+          <button
             type="submit"
-            size="sm"
-            loading={icsLoading}
-            disabled={!icsFile}
+            className={btnSmPrimary}
+            disabled={icsLoading || !icsFile}
           >
+            {icsLoading && <Spinner />}
             Import
-          </Button>
+          </button>
         </form>
-      </Card>
+      </div>
     </div>
   );
 }
@@ -1172,23 +1317,24 @@ function ConnectionsTab() {
   const plaidCount = plaidAccounts?.accounts.length ?? 0;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Connected Services</CardTitle>
-        <CardDescription>
+    <div className={cardCls}>
+      <div className="mb-5">
+        <p className="text-sm font-semibold text-zinc-100">Connected Services</p>
+        <p className="text-xs text-zinc-500">
           Manage the external services connected to your Whoami account.
-        </CardDescription>
-      </CardHeader>
+        </p>
+      </div>
 
       {connectionsError && (
-        <p className="mb-4 text-sm text-red-400">{connectionsError}</p>
+        <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/[0.08] px-4 py-3 text-sm text-red-400">
+          {connectionsError}
+        </div>
       )}
 
       <div className="divide-y divide-white/[0.06]">
         {/* Google Calendar row */}
         <div className="flex items-center justify-between py-4 first:pt-0 last:pb-0">
           <div className="flex items-center gap-3">
-            {/* Google icon */}
             <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.04] text-base font-bold text-white">
               G
             </div>
@@ -1204,7 +1350,13 @@ function ConnectionsTab() {
                   </div>
                   {calStatus.lastSynced && (
                     <span className="text-xs text-zinc-500">
-                      Last synced {new Date(calStatus.lastSynced).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      Last synced{' '}
+                      {new Date(calStatus.lastSynced).toLocaleString([], {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
                     </span>
                   )}
                 </div>
@@ -1218,18 +1370,25 @@ function ConnectionsTab() {
           </div>
           <div>
             {calStatus?.connected ? (
-              <Button
-                size="sm"
-                variant="danger"
+              <button
+                type="button"
+                className={btnSmDanger}
                 onClick={handleCalDisconnect}
-                loading={disconnectLoading}
+                disabled={disconnectLoading}
               >
+                {disconnectLoading && <Spinner />}
                 Disconnect
-              </Button>
+              </button>
             ) : (
-              <Button size="sm" onClick={handleCalConnect} loading={connectLoading}>
+              <button
+                type="button"
+                className={btnSmPrimary}
+                onClick={handleCalConnect}
+                disabled={connectLoading}
+              >
+                {connectLoading && <Spinner />}
                 Connect
-              </Button>
+              </button>
             )}
           </div>
         </div>
@@ -1237,7 +1396,6 @@ function ConnectionsTab() {
         {/* Plaid / Bank row */}
         <div className="flex items-center justify-between py-4 first:pt-0 last:pb-0">
           <div className="flex items-center gap-3">
-            {/* Bank icon */}
             <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.04]">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -1280,7 +1438,7 @@ function ConnectionsTab() {
           </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -1329,27 +1487,30 @@ export default function SettingsPage() {
       {/* Page heading */}
       <div className="relative overflow-hidden">
         <div className="pointer-events-none absolute -top-8 right-0 h-32 w-64 rounded-full bg-indigo-600/10 blur-3xl" />
-        <h1 className="bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent text-3xl font-bold tracking-tight">Settings</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-100">
+          Settings
+        </h1>
         <p className="mt-1 text-sm text-zinc-400">
           Manage your account, security, and integrations.
         </p>
       </div>
 
-      {/* Tab bar */}
-      <div className="flex gap-1 border-b border-white/[0.06]">
-        {TABS.map((tab) => (
+      {/* Tab bar — underline style */}
+      <div className="flex gap-0.5 border-b border-white/[0.06]">
+        {TAB_META.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
             className={[
-              'px-4 py-2.5 text-sm font-medium transition-colors duration-150',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950',
+              'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors duration-150',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090b]',
               activeTab === tab.id
-                ? 'border-b-2 border-indigo-500 text-indigo-400'
+                ? 'border-b-2 border-indigo-500 text-indigo-400 -mb-px'
                 : 'border-b-2 border-transparent text-zinc-500 hover:text-zinc-300',
             ].join(' ')}
           >
+            {tab.icon}
             {tab.label}
           </button>
         ))}

@@ -184,13 +184,16 @@ export default function JournalClient() {
       {/* Left panel */}
       <div className="flex w-72 shrink-0 flex-col border-r border-white/[0.06] bg-[#0e0e12]">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
-          <h2 className="text-sm font-semibold text-zinc-100">Journal</h2>
+        <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3.5">
+          <h2 className="text-sm font-bold tracking-tight text-zinc-100">Journal</h2>
           <button
             onClick={() => void handleNewEntry()}
-            className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 transition-colors"
+            className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 transition-colors"
           >
-            + New
+            <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            New
           </button>
         </div>
 

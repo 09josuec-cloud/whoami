@@ -76,12 +76,12 @@ interface StatCardProps {
 
 function StatCard({ icon, label, value, sub, accent = 'text-zinc-100' }: StatCardProps) {
   return (
-    <div className="rounded-xl bg-[#111114] border border-white/[0.06] p-5 flex flex-col gap-2">
-      <div className="flex items-center gap-2 text-zinc-500">
-        <span className="flex h-4 w-4 items-center justify-center">{icon}</span>
-        <span className="text-xs font-medium">{label}</span>
+    <div className="rounded-xl bg-[#111114] border border-white/[0.06] p-5 flex flex-col gap-3">
+      <div className="flex items-center gap-2">
+        <span className={`flex h-7 w-7 items-center justify-center rounded-lg bg-white/[0.06] ${accent}`}>{icon}</span>
+        <span className="text-xs font-medium text-zinc-500">{label}</span>
       </div>
-      <p className={`text-2xl font-semibold tracking-tight tabular-nums ${accent}`}>{value}</p>
+      <p className={`text-2xl font-bold tracking-tight tabular-nums ${accent}`}>{value}</p>
       {sub && <p className="text-xs text-zinc-600">{sub}</p>}
     </div>
   );

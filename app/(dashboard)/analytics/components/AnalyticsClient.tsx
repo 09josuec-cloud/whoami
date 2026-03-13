@@ -267,7 +267,7 @@ export default function AnalyticsClient() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-100">Analytics</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-zinc-100">Analytics</h1>
         <p className="mt-1 text-sm text-zinc-500">
           Your personal life stats — spending, mood, journaling, and savings.
         </p>
