@@ -11,7 +11,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const nowUTC = new Date();
   const currentDay = nowUTC.getUTCDay();    // 0=Sun … 6=Sat
-  const currentHour = nowUTC.getUTCHours(); // 0–23
   const todayStr = nowUTC.toISOString().slice(0, 10);
 
   const users = await prisma.user.findMany({
@@ -28,11 +27,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const lastSentStr = user.lastDigestSentAt?.toISOString().slice(0, 10);
     if (lastSentStr === todayStr) continue;
 
-    // Check day + hour match
-    const [digestHourStr] = user.digestTime.split(':');
-    const digestHour = parseInt(digestHourStr, 10);
+    // Check day match (cron fires daily at 8AM UTC — only send on user's chosen day)
     if (currentDay !== user.digestDay) continue;
-    if (currentHour !== digestHour) continue;
 
     processed++;
     try {
