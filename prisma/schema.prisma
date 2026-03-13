@@ -45,6 +45,7 @@ model User {
   habits              Habit[]
   habitLogs           HabitLog[]
   healthMetrics       HealthMetric[]
+  netWorthSnapshots   NetWorthSnapshot[]
 
   @@map("users")
 }
@@ -356,6 +357,22 @@ model HealthMetric {
   @@unique([userId, date, type])
   @@index([userId, date])
   @@map("health_metrics")
+}
+
+model NetWorthSnapshot {
+  id          String   @id @default(cuid())
+  userId      String
+  date        String   // YYYY-MM-DD
+  netWorth    Float
+  assets      Float
+  liabilities Float
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+  @@map("net_worth_snapshots")
 }
 
 model CalendarConnection {

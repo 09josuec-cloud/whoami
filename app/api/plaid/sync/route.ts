@@ -158,9 +158,26 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // Generate notifications for all synced data
     const updatedAccounts = await prisma.bankAccount.findMany({
       where: { plaidItem: { userId: session.user.id } },
-      select: { id: true, currentBalance: true, availableBalance: true },
+      select: { id: true, type: true, currentBalance: true, availableBalance: true },
     });
     await generateSyncNotifications(session.user.id, allAddedTxs, updatedAccounts);
+
+    // Capture net worth snapshot for history chart
+    const LIABILITY_TYPES = ['credit', 'loan', 'mortgage'];
+    let snapAssets = 0;
+    let snapLiabilities = 0;
+    for (const a of updatedAccounts) {
+      const bal = a.currentBalance ?? 0;
+      if (LIABILITY_TYPES.includes(a.type)) snapLiabilities += bal;
+      else snapAssets += bal;
+    }
+    const now2 = new Date();
+    const dateStr = `${now2.getFullYear()}-${String(now2.getMonth() + 1).padStart(2, '0')}-${String(now2.getDate()).padStart(2, '0')}`;
+    await prisma.netWorthSnapshot.upsert({
+      where: { userId_date: { userId: session.user.id, date: dateStr } },
+      create: { userId: session.user.id, date: dateStr, netWorth: snapAssets - snapLiabilities, assets: snapAssets, liabilities: snapLiabilities },
+      update: { netWorth: snapAssets - snapLiabilities, assets: snapAssets, liabilities: snapLiabilities },
+    });
 
     return NextResponse.json({ synced: totalSynced });
   } catch {

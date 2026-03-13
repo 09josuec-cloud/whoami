@@ -8,10 +8,12 @@ import JournalFrequencyChart from './JournalFrequencyChart';
 import BudgetChart from './BudgetChart';
 import SavingsChart from './SavingsChart';
 import NetWorthCard from './NetWorthCard';
+import NetWorthHistoryChart from './NetWorthHistoryChart';
 import InsightsPanel from './InsightsPanel';
 import CashFlowChart from './CashFlowChart';
 import type { Insight } from './InsightsPanel';
 import type { CashFlowMonth } from './CashFlowChart';
+import type { NetWorthSnapshot } from './NetWorthHistoryChart';
 
 // ---- Types ----
 
@@ -111,6 +113,7 @@ interface AllData {
   savings: SavingsData;
   insights: Insight[];
   cashflow: CashFlowMonth[];
+  netWorthHistory: NetWorthSnapshot[];
 }
 
 // ---- Skeleton ----
@@ -168,6 +171,7 @@ export default function AnalyticsClient() {
           savingsRes,
           insightsRes,
           cashflowRes,
+          netWorthHistoryRes,
         ] = await Promise.all([
           fetch('/api/analytics/overview'),
           fetch('/api/analytics/spending'),
@@ -178,6 +182,7 @@ export default function AnalyticsClient() {
           fetch('/api/analytics/savings'),
           fetch('/api/analytics/insights'),
           fetch('/api/analytics/cashflow'),
+          fetch('/api/analytics/net-worth-history'),
         ]);
 
         const now = new Date();
@@ -220,6 +225,10 @@ export default function AnalyticsClient() {
           ? ((await cashflowRes.json()) as { data: CashFlowMonth[] })
           : { data: [] };
 
+        const netWorthHistoryData = netWorthHistoryRes.ok
+          ? ((await netWorthHistoryRes.json()) as { data: NetWorthSnapshot[] })
+          : { data: [] };
+
         setAllData({
           overview,
           spending,
@@ -230,6 +239,7 @@ export default function AnalyticsClient() {
           savings,
           insights: insightsData.insights,
           cashflow: cashflowData.data,
+          netWorthHistory: netWorthHistoryData.data,
         });
       } catch (err) {
         console.error('[Analytics] fetch error:', err);
@@ -262,7 +272,7 @@ export default function AnalyticsClient() {
 
   if (!allData) return null;
 
-  const { overview, spending, netWorth, mood, journal, budget, savings, insights, cashflow } = allData;
+  const { overview, spending, netWorth, mood, journal, budget, savings, insights, cashflow, netWorthHistory } = allData;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 pb-8">
@@ -302,6 +312,9 @@ export default function AnalyticsClient() {
           longestStreak={journal.longestStreak}
         />
       </div>
+
+      {/* Net Worth History */}
+      <NetWorthHistoryChart data={netWorthHistory} />
 
       {/* Budget + Savings + Net Worth */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">

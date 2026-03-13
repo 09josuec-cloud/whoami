@@ -3,6 +3,7 @@ import { auth } from "@/src/lib/auth";
 import { signOut } from "@/src/lib/auth";
 import SidebarNav from "./components/SidebarNav";
 import NotificationBell from "./components/NotificationBell";
+import GreetingHeader, { DateBadge } from "./components/GreetingHeader";
 
 export const metadata: Metadata = {
   title: {
@@ -11,20 +12,6 @@ export const metadata: Metadata = {
   },
 };
 
-function getGreeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
-
-function formatDate() {
-  return new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
-}
 
 async function SignOutButton() {
   return (
@@ -108,15 +95,10 @@ export default async function DashboardLayout({
         {/* Header */}
         <header className="h-14 shrink-0 flex items-center justify-between px-6 border-b border-white/[0.06] bg-[#09090b]/80 backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-zinc-400">
-              {getGreeting()},{" "}
-              <span className="text-zinc-100 font-semibold">{firstName}</span>
-            </span>
+            <GreetingHeader firstName={firstName} />
           </div>
           <div className="flex items-center gap-3">
-            <span className="hidden sm:block text-xs bg-white/[0.04] border border-white/[0.06] rounded-full px-3 py-1 text-zinc-500">
-              {formatDate()}
-            </span>
+            <DateBadge />
             <div className="h-4 w-px bg-white/[0.06]" aria-hidden="true" />
             <NotificationBell />
           </div>
