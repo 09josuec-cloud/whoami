@@ -74,12 +74,12 @@ export default function MonthGrid({ year, month, events, onDayClick, onEventClic
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       {/* Weekday header */}
-      <div className="grid grid-cols-7 bg-zinc-900/60 border-b border-zinc-800/60">
+      <div className="grid grid-cols-7 border-b border-white/[0.06]">
         {WEEKDAYS.map((day, i) => (
           <div
             key={day}
             className={[
-              'py-2.5 text-center text-[11px] font-semibold uppercase tracking-widest',
+              'py-2.5 text-center text-xs font-medium',
               i === 0 || i === 6 ? 'text-zinc-600' : 'text-zinc-500',
             ].join(' ')}
           >
@@ -104,14 +104,14 @@ export default function MonthGrid({ year, month, events, onDayClick, onEventClic
                 'group relative flex flex-col overflow-hidden border-b border-r transition-colors',
                 // Base background per cell type
                 isToday
-                  ? 'bg-indigo-950/30 border-zinc-800/40'
+                  ? 'bg-indigo-500/[0.06] border-white/[0.06]'
                   : isCurrent && isWeekend
-                  ? 'bg-zinc-900/20 border-zinc-800/30'
+                  ? 'bg-white/[0.01] border-white/[0.04]'
                   : isCurrent
-                  ? 'bg-transparent border-zinc-800/30'
-                  : 'bg-zinc-900/10 border-zinc-800/20',
+                  ? 'bg-transparent border-white/[0.04]'
+                  : 'bg-transparent border-white/[0.03]',
                 // Hover
-                isCurrent ? 'cursor-pointer hover:bg-zinc-800/40' : 'cursor-default',
+                isCurrent ? 'cursor-pointer hover:bg-white/[0.04]' : 'cursor-default',
               ].join(' ')}
             >
               {/* Today accent top line */}
@@ -128,7 +128,7 @@ export default function MonthGrid({ year, month, events, onDayClick, onEventClic
                     isToday
                       ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/40'
                       : isCurrent
-                      ? 'text-zinc-200 hover:bg-zinc-700/80'
+                      ? 'text-zinc-200 hover:bg-white/[0.08]'
                       : 'text-zinc-700 cursor-default',
                   ].join(' ')}
                 >
@@ -144,7 +144,7 @@ export default function MonthGrid({ year, month, events, onDayClick, onEventClic
                         key={event.id}
                         onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
                         className={[
-                          'w-full truncate rounded px-1.5 py-0.5 text-left text-[10px] font-medium leading-4 transition-opacity hover:opacity-90',
+                          'w-full truncate rounded px-1.5 py-0.5 text-left text-xs font-medium leading-4 transition-opacity hover:opacity-90',
                           pill,
                         ].join(' ')}
                         title={event.title}
@@ -161,7 +161,7 @@ export default function MonthGrid({ year, month, events, onDayClick, onEventClic
                   {dayEvents.length > 3 && (
                     <button
                       onClick={(e) => { e.stopPropagation(); onShowDayEvents(cell.dateStr); }}
-                      className="px-1.5 py-0.5 text-left text-[10px] font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+                      className="px-1.5 py-0.5 text-left text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
                     >
                       +{dayEvents.length - 3} more
                     </button>

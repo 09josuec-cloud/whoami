@@ -38,7 +38,7 @@ function CustomTooltip({ active, label, payload }: CustomTooltipProps) {
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
 
   return (
-    <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-3 shadow-xl text-sm">
+    <div className="rounded-lg border border-white/[0.06] bg-[#111114] p-3 shadow-sm shadow-black/20 text-sm">
       <p className="mb-2 font-medium text-zinc-100">{label}</p>
       <div className="space-y-1">
         <div className="flex items-center justify-between gap-4">
@@ -49,7 +49,7 @@ function CustomTooltip({ active, label, payload }: CustomTooltipProps) {
           <span className="text-red-400">Spending</span>
           <span className="font-semibold text-red-400">{fmt(spending)}</span>
         </div>
-        <div className="border-t border-zinc-700 pt-1 flex items-center justify-between gap-4">
+        <div className="border-t border-white/[0.06] pt-1 flex items-center justify-between gap-4">
           <span className="text-zinc-400">Net</span>
           <span className={['font-semibold', net >= 0 ? 'text-emerald-400' : 'text-red-400'].join(' ')}>
             {net >= 0 ? '+' : ''}{fmt(net)}

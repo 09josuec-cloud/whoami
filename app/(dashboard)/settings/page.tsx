@@ -39,7 +39,7 @@ interface BackupCodesModalProps {
 function BackupCodesModal({ codes, onClose }: BackupCodesModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl bg-[#0f0f12] p-6 shadow-2xl">
+      <div className="w-full max-w-md rounded-xl bg-[#111114] border border-white/[0.06] p-6 shadow-sm shadow-black/20">
         <h3 className="text-lg font-semibold text-zinc-100">
           Save your backup codes
         </h3>
@@ -51,7 +51,7 @@ function BackupCodesModal({ codes, onClose }: BackupCodesModalProps) {
           {codes.map((code) => (
             <div
               key={code}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-center font-mono text-sm tracking-widest text-zinc-200"
+              className="rounded-lg border border-white/[0.06] bg-white/[0.04] px-3 py-2 text-center font-mono text-sm tracking-widest text-zinc-200"
             >
               {code}
             </div>
@@ -392,7 +392,7 @@ function SecurityTab() {
                       Scan this QR code with your authenticator app
                     </p>
                   </div>
-                  <div className="inline-block rounded-xl border border-zinc-700 bg-zinc-800 p-3">
+                  <div className="inline-block rounded-xl border border-white/[0.06] bg-white/[0.04] p-3">
                     <Image
                       src={setupData.qrCode}
                       alt="2FA QR code"
@@ -406,7 +406,7 @@ function SecurityTab() {
                     <summary className="cursor-pointer text-xs text-zinc-500 hover:text-zinc-400">
                       Can&apos;t scan? Show secret key
                     </summary>
-                    <p className="mt-1 rounded border border-zinc-700 bg-zinc-800 px-3 py-2 font-mono text-xs tracking-widest text-zinc-300">
+                    <p className="mt-1 rounded border border-white/[0.06] bg-white/[0.04] px-3 py-2 font-mono text-xs tracking-widest text-zinc-300">
                       {setupData.secret}
                     </p>
                   </details>
@@ -726,7 +726,7 @@ function JournalTab() {
             <form
               onSubmit={handleChangePin}
               noValidate
-              className="space-y-4 rounded-lg border border-zinc-700/50 bg-zinc-800/30 p-4"
+              className="space-y-4 rounded-lg border border-white/[0.06] bg-white/[0.04] p-4"
             >
               <p className="text-sm font-medium text-zinc-200">Change PIN</p>
               <Input
@@ -1057,9 +1057,9 @@ function CalendarTab() {
                 setIcsSuccess('');
               }}
               className={[
-                'w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-300',
+                'w-full rounded-lg border border-white/[0.06] bg-white/[0.04] px-3 py-2 text-sm text-zinc-300',
                 'file:mr-3 file:rounded file:border-0 file:bg-indigo-600 file:px-3 file:py-1 file:text-xs file:font-medium file:text-white',
-                'hover:border-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500',
+                'hover:border-white/[0.1] focus:outline-none focus:ring-2 focus:ring-indigo-500',
                 'disabled:cursor-not-allowed disabled:opacity-50',
               ].join(' ')}
             />
@@ -1184,12 +1184,12 @@ function ConnectionsTab() {
         <p className="mb-4 text-sm text-red-400">{connectionsError}</p>
       )}
 
-      <div className="divide-y divide-zinc-800">
+      <div className="divide-y divide-white/[0.06]">
         {/* Google Calendar row */}
         <div className="flex items-center justify-between py-4 first:pt-0 last:pb-0">
           <div className="flex items-center gap-3">
             {/* Google icon */}
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800 text-base font-bold text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.04] text-base font-bold text-white">
               G
             </div>
             <div>
@@ -1203,7 +1203,7 @@ function ConnectionsTab() {
                     <span className="text-xs text-green-400">Connected</span>
                   </div>
                   {calStatus.lastSynced && (
-                    <span className="text-[10px] text-zinc-500">
+                    <span className="text-xs text-zinc-500">
                       Last synced {new Date(calStatus.lastSynced).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </span>
                   )}
@@ -1238,7 +1238,7 @@ function ConnectionsTab() {
         <div className="flex items-center justify-between py-4 first:pt-0 last:pb-0">
           <div className="flex items-center gap-3">
             {/* Bank icon */}
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.04]">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5 text-zinc-300"
@@ -1336,7 +1336,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 border-b border-zinc-800">
+      <div className="flex gap-1 border-b border-white/[0.06]">
         {TABS.map((tab) => (
           <button
             key={tab.id}

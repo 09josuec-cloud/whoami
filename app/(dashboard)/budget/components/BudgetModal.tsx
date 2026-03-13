@@ -76,7 +76,7 @@ export default function BudgetModal({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
+      <div className="w-full max-w-sm rounded-xl border border-white/[0.06] bg-[#111114] p-6">
         {/* Header */}
         <div className="mb-5 flex items-start justify-between">
           <div>
@@ -90,7 +90,7 @@ export default function BudgetModal({
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300 transition-colors"
+            className="rounded-lg p-1 text-zinc-500 hover:bg-white/[0.06] hover:text-zinc-300 transition-colors"
             aria-label="Close"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
@@ -116,7 +116,7 @@ export default function BudgetModal({
               onChange={(e) => { setAmount(e.target.value); setError(null); }}
               onKeyDown={(e) => { if (e.key === 'Enter') void handleSave(); }}
               placeholder="0.00"
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-800 py-2.5 pl-7 pr-3 text-sm text-zinc-100 placeholder-zinc-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+              className="w-full rounded-lg border border-white/[0.06] bg-white/[0.04] py-2.5 pl-7 pr-3 text-sm text-zinc-100 placeholder-zinc-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
             />
           </div>
           {error && <p className="mt-1.5 text-xs text-red-400">{error}</p>}
@@ -126,7 +126,7 @@ export default function BudgetModal({
         <div className="flex items-center justify-end gap-2">
           <button
             onClick={onClose}
-            className="rounded-lg px-4 py-2 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 transition-colors"
+            className="rounded-lg px-4 py-2 text-sm text-zinc-400 hover:bg-white/[0.06] hover:text-zinc-100 transition-colors"
           >
             Cancel
           </button>

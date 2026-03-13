@@ -14,7 +14,7 @@ interface Note {
 }
 
 const NOTE_COLORS: { label: string; value: string; bg: string; border: string }[] = [
-  { label: 'Default', value: '', bg: 'bg-[#0f0f12]', border: 'border-transparent' },
+  { label: 'Default', value: '', bg: 'bg-[#111114]', border: 'border-transparent' },
   { label: 'Indigo', value: 'indigo', bg: 'bg-indigo-950/40', border: 'border-indigo-800/40' },
   { label: 'Emerald', value: 'emerald', bg: 'bg-emerald-950/40', border: 'border-emerald-800/40' },
   { label: 'Amber', value: 'amber', bg: 'bg-amber-950/40', border: 'border-amber-800/40' },
@@ -32,7 +32,7 @@ const COLOR_DOT: Record<string, string> = {
 
 function getNoteBg(color: string | null) {
   const c = NOTE_COLORS.find((n) => n.value === (color ?? ''));
-  return c ? `${c.bg} ${c.border}` : 'bg-[#0f0f12] border-transparent';
+  return c ? `${c.bg} ${c.border}` : 'bg-[#111114] border-transparent';
 }
 
 function timeAgo(dateStr: string): string {
@@ -45,6 +45,22 @@ function timeAgo(dateStr: string): string {
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d ago`;
   return new Date(dateStr).toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+function PinIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className ?? 'h-3 w-3'} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M16 12V4h1a1 1 0 0 0 0-2H7a1 1 0 0 0 0 2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
+    </svg>
+  );
+}
+
+function DocumentIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className ?? 'h-8 w-8'} fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+    </svg>
+  );
 }
 
 export default function NotesPage() {
@@ -82,6 +98,13 @@ export default function NotesPage() {
   useEffect(() => {
     void fetchNotes();
   }, [fetchNotes]);
+
+  // Clear any pending auto-save timer on unmount to prevent state updates after unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, []);
 
   // Debounced search
   useEffect(() => {
@@ -201,15 +224,15 @@ export default function NotesPage() {
   const editorBg = getNoteBg(editColor || null);
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden rounded-2xl bg-[#0a0a0d]">
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden rounded-xl bg-[#09090b]">
       {/* Sidebar */}
-      <div className="flex w-72 shrink-0 flex-col border-r border-zinc-800/60 bg-[#0a0a0d]">
+      <div className="flex w-72 shrink-0 flex-col border-r border-white/[0.06] bg-[#0e0e12]">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
-          <h1 className="text-sm font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">Notes</h1>
+        <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
+          <h1 className="text-sm font-semibold text-zinc-100">Notes</h1>
           <button
             onClick={openNew}
-            className="flex h-7 w-7 items-center justify-center rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 transition-colors text-lg leading-none"
+            className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 transition-colors text-lg leading-none"
             title="New note"
           >
             +
@@ -217,24 +240,24 @@ export default function NotesPage() {
         </div>
 
         {/* Search */}
-        <div className="px-3 py-2 border-b border-zinc-800">
+        <div className="px-3 py-2 border-b border-white/[0.06]">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search notes…"
-            className="w-full rounded-xl bg-zinc-800/50 px-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-600 outline-none ring-1 ring-zinc-700/40 focus:ring-indigo-500"
+            className="w-full rounded-lg bg-white/[0.04] px-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-600 outline-none ring-1 ring-white/[0.06] focus:ring-indigo-500"
           />
         </div>
 
         {/* Tags filter */}
         {allTags.length > 0 && (
-          <div className="flex flex-wrap gap-1 px-3 py-2 border-b border-zinc-800">
+          <div className="flex flex-wrap gap-1 px-3 py-2 border-b border-white/[0.06]">
             <button
               onClick={() => setSelectedTag('')}
               className={[
-                'rounded-full px-2 py-0.5 text-[10px] transition-colors',
-                selectedTag === '' ? 'bg-indigo-600/90 text-white shadow-sm rounded-full' : 'bg-zinc-800/60 text-zinc-400 hover:text-zinc-200',
+                'rounded-md px-2 py-0.5 text-xs transition-colors',
+                selectedTag === '' ? 'bg-indigo-500/20 text-indigo-300' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200',
               ].join(' ')}
             >
               All
@@ -244,8 +267,8 @@ export default function NotesPage() {
                 key={tag}
                 onClick={() => setSelectedTag(selectedTag === tag ? '' : tag)}
                 className={[
-                  'rounded-full px-2 py-0.5 text-[10px] transition-colors',
-                  selectedTag === tag ? 'bg-indigo-600/90 text-white shadow-sm rounded-full' : 'bg-zinc-800/60 text-zinc-400 hover:text-zinc-200',
+                  'rounded-md px-2 py-0.5 text-xs transition-colors',
+                  selectedTag === tag ? 'bg-indigo-500/20 text-indigo-300' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200',
                 ].join(' ')}
               >
                 {tag}
@@ -258,7 +281,7 @@ export default function NotesPage() {
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-700 border-t-indigo-500" />
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/[0.06] border-t-indigo-500" />
             </div>
           ) : notes.length === 0 ? (
             <div className="px-4 py-8 text-center">
@@ -277,8 +300,8 @@ export default function NotesPage() {
                 key={note.id}
                 onClick={() => openNote(note)}
                 className={[
-                  'group w-full border-b border-zinc-800/60 px-4 py-3 text-left transition-colors hover:bg-zinc-800/40',
-                  activeNote?.id === note.id ? 'bg-zinc-800/60' : '',
+                  'group w-full border-b border-white/[0.04] px-4 py-3 text-left transition-colors hover:bg-white/[0.04]',
+                  activeNote?.id === note.id ? 'bg-white/[0.06]' : '',
                 ].join(' ')}
               >
                 <div className="flex items-start gap-2">
@@ -287,16 +310,16 @@ export default function NotesPage() {
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1">
-                      {note.pinned && <span className="text-[10px] text-amber-400">📌</span>}
+                      {note.pinned && <PinIcon className="h-3 w-3 shrink-0 text-amber-400" />}
                       <p className="truncate text-xs font-medium text-zinc-200">{note.title}</p>
                     </div>
-                    <p className="mt-0.5 line-clamp-2 text-[10px] text-zinc-500">
+                    <p className="mt-0.5 line-clamp-2 text-xs text-zinc-500">
                       {note.content || 'Empty note'}
                     </p>
                     <div className="mt-1 flex items-center gap-1.5">
-                      <span className="text-[9px] text-zinc-600">{timeAgo(note.updatedAt)}</span>
+                      <span className="text-xs text-zinc-600">{timeAgo(note.updatedAt)}</span>
                       {note.tags.slice(0, 2).map((tag) => (
-                        <span key={tag} className="rounded bg-zinc-800 px-1 py-px text-[9px] text-zinc-500">{tag}</span>
+                        <span key={tag} className="rounded-md bg-white/[0.04] px-1 py-px text-xs text-zinc-500">{tag}</span>
                       ))}
                     </div>
                   </div>
@@ -307,16 +330,16 @@ export default function NotesPage() {
         </div>
 
         {/* Note count */}
-        <div className="border-t border-zinc-800 px-4 py-2">
-          <p className="text-[10px] text-zinc-600">{notes.length} {notes.length === 1 ? 'note' : 'notes'}</p>
+        <div className="border-t border-white/[0.06] px-4 py-2">
+          <p className="text-xs text-zinc-600">{notes.length} {notes.length === 1 ? 'note' : 'notes'}</p>
         </div>
       </div>
 
       {/* Editor pane */}
       {isEditing ? (
-        <div className={['flex flex-1 flex-col overflow-hidden border-l border-zinc-800', editorBg].join(' ')}>
+        <div className={['flex flex-1 flex-col overflow-hidden border-l border-white/[0.06]', editorBg].join(' ')}>
           {/* Editor toolbar */}
-          <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-2">
+          <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-2">
             <div className="flex items-center gap-2">
               {/* Color picker */}
               <div className="flex items-center gap-1">
@@ -327,7 +350,7 @@ export default function NotesPage() {
                     title={c.label}
                     className={[
                       'h-4 w-4 rounded-full border-2 transition-transform hover:scale-110',
-                      c.value === '' ? 'bg-zinc-700' : COLOR_DOT[c.value] ?? 'bg-zinc-500',
+                      c.value === '' ? 'bg-white/[0.12]' : COLOR_DOT[c.value] ?? 'bg-zinc-500',
                       editColor === c.value ? 'border-white scale-110' : 'border-transparent',
                     ].join(' ')}
                   />
@@ -337,16 +360,17 @@ export default function NotesPage() {
               {/* Pin toggle */}
               <button
                 onClick={handlePinToggle}
-                className={['rounded px-2 py-0.5 text-[10px] transition-colors', editPinned ? 'text-amber-400' : 'text-zinc-500 hover:text-zinc-300'].join(' ')}
+                className={['flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors', editPinned ? 'text-amber-400' : 'text-zinc-500 hover:text-zinc-300'].join(' ')}
                 title={editPinned ? 'Unpin' : 'Pin'}
               >
-                📌 {editPinned ? 'Pinned' : 'Pin'}
+                <PinIcon className="h-3 w-3" />
+                {editPinned ? 'Pinned' : 'Pin'}
               </button>
             </div>
 
             <div className="flex items-center gap-2">
               {activeNote && (
-                <span className="text-[10px] text-zinc-600">
+                <span className="text-xs text-zinc-600">
                   {saving ? 'Saving…' : 'Auto-saved'}
                 </span>
               )}
@@ -378,11 +402,11 @@ export default function NotesPage() {
             value={editTitle}
             onChange={(e) => handleTitleChange(e.target.value)}
             placeholder="Note title…"
-            className="border-b border-zinc-800 bg-transparent px-6 py-4 text-lg font-semibold text-zinc-100 placeholder-zinc-600 outline-none"
+            className="border-b border-white/[0.06] bg-transparent px-6 py-4 text-lg font-semibold text-zinc-100 placeholder-zinc-600 outline-none"
           />
 
           {/* Tags */}
-          <div className="border-b border-zinc-800 px-6 py-2">
+          <div className="border-b border-white/[0.06] px-6 py-2">
             <input
               type="text"
               value={editTags}
@@ -403,10 +427,10 @@ export default function NotesPage() {
 
           {/* New note action bar */}
           {showNew && (
-            <div className="border-t border-zinc-800 px-4 py-3 flex justify-end gap-2">
+            <div className="border-t border-white/[0.06] px-4 py-3 flex justify-end gap-2">
               <button
                 onClick={() => setShowNew(false)}
-                className="rounded-lg border border-zinc-700 px-4 py-1.5 text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
+                className="rounded-lg border border-white/[0.06] px-4 py-1.5 text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
               >
                 Cancel
               </button>
@@ -423,8 +447,8 @@ export default function NotesPage() {
       ) : (
         <div className="flex flex-1 items-center justify-center text-center">
           <div>
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-800 text-3xl">
-              📝
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-white/[0.04]">
+              <DocumentIcon className="h-7 w-7 text-zinc-500" />
             </div>
             <p className="text-sm font-medium text-zinc-400">Select a note or create a new one</p>
             <button

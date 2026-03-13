@@ -27,13 +27,13 @@ interface StatCardProps {
 
 function StatCard({ icon, label, value, sub, accent = 'text-zinc-100' }: StatCardProps) {
   return (
-    <div className="rounded-2xl bg-[#0f0f12] p-5 flex flex-col gap-1 ring-1 ring-zinc-800/40">
+    <div className="rounded-xl bg-[#111114] border border-white/[0.06] p-5 flex flex-col gap-1">
       <div className="flex items-center gap-2 text-zinc-500 text-xs">
         <span className="text-base">{icon}</span>
-        <span className="uppercase tracking-widest font-semibold">{label}</span>
+        <span className="font-medium">{label}</span>
       </div>
-      <p className={`text-3xl font-bold tracking-tight ${accent}`}>{value}</p>
-      {sub && <p className="text-[11px] text-zinc-600">{sub}</p>}
+      <p className={`text-3xl font-semibold tracking-tight tabular-nums ${accent}`}>{value}</p>
+      {sub && <p className="text-xs text-zinc-600">{sub}</p>}
     </div>
   );
 }

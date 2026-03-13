@@ -97,29 +97,29 @@ export default function NotificationBell() {
       {/* Bell button */}
       <button
         onClick={handleBellClick}
-        className="relative flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 transition-colors"
+        className="relative rounded-lg p-2 hover:bg-white/[0.05] transition-all duration-150 text-zinc-400 hover:text-zinc-200"
         aria-label="Notifications"
       >
-        <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white">
+          <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-indigo-500 text-xs font-bold text-white flex items-center justify-center ring-2 ring-[#09090b]">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
-      {/* Slide-down panel */}
+      {/* Dropdown panel */}
       {open && (
-        <div className="absolute right-0 top-10 z-50 w-80 rounded-2xl bg-[#0f0f12] shadow-xl overflow-hidden ring-1 ring-zinc-800/60">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
-            <span className="text-sm font-semibold text-zinc-100">Notifications</span>
+        <div className="absolute right-0 top-full mt-2 w-80 rounded-xl bg-[#111114] border border-white/[0.06] z-50 overflow-hidden">
+          {/* Panel header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+            <span className="text-sm font-semibold text-white">Notifications</span>
             {unreadCount > 0 && (
               <button
                 onClick={() => void markAllRead()}
-                className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors duration-150"
               >
                 Mark all read
               </button>
@@ -129,8 +129,14 @@ export default function NotificationBell() {
           {/* List */}
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-zinc-500">
-                No notifications yet
+              <div className="flex flex-col items-center justify-center px-4 py-10 gap-3">
+                <svg className="h-8 w-8 text-zinc-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+                </svg>
+                <div className="text-center">
+                  <p className="text-sm font-medium text-zinc-400">All caught up</p>
+                  <p className="text-xs text-zinc-600 mt-0.5">No notifications yet</p>
+                </div>
               </div>
             ) : (
               notifications.map((n) => {
@@ -138,26 +144,25 @@ export default function NotificationBell() {
                 const content = (
                   <div
                     className={[
-                      'flex gap-3 px-4 py-3 transition-colors',
-                      !n.read ? 'bg-indigo-600/5' : '',
-                      'hover:bg-zinc-800/60 cursor-pointer',
+                      'flex gap-3 px-4 py-3 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors duration-150 cursor-pointer',
+                      !n.read ? 'bg-indigo-500/[0.03]' : '',
                     ].join(' ')}
                     onClick={() => {
                       if (!n.read) void markRead(n.id);
                     }}
                   >
-                    <span className="mt-0.5 text-base leading-none">{icon}</span>
+                    <span className="mt-0.5 text-base leading-none shrink-0">{icon}</span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <p className={['text-sm leading-snug', !n.read ? 'font-medium text-zinc-100' : 'text-zinc-300'].join(' ')}>
                           {n.title}
                         </p>
                         {!n.read && (
-                          <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" aria-hidden="true" />
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" aria-hidden="true" />
                         )}
                       </div>
                       <p className="mt-0.5 text-xs text-zinc-500 leading-snug">{n.body}</p>
-                      <p className="mt-1 text-[10px] text-zinc-600">{timeAgo(n.createdAt)}</p>
+                      <p className="mt-1 text-xs text-zinc-600">{timeAgo(n.createdAt)}</p>
                     </div>
                   </div>
                 );

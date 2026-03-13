@@ -25,7 +25,7 @@ function fmt(n: number) {
 
 export default function SavingsChart({ data }: SavingsChartProps) {
   return (
-    <div className="rounded-2xl bg-[#0f0f12] p-5">
+    <div className="rounded-xl bg-[#111114] border border-white/[0.06] p-5">
       <h2 className="text-lg font-semibold text-zinc-100 mb-4">Savings Goals</h2>
       {data.length === 0 ? (
         <div className="flex h-32 items-center justify-center text-zinc-500 text-sm">
@@ -40,7 +40,7 @@ export default function SavingsChart({ data }: SavingsChartProps) {
                   {goal.emoji && <span className="text-lg leading-none">{goal.emoji}</span>}
                   <span className="text-sm font-medium text-zinc-200">{goal.name}</span>
                   {goal.targetDate && (
-                    <span className="text-[10px] text-zinc-500">
+                    <span className="text-xs text-zinc-500">
                       Due{' '}
                       {new Date(goal.targetDate).toLocaleDateString('en-US', {
                         month: 'short',
@@ -53,7 +53,7 @@ export default function SavingsChart({ data }: SavingsChartProps) {
                   {goal.progress.toFixed(1)}% &middot; {fmt(goal.currentAmount)} / {fmt(goal.targetAmount)}
                 </span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-800">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-white/[0.08]">
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{

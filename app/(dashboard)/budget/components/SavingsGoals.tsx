@@ -99,10 +99,10 @@ function GoalModal({ goal, onClose, onSave }: GoalModalProps) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="w-full max-w-sm rounded-2xl border border-zinc-800 bg-zinc-900 p-6 shadow-2xl">
+      <div className="w-full max-w-sm rounded-xl border border-white/[0.06] bg-[#111114] p-6">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-base font-semibold text-zinc-100">{goal ? 'Edit Goal' : 'New Savings Goal'}</h2>
-          <button onClick={onClose} className="rounded-lg p-1 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300 transition-colors">
+          <button onClick={onClose} className="rounded-lg p-1 text-zinc-500 hover:bg-white/[0.06] hover:text-zinc-300 transition-colors">
             <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
             </svg>
@@ -119,7 +119,7 @@ function GoalModal({ goal, onClose, onSave }: GoalModalProps) {
                 onClick={() => setEmoji(e)}
                 className={[
                   'h-9 w-9 rounded-lg text-lg transition-all',
-                  emoji === e ? 'bg-indigo-600/30 ring-2 ring-indigo-500' : 'bg-zinc-800 hover:bg-zinc-700',
+                  emoji === e ? 'bg-indigo-500/20 ring-2 ring-indigo-500' : 'bg-white/[0.04] hover:bg-white/[0.08]',
                 ].join(' ')}
               >
                 {e}
@@ -155,7 +155,7 @@ function GoalModal({ goal, onClose, onSave }: GoalModalProps) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Emergency Fund"
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:border-indigo-500 focus:outline-none"
+            className="w-full rounded-lg border border-white/[0.06] bg-white/[0.04] px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:border-indigo-500 focus:outline-none"
           />
         </div>
 
@@ -171,7 +171,7 @@ function GoalModal({ goal, onClose, onSave }: GoalModalProps) {
               value={target}
               onChange={(e) => setTarget(e.target.value)}
               placeholder="10,000"
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-800 py-2 pl-7 pr-3 text-sm text-zinc-100 placeholder-zinc-600 focus:border-indigo-500 focus:outline-none"
+              className="w-full rounded-lg border border-white/[0.06] bg-white/[0.04] py-2 pl-7 pr-3 text-sm text-zinc-100 placeholder-zinc-600 focus:border-indigo-500 focus:outline-none"
             />
           </div>
         </div>
@@ -188,7 +188,7 @@ function GoalModal({ goal, onClose, onSave }: GoalModalProps) {
               value={current}
               onChange={(e) => setCurrent(e.target.value)}
               placeholder="0"
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-800 py-2 pl-7 pr-3 text-sm text-zinc-100 placeholder-zinc-600 focus:border-indigo-500 focus:outline-none"
+              className="w-full rounded-lg border border-white/[0.06] bg-white/[0.04] py-2 pl-7 pr-3 text-sm text-zinc-100 placeholder-zinc-600 focus:border-indigo-500 focus:outline-none"
             />
           </div>
         </div>
@@ -200,14 +200,14 @@ function GoalModal({ goal, onClose, onSave }: GoalModalProps) {
             type="date"
             value={targetDate}
             onChange={(e) => setTargetDate(e.target.value)}
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none"
+            className="w-full rounded-lg border border-white/[0.06] bg-white/[0.04] px-3 py-2 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none [color-scheme:dark]"
           />
         </div>
 
         {error && <p className="mb-3 text-xs text-red-400">{error}</p>}
 
         <div className="flex items-center justify-end gap-2">
-          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 transition-colors">
+          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-zinc-400 hover:bg-white/[0.06] hover:text-zinc-100 transition-colors">
             Cancel
           </button>
           <button
@@ -238,7 +238,7 @@ interface GoalCardProps {
 }
 
 function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
-  const pct = Math.min((goal.currentAmount / goal.targetAmount) * 100, 100);
+  const pct = goal.targetAmount > 0 ? Math.min((goal.currentAmount / goal.targetAmount) * 100, 100) : 0;
   const color = goal.color ?? '#6366f1';
   const remaining = Math.max(goal.targetAmount - goal.currentAmount, 0);
   const days = goal.targetDate ? daysUntil(goal.targetDate) : null;
@@ -249,7 +249,7 @@ function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
   }
 
   return (
-    <div className="rounded-2xl bg-[#0f0f12] p-5 ring-1 ring-zinc-800/40">
+    <div className="rounded-xl bg-[#111114] p-5 border border-white/[0.06]">
       <div className="mb-3 flex items-start justify-between">
         <div className="flex items-center gap-2">
           <div
@@ -270,7 +270,7 @@ function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
         <div className="flex items-center gap-1">
           <button
             onClick={() => onEdit(goal)}
-            className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-300 transition-colors"
+            className="rounded-lg p-1.5 text-zinc-500 hover:bg-white/[0.06] hover:text-zinc-300 transition-colors"
             aria-label="Edit goal"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -290,7 +290,7 @@ function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
       </div>
 
       {/* Progress */}
-      <div className="mb-2 h-2 w-full overflow-hidden rounded-full bg-zinc-800">
+      <div className="mb-2 h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
         <div
           className="h-full rounded-full transition-all duration-700"
           style={{ width: `${pct}%`, backgroundColor: color, boxShadow: `0 0 8px ${color}60` }}
@@ -390,7 +390,7 @@ export default function SavingsGoals() {
         )}
         <button
           onClick={() => { setEditingGoal(undefined); setShowModal(true); }}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
+          className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -401,8 +401,10 @@ export default function SavingsGoals() {
 
       {/* Goals grid */}
       {goals.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-700 py-16 text-center">
-          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-800 text-2xl">🎯</div>
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/[0.08] py-16 text-center">
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.04]">
+            <svg className="h-6 w-6 text-zinc-500" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" /></svg>
+          </div>
           <p className="text-sm font-medium text-zinc-300">No savings goals yet</p>
           <p className="mt-1 max-w-xs text-xs text-zinc-500">
             Create goals for your emergency fund, vacation, down payment, or anything else.

@@ -34,7 +34,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
     const entry = payload[0];
     if (!entry) return null;
     return (
-      <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-2.5 text-sm shadow-xl">
+      <div className="rounded-lg border border-white/[0.06] bg-[#111114] p-2.5 text-sm shadow-sm shadow-black/20">
         <p className="font-medium text-zinc-100">{entry.name}</p>
         <p className="text-zinc-400">
           ${Math.abs(entry.value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

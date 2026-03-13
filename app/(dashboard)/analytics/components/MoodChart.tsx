@@ -38,7 +38,7 @@ export default function MoodChart({ data, avgMood, bestDay, worstDay }: MoodChar
   const hasData = data.length > 0;
 
   return (
-    <div className="rounded-2xl bg-[#0f0f12] p-5">
+    <div className="rounded-xl bg-[#111114] border border-white/[0.06] p-5">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
         <h2 className="text-lg font-semibold text-zinc-100">Mood Trends</h2>
         {hasData && (

@@ -75,7 +75,7 @@ export default function PinUnlockModal({ entryId, onSuccess, onDeleted, onCancel
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl bg-[#0f0f12] p-6 shadow-2xl ring-1 ring-zinc-800/60">
+      <div className="w-full max-w-sm rounded-xl bg-[#111114] border border-white/[0.06] p-6">
         <div className="mb-1 flex items-center gap-2">
           <span className="text-xl">🔒</span>
           <h2 className="text-lg font-semibold text-zinc-100">Locked Entry</h2>
@@ -90,7 +90,7 @@ export default function PinUnlockModal({ entryId, onSuccess, onDeleted, onCancel
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
             placeholder="••••"
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 tracking-[0.5em] text-center"
+            className="w-full rounded-lg border border-white/[0.06] bg-white/[0.04] px-3 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 tracking-[0.5em] text-center"
             autoFocus
             autoComplete="current-password"
           />
@@ -105,7 +105,7 @@ export default function PinUnlockModal({ entryId, onSuccess, onDeleted, onCancel
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 rounded-lg border border-zinc-700 py-2.5 text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
+              className="flex-1 rounded-lg border border-white/[0.06] py-2.5 text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
             >
               Cancel
             </button>

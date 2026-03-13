@@ -56,9 +56,12 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
 
   const handleSubmit = async () => {
     if (!newTitle.trim()) return;
+    if (!newDate || !newTime) return;
+    const parsedDate = new Date(`${newDate}T${newTime}`);
+    if (isNaN(parsedDate.getTime())) return;
     setSaving(true);
     try {
-      const dueAt = new Date(`${newDate}T${newTime}`).toISOString();
+      const dueAt = parsedDate.toISOString();
       await onAdd({
         title: newTitle.trim(),
         notes: newNotes.trim() || undefined,
@@ -67,6 +70,9 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
       });
       setNewTitle('');
       setNewNotes('');
+      setNewDate('');
+      setNewTime('');
+      setNewRepeat('none');
       setShowForm(false);
     } finally {
       setSaving(false);
@@ -80,7 +86,7 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
     <div className="flex flex-col gap-1">
       {/* Pending reminders */}
       {pending.length === 0 && !showForm && (
-        <p className="px-1 py-2 text-[11px] text-zinc-600">No upcoming reminders</p>
+        <p className="px-1 py-2 text-xs text-zinc-600">No upcoming reminders</p>
       )}
 
       {pending.map((r) => {
@@ -89,7 +95,7 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
         return (
           <div
             key={r.id}
-            className="group rounded-lg hover:bg-zinc-800/50 transition-colors"
+            className="group rounded-lg hover:bg-white/[0.04] transition-colors"
           >
             <div className="flex items-start gap-2 px-2 py-1.5">
               {/* Done checkbox — marks done → deletes */}
@@ -112,10 +118,10 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
                 <p className={['truncate text-xs font-medium', overdue ? 'text-red-400' : 'text-zinc-200'].join(' ')}>
                   {r.title}
                 </p>
-                <p className={['text-[10px]', overdue ? 'text-red-500' : 'text-zinc-500'].join(' ')}>
+                <p className={['text-xs', overdue ? 'text-red-500' : 'text-zinc-500'].join(' ')}>
                   {overdue ? 'Overdue · ' : ''}{formatDue(r.dueAt)}
                   {r.repeat && r.repeat !== 'none' && (
-                    <span className="ml-1 rounded bg-zinc-800 px-1 py-px text-[9px] text-zinc-400">
+                    <span className="ml-1 rounded-md bg-white/[0.06] px-1 py-px text-xs text-zinc-400">
                       {REPEAT_LABELS[r.repeat] ?? r.repeat}
                     </span>
                   )}
@@ -132,7 +138,7 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
             {/* Notes (expandable) */}
             {expanded && r.notes && (
               <div className="px-8 pb-2">
-                <p className="text-[10px] text-zinc-500 whitespace-pre-wrap">{r.notes}</p>
+                <p className="text-xs text-zinc-500 whitespace-pre-wrap">{r.notes}</p>
               </div>
             )}
           </div>
@@ -141,21 +147,21 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
 
       {/* Completed reminders */}
       {done.length > 0 && (
-        <div className="mt-2 border-t border-zinc-800/60 pt-1">
-          <p className="px-2 py-1 text-xs font-semibold uppercase tracking-widest text-zinc-600">Completed</p>
+        <div className="mt-2 border-t border-white/[0.06] pt-1">
+          <p className="px-2 py-1 text-xs font-medium text-zinc-600">Completed</p>
           {done.map((r) => (
             <div
               key={r.id}
               className="group flex items-start gap-2 rounded-lg px-2 py-1.5 opacity-50 hover:opacity-80 transition-opacity"
             >
-              <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border border-zinc-700 bg-zinc-700">
+              <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border border-white/[0.12] bg-white/[0.06]">
                 <svg className="h-2.5 w-2.5 text-zinc-400" viewBox="0 0 10 10" fill="none">
                   <path d="M1.5 5l2.5 3 4.5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs text-zinc-500 line-through">{r.title}</p>
-                <p className="text-[10px] text-zinc-600">{formatDue(r.dueAt)}</p>
+                <p className="text-xs text-zinc-600">{formatDue(r.dueAt)}</p>
               </div>
               <button
                 onClick={() => onDelete(r.id)}
@@ -171,7 +177,7 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
 
       {/* Add reminder inline form */}
       {showForm && (
-        <div className="mt-1 rounded-xl bg-zinc-800/40 p-3 flex flex-col gap-2">
+        <div className="mt-1 rounded-lg border border-white/[0.06] bg-white/[0.03] p-3 flex flex-col gap-2">
           <input
             autoFocus
             type="text"
@@ -179,33 +185,33 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
             onChange={(e) => setNewTitle(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Escape') setShowForm(false); }}
             placeholder="Reminder title…"
-            className="w-full rounded-md bg-zinc-800 px-2.5 py-1.5 text-xs text-zinc-100 placeholder-zinc-600 outline-none focus:ring-1 focus:ring-indigo-500"
+            className="w-full rounded-md bg-white/[0.06] px-2.5 py-1.5 text-xs text-zinc-100 placeholder-zinc-600 outline-none focus:ring-1 focus:ring-indigo-500"
           />
           <textarea
             value={newNotes}
             onChange={(e) => setNewNotes(e.target.value)}
             placeholder="Notes (optional)…"
             rows={2}
-            className="w-full resize-none rounded-md bg-zinc-800 px-2.5 py-1.5 text-xs text-zinc-100 placeholder-zinc-600 outline-none focus:ring-1 focus:ring-indigo-500"
+            className="w-full resize-none rounded-md bg-white/[0.06] px-2.5 py-1.5 text-xs text-zinc-100 placeholder-zinc-600 outline-none focus:ring-1 focus:ring-indigo-500"
           />
           <div className="flex gap-1.5">
             <input
               type="date"
               value={newDate}
               onChange={(e) => setNewDate(e.target.value)}
-              className="flex-1 rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-zinc-300 outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
+              className="flex-1 rounded-md bg-white/[0.06] px-2 py-1 text-xs text-zinc-300 outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
             />
             <input
               type="time"
               value={newTime}
               onChange={(e) => setNewTime(e.target.value)}
-              className="w-20 rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-zinc-300 outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
+              className="w-20 rounded-md bg-white/[0.06] px-2 py-1 text-xs text-zinc-300 outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
             />
           </div>
           <select
             value={newRepeat}
             onChange={(e) => setNewRepeat(e.target.value)}
-            className="rounded-md bg-zinc-800 px-2 py-1 text-[11px] text-zinc-300 outline-none focus:ring-1 focus:ring-indigo-500"
+            className="rounded-md bg-white/[0.06] px-2 py-1 text-xs text-zinc-300 outline-none focus:ring-1 focus:ring-indigo-500"
           >
             <option value="none">No repeat</option>
             <option value="daily">Daily</option>
@@ -216,13 +222,13 @@ export default function ReminderPanel({ reminders, onToggleDone, onDelete, onAdd
             <button
               onClick={() => void handleSubmit()}
               disabled={saving || !newTitle.trim()}
-              className="flex-1 rounded-md bg-indigo-600 py-1 text-[11px] font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+              className="flex-1 rounded-md bg-indigo-600 py-1 text-xs font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
             >
               {saving ? 'Saving…' : 'Add'}
             </button>
             <button
               onClick={() => setShowForm(false)}
-              className="flex-1 rounded-md bg-zinc-800 py-1 text-[11px] text-zinc-400 hover:text-zinc-200 transition-colors"
+              className="flex-1 rounded-md bg-white/[0.06] py-1 text-xs text-zinc-400 hover:text-zinc-200 transition-colors"
             >
               Cancel
             </button>

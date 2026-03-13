@@ -187,7 +187,8 @@ export default function CalendarClient() {
     if (searchParams.get('connected') === 'true') {
       setGoogleConnected(true);
       setSyncMessage('Google Calendar connected!');
-      setTimeout(() => setSyncMessage(''), 4000);
+      const timerId = setTimeout(() => setSyncMessage(''), 4000);
+      return () => clearTimeout(timerId);
     }
   }, [searchParams]);
 
@@ -368,21 +369,21 @@ export default function CalendarClient() {
     : [];
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] overflow-hidden rounded-2xl bg-[#0a0a0d]">
+    <div className="flex h-[calc(100vh-8rem)] overflow-hidden rounded-xl bg-[#09090b]">
       {/* Left sidebar */}
-      <div className="flex w-60 shrink-0 flex-col border-r border-zinc-800/50">
+      <div className="flex w-60 shrink-0 flex-col border-r border-white/[0.06] bg-[#0e0e12]">
         {/* Today widget */}
-        <div className="border-b border-zinc-800/50 px-4 py-5">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
+        <div className="border-b border-white/[0.06] px-4 py-5">
+          <p className="text-xs font-medium text-zinc-500">
             {now.toLocaleDateString('en-US', { weekday: 'long' })}
           </p>
-          <p className="mt-0.5 text-3xl font-bold text-zinc-100">{now.getDate()}</p>
+          <p className="mt-0.5 text-4xl font-semibold tracking-tight text-zinc-100 tabular-nums">{now.getDate()}</p>
           <p className="text-xs text-zinc-500">
             {now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
           </p>
         </div>
-        <div className="border-b border-zinc-800/50 px-4 py-3">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-zinc-600">Reminders</h2>
+        <div className="border-b border-white/[0.06] px-4 py-3">
+          <h2 className="text-xs font-medium text-zinc-500">Reminders</h2>
         </div>
         <div className="flex-1 overflow-y-auto px-2 py-2">
           <ReminderPanel
@@ -392,16 +393,16 @@ export default function CalendarClient() {
             onAdd={handleAddReminder}
           />
         </div>
-        <div className="border-t border-zinc-800/50 p-3 flex flex-col gap-2">
+        <div className="border-t border-white/[0.06] p-3 flex flex-col gap-2">
           {googleConnected && (
-            <p className="text-[10px] text-amber-500/80 leading-tight px-1">
+            <p className="text-xs text-amber-500/80 leading-tight px-1">
               To push events to Google, disconnect and reconnect to upgrade permissions.
             </p>
           )}
           {googleConnected ? (
             <button
               onClick={() => void handleGoogleDisconnect()}
-              className="w-full rounded-xl bg-zinc-800/60 px-3 py-2.5 text-xs font-medium text-zinc-400 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+              className="w-full rounded-lg bg-white/[0.06] px-3 py-2.5 text-xs font-medium text-zinc-400 hover:bg-red-500/10 hover:text-red-400 transition-colors"
             >
               Disconnect Google
             </button>
@@ -409,7 +410,7 @@ export default function CalendarClient() {
             <button
               onClick={() => void handleGoogleConnect()}
               disabled={connectingGoogle}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-zinc-800/60 px-3 py-2.5 text-xs font-medium text-zinc-300 hover:bg-zinc-700 hover:text-white disabled:opacity-50 transition-colors"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-white/[0.06] px-3 py-2.5 text-xs font-medium text-zinc-300 hover:bg-white/[0.1] hover:text-white disabled:opacity-50 transition-colors"
             >
               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
@@ -423,7 +424,7 @@ export default function CalendarClient() {
       {/* Main calendar area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <div className="flex shrink-0 items-center justify-between border-b border-zinc-800/50 bg-zinc-900/30 px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] px-4 py-3">
           {/* Navigation */}
           <div className="flex items-center gap-2">
             {/* Back to month (shown in week/day view) */}
@@ -433,7 +434,7 @@ export default function CalendarClient() {
                   setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1));
                   setView('month');
                 }}
-                className="rounded-xl bg-zinc-800/50 flex items-center gap-1 px-2.5 py-1.5 text-xs text-zinc-400 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
+                className="rounded-lg bg-white/[0.06] flex items-center gap-1 px-2.5 py-1.5 text-xs text-zinc-400 hover:bg-white/[0.1] hover:text-zinc-100 transition-colors"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -443,7 +444,7 @@ export default function CalendarClient() {
             )}
             <button
               onClick={handlePrev}
-              className="rounded-xl bg-zinc-800/60 p-1.5 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
+              className="rounded-lg bg-white/[0.06] p-1.5 text-zinc-400 hover:bg-white/[0.1] hover:text-zinc-100 transition-colors"
               aria-label="Previous"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -458,14 +459,14 @@ export default function CalendarClient() {
             </button>
             <button
               onClick={handleNext}
-              className="rounded-xl bg-zinc-800/60 p-1.5 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
+              className="rounded-lg bg-white/[0.06] p-1.5 text-zinc-400 hover:bg-white/[0.1] hover:text-zinc-100 transition-colors"
               aria-label="Next"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
-            <h1 className="ml-1 text-xl font-bold text-zinc-100">{headerLabel}</h1>
+            <h1 className="ml-1 text-xl font-semibold text-zinc-100">{headerLabel}</h1>
           </div>
 
           {/* Right actions */}
@@ -475,7 +476,7 @@ export default function CalendarClient() {
             )}
 
             {/* View switcher */}
-            <div className="flex rounded-xl bg-zinc-800/50 p-0.5 gap-0.5">
+            <div className="flex rounded-lg bg-white/[0.06] p-0.5 gap-0.5">
               {(['month', 'week', 'day'] as CalendarView[]).map((v) => (
                 <button
                   key={v}
@@ -515,7 +516,7 @@ export default function CalendarClient() {
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="rounded-xl bg-zinc-800/50 px-2.5 py-1.5 text-xs text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
+              className="rounded-lg bg-white/[0.06] px-2.5 py-1.5 text-xs text-zinc-400 hover:bg-white/[0.1] hover:text-zinc-200 transition-colors"
             >
               Import .ics
             </button>
@@ -525,7 +526,7 @@ export default function CalendarClient() {
               <button
                 onClick={() => void handleSync()}
                 disabled={syncing}
-                className="rounded-xl bg-blue-500/10 flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-blue-400 hover:bg-blue-500/20 disabled:opacity-50 transition-colors"
+                className="rounded-lg bg-indigo-500/10 flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-indigo-400 hover:bg-indigo-500/20 disabled:opacity-50 transition-colors"
               >
                 <svg
                   className={['h-3.5 w-3.5', syncing ? 'animate-spin' : ''].join(' ')}

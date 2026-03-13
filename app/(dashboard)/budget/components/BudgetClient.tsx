@@ -84,13 +84,13 @@ function AccountCard({ account }: { account: BankAccountItem }) {
     : account.type;
 
   return (
-    <div className="rounded-2xl bg-[#0f0f12] p-5">
+    <div className="rounded-xl bg-[#111114] p-5 border border-white/[0.06]">
       <div className="mb-3 flex items-start justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-zinc-600">{institution}</p>
+          <p className="text-xs font-medium text-zinc-500">{institution}</p>
           <p className="mt-0.5 text-sm font-semibold text-zinc-100">{account.name}</p>
         </div>
-        <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-400">
+        <span className="rounded-md bg-white/[0.06] px-2 py-0.5 text-xs font-medium text-zinc-400">
           {typeLabel}
         </span>
       </div>
@@ -142,20 +142,20 @@ function BudgetProgressRow({ category, spent, budget, onSetBudget }: BudgetProgr
           </span>
         </div>
         {budget !== null ? (
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-800">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{ width: `${pct}%`, backgroundColor: barColor }}
             />
           </div>
         ) : (
-          <div className="h-1.5 w-full rounded-full bg-zinc-800" />
+          <div className="h-1.5 w-full rounded-full bg-white/[0.06]" />
         )}
       </div>
       {budget === null ? (
         <button
           onClick={() => onSetBudget(category)}
-          className="shrink-0 rounded-lg border border-zinc-700 bg-zinc-800 px-2.5 py-1 text-xs font-medium text-zinc-400 hover:border-indigo-500/40 hover:bg-zinc-700 hover:text-indigo-400 transition-colors"
+          className="shrink-0 rounded-lg border border-white/[0.06] bg-white/[0.04] px-2.5 py-1 text-xs font-medium text-zinc-400 hover:border-indigo-500/40 hover:bg-white/[0.08] hover:text-indigo-400 transition-colors"
         >
           Set budget
         </button>
@@ -185,12 +185,12 @@ function StatCard({
   borderColor?: string;
 }) {
   return (
-    <div className={['rounded-2xl bg-[#0f0f12] p-5 ring-1 ring-zinc-800/40 border-t-2', borderColor ?? 'border-zinc-500/30'].join(' ')}>
-      <p className="text-xs font-semibold uppercase tracking-widest text-zinc-600">{label}</p>
-      <p className={['mt-2 text-2xl font-bold tabular-nums tracking-tight', color ?? 'text-zinc-100'].join(' ')}>
+    <div className="rounded-xl bg-[#111114] p-5 border border-white/[0.06]">
+      <p className="text-xs font-medium text-zinc-500">{label}</p>
+      <p className={['mt-2 text-2xl font-semibold tabular-nums tracking-tight', color ?? 'text-zinc-100'].join(' ')}>
         {value}
       </p>
-      {sub && <p className="mt-0.5 text-xs text-zinc-600">{sub}</p>}
+      {sub && <p className="mt-0.5 text-xs text-zinc-500">{sub}</p>}
     </div>
   );
 }
@@ -326,7 +326,7 @@ export default function BudgetClient() {
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent text-3xl font-bold tracking-tight">Budget</h1>
+          <h1 className="text-zinc-100 text-3xl font-semibold tracking-tight">Budget</h1>
           <p className="mt-0.5 text-sm text-zinc-500">
             Track spending, subscriptions, and savings goals
           </p>
@@ -337,7 +337,7 @@ export default function BudgetClient() {
             <button
               onClick={() => void handleSync()}
               disabled={isSyncing}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-zinc-800/60 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-700/60 hover:text-zinc-100 disabled:opacity-50 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-white/[0.06] px-3 py-2 text-sm text-zinc-300 hover:bg-white/[0.08] hover:text-zinc-100 disabled:opacity-50 transition-colors"
             >
               <svg
                 className={['h-4 w-4', isSyncing ? 'animate-spin' : ''].join(' ')}
@@ -381,7 +381,7 @@ export default function BudgetClient() {
         </div>
       ) : !hasAccounts ? (
         /* Empty state */
-        <div className="flex flex-col items-center justify-center rounded-2xl bg-[#0f0f12] ring-1 ring-dashed ring-zinc-700/50 py-20 text-center">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/[0.08] bg-[#111114] py-20 text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-zinc-800">
             <svg className="h-8 w-8 text-zinc-500" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" />
@@ -449,7 +449,7 @@ export default function BudgetClient() {
           </div>
 
           {/* Tabs */}
-          <div className="flex items-center gap-1 border-b border-zinc-800">
+          <div className="flex items-center gap-1 border-b border-white/[0.06]">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -473,7 +473,7 @@ export default function BudgetClient() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={prevMonth}
-                  className="rounded-xl bg-zinc-800/60 p-1.5 text-zinc-400 hover:bg-zinc-700/60 hover:text-zinc-100 transition-colors"
+                  className="rounded-lg bg-white/[0.06] p-1.5 text-zinc-400 hover:bg-white/[0.1] hover:text-zinc-100 transition-colors"
                   aria-label="Previous month"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -483,7 +483,7 @@ export default function BudgetClient() {
                 <span className="min-w-[140px] text-center text-sm font-medium text-zinc-200">
                   {MONTH_NAMES[month - 1]} {year}
                   {isCurrentMonth && (
-                    <span className="ml-2 inline-flex items-center rounded-full bg-indigo-500/20 px-1.5 py-0.5 text-[10px] font-medium text-indigo-400">
+                    <span className="ml-2 inline-flex items-center rounded-md bg-indigo-500/20 px-1.5 py-0.5 text-xs font-medium text-indigo-400">
                       Current
                     </span>
                   )}
@@ -491,7 +491,7 @@ export default function BudgetClient() {
                 <button
                   onClick={nextMonth}
                   disabled={isCurrentMonth}
-                  className="rounded-xl bg-zinc-800/60 p-1.5 text-zinc-400 hover:bg-zinc-700/60 hover:text-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="rounded-lg bg-white/[0.06] p-1.5 text-zinc-400 hover:bg-white/[0.1] hover:text-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   aria-label="Next month"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -502,7 +502,7 @@ export default function BudgetClient() {
 
               {/* Account cards */}
               <section>
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-zinc-600">
+                <h2 className="mb-3 text-xs font-medium text-zinc-500">
                   Connected Accounts
                 </h2>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -514,14 +514,14 @@ export default function BudgetClient() {
 
               {/* Spending chart + Budget progress */}
               <div className="grid gap-6 lg:grid-cols-2">
-                <section className="rounded-2xl bg-[#0f0f12] p-5 ring-1 ring-zinc-800/40">
+                <section className="rounded-xl bg-[#111114] p-5 border border-white/[0.06]">
                   <h2 className="mb-4 text-sm font-semibold text-zinc-100">Spending by Category</h2>
                   <SpendingChart data={spendingChartData} />
                 </section>
 
-                <section className="rounded-2xl bg-[#0f0f12] p-5 ring-1 ring-zinc-800/40">
+                <section className="rounded-xl bg-[#111114] p-5 border border-white/[0.06]">
                   <h2 className="mb-2 text-sm font-semibold text-zinc-100">Budget Progress</h2>
-                  <div className="divide-y divide-zinc-800/60">
+                  <div className="divide-y divide-white/[0.06]">
                     {CATEGORIES.filter((c) => c !== 'Income' && c !== 'Transfer').map((category) => (
                       <BudgetProgressRow
                         key={category}
@@ -536,7 +536,7 @@ export default function BudgetClient() {
               </div>
 
               {/* Transactions */}
-              <section className="rounded-2xl bg-[#0f0f12] p-5 ring-1 ring-zinc-800/40">
+              <section className="rounded-xl bg-[#111114] p-5 border border-white/[0.06]">
                 <h2 className="mb-4 text-sm font-semibold text-zinc-100">
                   Transactions
                   <span className="ml-2 text-xs font-normal text-zinc-500">
@@ -561,26 +561,26 @@ export default function BudgetClient() {
           {/* Tab: Cash Flow */}
           {activeTab === 'cashflow' && (
             <div className="space-y-6">
-              <section className="rounded-2xl bg-[#0f0f12] p-5 ring-1 ring-zinc-800/40">
+              <section className="rounded-xl bg-[#111114] border border-white/[0.06] p-5">
                 <h2 className="mb-1 text-sm font-semibold text-zinc-100">Monthly Cash Flow</h2>
                 <p className="mb-5 text-xs text-zinc-500">Income vs. spending over the last 6 months</p>
                 <CashFlowChart data={cashflow} />
               </section>
 
               {/* Monthly breakdown table */}
-              <section className="rounded-2xl bg-[#0f0f12] p-5 ring-1 ring-zinc-800/40">
+              <section className="rounded-xl bg-[#111114] border border-white/[0.06] p-5">
                 <h2 className="mb-4 text-sm font-semibold text-zinc-100">Monthly Breakdown</h2>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-zinc-800 text-left">
+                      <tr className="border-b border-white/[0.06] text-left">
                         <th className="pb-2 text-xs font-medium text-zinc-500">Month</th>
                         <th className="pb-2 text-right text-xs font-medium text-zinc-500">Income</th>
                         <th className="pb-2 text-right text-xs font-medium text-zinc-500">Spending</th>
                         <th className="pb-2 text-right text-xs font-medium text-zinc-500">Net</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-800">
+                    <tbody className="divide-y divide-white/[0.04]">
                       {[...cashflow].reverse().map((row) => {
                         const net = row.income - row.spending;
                         return (

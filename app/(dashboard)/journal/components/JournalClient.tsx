@@ -180,22 +180,22 @@ export default function JournalClient() {
   } : null;
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] overflow-hidden rounded-2xl bg-[#0a0a0d]">
+    <div className="flex h-[calc(100vh-8rem)] overflow-hidden rounded-xl bg-[#09090b]">
       {/* Left panel */}
-      <div className="flex w-72 shrink-0 flex-col border-r border-zinc-800">
+      <div className="flex w-72 shrink-0 flex-col border-r border-white/[0.06] bg-[#0e0e12]">
         {/* Header */}
-        <div className="flex items-center justify-between bg-zinc-900/40 border-b border-zinc-800/50 px-4 py-3">
-          <h2 className="text-sm font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">Journal</h2>
+        <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
+          <h2 className="text-sm font-semibold text-zinc-100">Journal</h2>
           <button
             onClick={() => void handleNewEntry()}
-            className="flex items-center gap-1 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 transition-colors"
+            className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 transition-colors"
           >
             + New
           </button>
         </div>
 
         {/* View toggle */}
-        <div className="flex border-b border-zinc-800">
+        <div className="flex border-b border-white/[0.06]">
           <button
             onClick={() => setView('list')}
             className={['flex-1 py-2 text-xs font-medium transition-colors', view === 'list' ? 'text-indigo-400 border-b-2 border-indigo-500' : 'text-zinc-500 hover:text-zinc-300'].join(' ')}
@@ -223,22 +223,22 @@ export default function JournalClient() {
         ) : (
           <>
             {/* Search */}
-            <div className="border-b border-zinc-800 px-3 py-2">
+            <div className="border-b border-white/[0.06] px-3 py-2">
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search entries…"
-                className="w-full rounded-xl bg-zinc-800/50 px-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-600 outline-none ring-1 ring-zinc-700/40 focus:ring-indigo-500"
+                className="w-full rounded-lg bg-white/[0.04] px-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-600 outline-none ring-1 ring-white/[0.06] focus:ring-indigo-500"
               />
             </div>
 
             {/* Tags filter */}
             {allTags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 border-b border-zinc-800 px-3 py-2">
+              <div className="flex flex-wrap gap-1.5 border-b border-white/[0.06] px-3 py-2">
                 <button
                   onClick={() => setActiveTag(null)}
-                  className={['rounded-full px-2 py-0.5 text-[10px] transition-colors', !activeTag ? 'bg-indigo-600/90 text-white shadow-sm' : 'bg-zinc-800/60 text-zinc-400 hover:text-zinc-200'].join(' ')}
+                  className={['rounded-md px-2 py-0.5 text-xs transition-colors', !activeTag ? 'bg-indigo-500/20 text-indigo-300' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'].join(' ')}
                 >
                   All
                 </button>
@@ -246,7 +246,7 @@ export default function JournalClient() {
                   <button
                     key={tag}
                     onClick={() => setActiveTag(activeTag === tag ? null : tag)}
-                    className={['rounded-full px-2 py-0.5 text-[10px] transition-colors', activeTag === tag ? 'bg-indigo-600/90 text-white shadow-sm' : 'bg-zinc-800/60 text-zinc-400 hover:text-zinc-200'].join(' ')}
+                    className={['rounded-md px-2 py-0.5 text-xs transition-colors', activeTag === tag ? 'bg-indigo-500/20 text-indigo-300' : 'bg-white/[0.04] text-zinc-400 hover:text-zinc-200'].join(' ')}
                   >
                     {tag}
                   </button>
@@ -255,8 +255,8 @@ export default function JournalClient() {
             )}
 
             {/* Mood filter row */}
-            <div className="flex items-center gap-1 border-b border-zinc-800 px-3 py-2">
-              <span className="text-[10px] text-zinc-600 mr-1">Mood</span>
+            <div className="flex items-center gap-1 border-b border-white/[0.06] px-3 py-2">
+              <span className="text-xs text-zinc-500 mr-1">Mood</span>
               {[1, 2, 3, 4, 5].map((m) => (
                 <span key={m} className="text-sm opacity-60 hover:opacity-100 cursor-default">{MOOD_EMOJI[m]}</span>
               ))}
@@ -282,7 +282,7 @@ export default function JournalClient() {
         </div>
 
         {/* Stats footer */}
-        <div className="border-t border-zinc-800/50 px-4 py-2.5 bg-zinc-900/30 text-[10px] text-zinc-600">
+        <div className="border-t border-white/[0.06] px-4 py-2.5 text-xs text-zinc-600">
           {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
         </div>
       </div>
@@ -303,7 +303,9 @@ export default function JournalClient() {
           />
         ) : (
           <div className="flex flex-1 items-center justify-center text-zinc-500 text-sm">
-            Select an entry or click <button onClick={() => void handleNewEntry()} className="mx-1.5 text-indigo-400 hover:underline">+ New</button> to start writing
+            Select an entry or click{' '}
+            <button onClick={() => void handleNewEntry()} className="mx-1.5 text-indigo-400 hover:text-indigo-300 transition-colors">+ New</button>
+            to start writing
           </div>
         )}
       </div>

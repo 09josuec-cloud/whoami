@@ -38,7 +38,7 @@ export default function EntryList({ entries, selectedId, onSelect }: EntryListPr
   }
 
   return (
-    <div className="divide-y divide-zinc-800/60">
+    <div className="divide-y divide-white/[0.06]">
       {entries.map((entry) => {
         const isSelected = entry.id === selectedId;
         const preview = stripHtml(entry.content).slice(0, 100);
@@ -50,7 +50,7 @@ export default function EntryList({ entries, selectedId, onSelect }: EntryListPr
             onClick={() => onSelect(entry.id)}
             className={[
               'w-full text-left px-4 py-3.5 transition-colors',
-              isSelected ? 'bg-indigo-600/10 border-r-2 border-indigo-500' : 'hover:bg-zinc-800/40',
+              isSelected ? 'bg-indigo-600/10 border-r-2 border-indigo-500' : 'hover:bg-white/[0.04]',
             ].join(' ')}
           >
             <div className="flex items-start justify-between gap-2 mb-1">
@@ -68,16 +68,16 @@ export default function EntryList({ entries, selectedId, onSelect }: EntryListPr
               <p className="text-xs text-zinc-500 line-clamp-2 mb-1.5">{preview || 'No content'}</p>
             )}
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-zinc-600">{formatDate(entry.entryDate)}</span>
+              <span className="text-xs text-zinc-600">{formatDate(entry.entryDate)}</span>
               {!entry.locked && entry.tags.length > 0 && (
                 <div className="flex gap-1">
                   {entry.tags.slice(0, 2).map((tag) => (
-                    <span key={tag} className="text-[10px] text-indigo-400 bg-indigo-600/10 px-1.5 py-0.5 rounded-full">
+                    <span key={tag} className="text-xs text-indigo-400 bg-indigo-600/10 px-1.5 py-0.5 rounded-full">
                       {tag}
                     </span>
                   ))}
                   {entry.tags.length > 2 && (
-                    <span className="text-[10px] text-zinc-500">+{entry.tags.length - 2}</span>
+                    <span className="text-xs text-zinc-500">+{entry.tags.length - 2}</span>
                   )}
                 </div>
               )}

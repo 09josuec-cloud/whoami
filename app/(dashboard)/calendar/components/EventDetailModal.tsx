@@ -61,12 +61,12 @@ export default function EventDetailModal({ event, onClose, onDelete, onEdit }: E
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl bg-[#0f0f12] p-6 shadow-2xl ring-1 ring-zinc-800/60">
+      <div className="w-full max-w-md rounded-xl bg-[#111114] border border-white/[0.06] p-6">
         {/* Header */}
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <h2 className="text-base font-semibold text-zinc-100 leading-tight">{event.title}</h2>
-            <span className={['mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium', badge.className].join(' ')}>
+            <span className={['mt-1.5 inline-flex rounded-full px-2 py-0.5 text-xs font-medium', badge.className].join(' ')}>
               {badge.label}
             </span>
           </div>
@@ -128,7 +128,7 @@ export default function EventDetailModal({ event, onClose, onDelete, onEdit }: E
               {onEdit && (
                 <button
                   onClick={() => onEdit(event)}
-                  className="flex-1 rounded-lg border border-zinc-700 py-2 text-sm text-zinc-300 hover:text-zinc-100 hover:border-zinc-600 transition-colors"
+                  className="flex-1 rounded-lg border border-white/[0.06] py-2 text-sm text-zinc-300 hover:text-zinc-100 hover:border-white/[0.1] transition-colors"
                 >
                   Edit
                 </button>
@@ -142,13 +142,13 @@ export default function EventDetailModal({ event, onClose, onDelete, onEdit }: E
               </button>
             </>
           ) : (
-            <div className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900/50 py-2 text-center text-xs text-zinc-500">
+            <div className="flex-1 rounded-lg border border-white/[0.06] bg-white/[0.04] py-2 text-center text-xs text-zinc-500">
               {event.source === 'google' ? 'Edit in Google Calendar' : 'Imported from iCal — read only'}
             </div>
           )}
           <button
             onClick={onClose}
-            className="flex-1 rounded-lg border border-zinc-800 py-2 text-sm text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
+            className="flex-1 rounded-lg border border-white/[0.06] py-2 text-sm text-zinc-400 hover:text-zinc-200 hover:border-white/[0.1] transition-colors"
           >
             Close
           </button>

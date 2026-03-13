@@ -31,7 +31,7 @@ export default function JournalFrequencyChart({
   const hasData = data.some((d) => d.count > 0);
 
   return (
-    <div className="rounded-2xl bg-[#0f0f12] p-5">
+    <div className="rounded-xl bg-[#111114] border border-white/[0.06] p-5">
       <h2 className="text-lg font-semibold text-zinc-100 mb-4">Journal Activity</h2>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
@@ -71,7 +71,7 @@ export default function JournalFrequencyChart({
       {!hasData && (
         <p className="mt-2 text-center text-sm text-zinc-500">No journal entries in the last 12 weeks.</p>
       )}
-      <div className="mt-4 grid grid-cols-3 gap-3 border-t border-zinc-800 pt-4">
+      <div className="mt-4 grid grid-cols-3 gap-3 border-t border-white/[0.06] pt-4">
         <div className="text-center">
           <p className="text-lg font-bold text-violet-400">{totalEntries}</p>
           <p className="text-[11px] text-zinc-500">Total entries</p>

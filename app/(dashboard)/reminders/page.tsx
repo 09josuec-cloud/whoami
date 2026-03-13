@@ -118,7 +118,7 @@ export default function RemindersPage() {
   return (
     <div className="space-y-6 px-6 py-6">
       {/* Header */}
-      <div className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-violet-950/40 via-[#0f0f15] to-[#0f0f12] p-7">
+      <div className="relative mb-6 overflow-hidden rounded-xl bg-gradient-to-br from-violet-950/40 via-[#111114] to-[#111114] p-7 border border-white/[0.06]">
         <div className="pointer-events-none absolute -top-8 right-0 h-32 w-64 rounded-full bg-violet-600/10 blur-3xl" />
         <div className="relative flex items-start justify-between">
           <div>
@@ -144,7 +144,7 @@ export default function RemindersPage() {
 
       {/* Add form */}
       {showForm && (
-        <div className="rounded-2xl bg-[#0f0f12] p-5 ring-1 ring-zinc-800/40">
+        <div className="rounded-xl bg-[#111114] border border-white/[0.06] p-5">
           <h3 className="mb-3 text-sm font-medium text-zinc-100">New Reminder</h3>
           <div className="flex flex-col gap-3">
             <input
@@ -154,32 +154,32 @@ export default function RemindersPage() {
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Escape') setShowForm(false); }}
               placeholder="Reminder title *"
-              className="w-full rounded-xl bg-zinc-800/50 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none ring-1 ring-zinc-700/50 focus:ring-indigo-500"
+              className="w-full rounded-xl bg-white/[0.04] px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none border border-white/[0.06] focus:ring-1 focus:ring-indigo-500"
             />
             <textarea
               value={newNotes}
               onChange={(e) => setNewNotes(e.target.value)}
               placeholder="Notes (optional)"
               rows={2}
-              className="w-full resize-none rounded-xl bg-zinc-800/50 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none ring-1 ring-zinc-700/50 focus:ring-indigo-500"
+              className="w-full resize-none rounded-xl bg-white/[0.04] px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none border border-white/[0.06] focus:ring-1 focus:ring-indigo-500"
             />
             <div className="flex gap-2">
               <input
                 type="date"
                 value={newDate}
                 onChange={(e) => setNewDate(e.target.value)}
-                className="flex-1 rounded-xl bg-zinc-800/50 px-3 py-2 text-sm text-zinc-100 outline-none ring-1 ring-zinc-700/50 focus:ring-indigo-500 [color-scheme:dark]"
+                className="flex-1 rounded-xl bg-white/[0.04] px-3 py-2 text-sm text-zinc-100 outline-none border border-white/[0.06] focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
               />
               <input
                 type="time"
                 value={newTime}
                 onChange={(e) => setNewTime(e.target.value)}
-                className="w-32 rounded-xl bg-zinc-800/50 px-3 py-2 text-sm text-zinc-100 outline-none ring-1 ring-zinc-700/50 focus:ring-indigo-500 [color-scheme:dark]"
+                className="w-32 rounded-xl bg-white/[0.04] px-3 py-2 text-sm text-zinc-100 outline-none border border-white/[0.06] focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
               />
               <select
                 value={newRepeat}
                 onChange={(e) => setNewRepeat(e.target.value)}
-                className="rounded-xl bg-zinc-800/50 px-3 py-2 text-sm text-zinc-100 outline-none ring-1 ring-zinc-700/50 focus:ring-indigo-500"
+                className="rounded-xl bg-white/[0.04] px-3 py-2 text-sm text-zinc-100 outline-none border border-white/[0.06] focus:ring-1 focus:ring-indigo-500"
               >
                 <option value="none">No repeat</option>
                 <option value="daily">Daily</option>
@@ -197,7 +197,7 @@ export default function RemindersPage() {
               </button>
               <button
                 onClick={() => setShowForm(false)}
-                className="flex-1 rounded-lg border border-zinc-800 py-2 text-sm text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
+                className="flex-1 rounded-lg border border-white/[0.06] py-2 text-sm text-zinc-400 hover:text-zinc-200 hover:border-white/[0.1] transition-colors"
               >
                 Cancel
               </button>
@@ -207,7 +207,7 @@ export default function RemindersPage() {
       )}
 
       {/* Filter tabs */}
-      <div className="flex gap-1 border-b border-zinc-800">
+      <div className="flex gap-1 border-b border-white/[0.06]">
         {(['pending', 'all'] as Filter[]).map((f) => (
           <button
             key={f}
@@ -251,8 +251,8 @@ export default function RemindersPage() {
               <div
                 key={r.id}
                 className={[
-                  'group rounded-2xl bg-[#0f0f12] p-4 transition-colors ring-1',
-                  overdue ? 'ring-red-600/20' : r.done ? 'ring-zinc-800/40 opacity-60' : 'ring-zinc-800/40 hover:ring-zinc-700/60',
+                  'group rounded-xl bg-[#111114] border p-4 transition-colors',
+                  overdue ? 'border-red-600/20' : r.done ? 'border-white/[0.06] opacity-60' : 'border-white/[0.06] hover:border-white/[0.1]',
                 ].join(' ')}
               >
                 <div className="flex items-start gap-3">
@@ -273,7 +273,7 @@ export default function RemindersPage() {
                       </svg>
                     </button>
                   ) : (
-                    <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-zinc-700 bg-zinc-700">
+                    <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-white/[0.12] bg-white/[0.08]">
                       <svg className="h-2.5 w-2.5 text-zinc-400" viewBox="0 0 10 10" fill="none">
                         <path d="M1.5 5l2.5 3 4.5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
@@ -297,18 +297,18 @@ export default function RemindersPage() {
                         {formatDue(r.dueAt)}
                       </p>
                       {r.repeat && r.repeat !== 'none' && (
-                        <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] text-zinc-400">
+                        <span className="rounded bg-white/[0.06] px-1.5 py-0.5 text-xs text-zinc-400">
                           {REPEAT_LABELS[r.repeat] ?? r.repeat}
                         </span>
                       )}
                       {r.notes && (
-                        <span className="text-[10px] text-zinc-600 hover:text-zinc-400">
+                        <span className="text-xs text-zinc-600 hover:text-zinc-400">
                           {expanded ? '▲ notes' : '▼ notes'}
                         </span>
                       )}
                     </div>
                     {expanded && r.notes && (
-                      <p className="mt-2 text-xs text-zinc-400 whitespace-pre-wrap rounded-lg bg-zinc-800/50 px-3 py-2">
+                      <p className="mt-2 text-xs text-zinc-400 whitespace-pre-wrap rounded-lg bg-white/[0.04] px-3 py-2">
                         {r.notes}
                       </p>
                     )}

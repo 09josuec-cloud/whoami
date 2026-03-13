@@ -70,14 +70,14 @@ export default function TransactionList({ transactions }: TransactionListProps) 
             placeholder="Search transactions..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 py-2 pl-9 pr-3 text-sm text-zinc-100 placeholder-zinc-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+            className="w-full rounded-lg border border-white/[0.06] bg-white/[0.04] py-2 pl-9 pr-3 text-sm text-zinc-100 placeholder-zinc-600 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
           />
         </div>
 
         <select
           value={categoryFilter}
           onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+          className="rounded-lg border border-white/[0.06] bg-white/[0.04] px-3 py-2 text-sm text-zinc-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
         >
           <option value="">All categories</option>
           {CATEGORIES.map((cat) => (
@@ -94,7 +94,7 @@ export default function TransactionList({ transactions }: TransactionListProps) 
           <p className="text-sm text-zinc-500">No transactions found</p>
         </div>
       ) : (
-        <ul className="divide-y divide-zinc-800">
+        <ul className="divide-y divide-white/[0.06]">
           {paginated.map((tx) => {
             const isIncome = tx.amount < 0;
             const absAmount = Math.abs(tx.amount);
@@ -119,7 +119,7 @@ export default function TransactionList({ transactions }: TransactionListProps) 
                       {tx.merchantName ?? tx.name}
                     </p>
                     {tx.pending && (
-                      <span className="inline-flex items-center rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-medium text-amber-400">
+                      <span className="inline-flex items-center rounded-full bg-amber-500/20 px-1.5 py-0.5 text-xs font-medium text-amber-400">
                         Pending
                       </span>
                     )}
@@ -127,7 +127,7 @@ export default function TransactionList({ transactions }: TransactionListProps) 
                   <div className="mt-0.5 flex items-center gap-2">
                     {tx.category && (
                       <span
-                        className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium"
+                        className="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium"
                         style={{
                           backgroundColor: `${categoryColor}20`,
                           color: categoryColor,
@@ -168,7 +168,7 @@ export default function TransactionList({ transactions }: TransactionListProps) 
         <div className="mt-4 text-center">
           <button
             onClick={loadMore}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-xs font-medium text-zinc-400 hover:bg-zinc-700 hover:text-zinc-100 transition-colors"
+            className="rounded-lg border border-white/[0.06] bg-white/[0.04] px-4 py-2 text-xs font-medium text-zinc-400 hover:bg-white/[0.08] hover:text-zinc-100 transition-colors"
           >
             Load more ({filtered.length - paginated.length} remaining)
           </button>

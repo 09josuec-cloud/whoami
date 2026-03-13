@@ -252,7 +252,7 @@ export default function AnalyticsClient() {
       {/* Header */}
       <div className="relative overflow-hidden">
         <div className="pointer-events-none absolute -top-8 right-0 h-32 w-64 rounded-full bg-indigo-600/10 blur-3xl" />
-        <h1 className="bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent text-3xl font-bold tracking-tight">Analytics</h1>
+        <h1 className="text-zinc-100 text-3xl font-semibold tracking-tight">Analytics</h1>
         <p className="mt-1 text-sm text-zinc-500">
           Your personal life stats — spending, mood, journaling, and savings at a glance.
         </p>

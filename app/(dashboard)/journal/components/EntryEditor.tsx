@@ -199,7 +199,7 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
       ) : (
         <>
           {/* Toolbar */}
-          <div className="flex items-center justify-between border-b border-zinc-800 px-6 py-3 gap-4">
+          <div className="flex items-center justify-between border-b border-white/[0.06] px-6 py-3 gap-4">
             <div className="flex items-center gap-2 text-xs text-zinc-500">
               {saving ? (
                 <span className="text-indigo-400">Saving…</span>
@@ -207,7 +207,7 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
                 <span>{wordCount} words · {charCount} chars</span>
               )}
               {locked && revealed && (
-                <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-amber-400 text-[10px] font-medium">
+                <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-amber-400 text-xs font-medium">
                   🔒 Viewing locked entry
                 </span>
               )}
@@ -216,22 +216,22 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
               <button
                 onClick={() => editor?.chain().focus().toggleBold().run()}
                 disabled={locked && !revealed}
-                className={['px-2 py-1 rounded text-xs font-bold transition-colors', editor?.isActive('bold') ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:bg-zinc-800'].join(' ')}
+                className={['px-2 py-1 rounded text-xs font-bold transition-colors', editor?.isActive('bold') ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:bg-white/[0.04]'].join(' ')}
               >B</button>
               <button
                 onClick={() => editor?.chain().focus().toggleItalic().run()}
                 disabled={locked && !revealed}
-                className={['px-2 py-1 rounded text-xs italic transition-colors', editor?.isActive('italic') ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:bg-zinc-800'].join(' ')}
+                className={['px-2 py-1 rounded text-xs italic transition-colors', editor?.isActive('italic') ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:bg-white/[0.04]'].join(' ')}
               >I</button>
               <button
                 onClick={() => editor?.chain().focus().toggleBulletList().run()}
                 disabled={locked && !revealed}
-                className={['px-2 py-1 rounded text-xs transition-colors', editor?.isActive('bulletList') ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:bg-zinc-800'].join(' ')}
+                className={['px-2 py-1 rounded text-xs transition-colors', editor?.isActive('bulletList') ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:bg-white/[0.04]'].join(' ')}
               >• List</button>
-              <div className="w-px h-4 bg-zinc-800" />
+              <div className="w-px h-4 bg-white/[0.06]" />
               <button
                 onClick={() => void handleLockClick()}
-                className={['px-2.5 py-1 rounded text-xs transition-colors flex items-center gap-1', locked ? 'bg-amber-600/20 text-amber-400' : 'text-zinc-400 hover:bg-zinc-800'].join(' ')}
+                className={['px-2.5 py-1 rounded text-xs transition-colors flex items-center gap-1', locked ? 'bg-amber-600/20 text-amber-400' : 'text-zinc-400 hover:bg-white/[0.04]'].join(' ')}
                 title={locked ? 'Hide entry' : 'Lock entry'}
               >
                 {locked ? '🔒 Hide' : '🔓 Lock'}
@@ -296,7 +296,7 @@ export default function EntryEditor({ entry, onSave, onDelete, onEntryDeleted, s
           </div>
 
           {/* Tags */}
-          <div className="border-t border-zinc-800 px-6 py-3">
+          <div className="border-t border-white/[0.06] px-6 py-3">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs text-zinc-600">Tags</span>
               {tags.map((tag) => (

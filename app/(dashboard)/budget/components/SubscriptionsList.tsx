@@ -86,8 +86,8 @@ export default function SubscriptionsList() {
 
   if (outflow.length === 0 && inflow.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-700 py-16 text-center">
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-zinc-800 text-2xl">🔄</div>
+      <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/[0.06] py-16 text-center">
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/[0.06] text-2xl">🔄</div>
         <p className="text-sm font-medium text-zinc-300">No recurring transactions found</p>
         <p className="mt-1 max-w-xs text-xs text-zinc-500">
           Sync your transactions first. Plaid detects recurring charges after 3+ occurrences.
@@ -100,17 +100,17 @@ export default function SubscriptionsList() {
     <div className="space-y-6">
       {/* Summary */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <div className="rounded-2xl bg-[#0f0f12] p-5">
+        <div className="rounded-xl bg-[#111114] border border-white/[0.06] p-5">
           <p className="text-xs text-zinc-500">Monthly subscriptions</p>
           <p className="mt-1 text-xl font-bold text-zinc-100">{fmt(monthlyTotal)}</p>
           <p className="mt-0.5 text-xs text-zinc-600">{activeSubscriptions.length} active</p>
         </div>
-        <div className="rounded-2xl bg-[#0f0f12] p-5">
+        <div className="rounded-xl bg-[#111114] border border-white/[0.06] p-5">
           <p className="text-xs text-zinc-500">Annual cost</p>
           <p className="mt-1 text-xl font-bold text-zinc-100">{fmt(monthlyTotal * 12)}</p>
           <p className="mt-0.5 text-xs text-zinc-600">Projected</p>
         </div>
-        <div className="rounded-2xl bg-[#0f0f12] p-5 col-span-2 sm:col-span-1">
+        <div className="rounded-xl bg-[#111114] border border-white/[0.06] p-5 col-span-2 sm:col-span-1">
           <p className="text-xs text-zinc-500">Recurring income</p>
           <p className="mt-1 text-xl font-bold text-emerald-400">{activeIncome.length} stream{activeIncome.length !== 1 ? 's' : ''}</p>
           <p className="mt-0.5 text-xs text-zinc-600">Detected</p>
@@ -123,7 +123,7 @@ export default function SubscriptionsList() {
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
             Recurring Charges
           </h3>
-          <div className="divide-y divide-zinc-800/60 rounded-2xl bg-[#0f0f12]">
+          <div className="divide-y divide-white/[0.06] rounded-xl bg-[#111114] border border-white/[0.06]">
             {activeSubscriptions.map((sub) => {
               const name = sub.merchant_name ?? sub.description ?? 'Unknown';
               const amt = Math.abs(sub.average_amount?.amount ?? sub.last_amount?.amount ?? 0);
@@ -133,7 +133,7 @@ export default function SubscriptionsList() {
               return (
                 <div key={sub.stream_id} className="flex items-center gap-3 px-4 py-3">
                   {/* Icon / logo */}
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-sm font-bold text-zinc-300">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-sm font-bold text-zinc-300">
                     {name.charAt(0).toUpperCase()}
                   </div>
 
@@ -141,7 +141,7 @@ export default function SubscriptionsList() {
                     <div className="flex items-center gap-2">
                       <p className="truncate text-sm font-medium text-zinc-100">{name}</p>
                       {isEarlyDetection && (
-                        <span className="shrink-0 rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-medium text-amber-400">
+                        <span className="shrink-0 rounded-full bg-amber-500/20 px-1.5 py-0.5 text-xs font-medium text-amber-400">
                           New
                         </span>
                       )}
@@ -173,7 +173,7 @@ export default function SubscriptionsList() {
               const amt = Math.abs(sub.average_amount?.amount ?? sub.last_amount?.amount ?? 0);
               return (
                 <div key={sub.stream_id} className="flex items-center gap-3 px-4 py-3 opacity-40">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-sm font-bold text-zinc-300">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-sm font-bold text-zinc-300">
                     {name.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -194,7 +194,7 @@ export default function SubscriptionsList() {
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
             Recurring Income
           </h3>
-          <div className="divide-y divide-zinc-800/60 rounded-2xl bg-[#0f0f12]">
+          <div className="divide-y divide-white/[0.06] rounded-xl bg-[#111114] border border-white/[0.06]">
             {inflow.map((stream) => {
               const name = stream.merchant_name ?? stream.description ?? 'Income';
               const amt = Math.abs(stream.average_amount?.amount ?? stream.last_amount?.amount ?? 0);

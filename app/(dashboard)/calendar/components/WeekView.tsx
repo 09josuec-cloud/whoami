@@ -64,24 +64,24 @@ export default function WeekView({ currentDate, events, onDayClick, onEventClick
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       {/* Day headers — sticky */}
-      <div className="grid shrink-0 border-b border-zinc-800" style={{ gridTemplateColumns: '48px repeat(7, 1fr)' }}>
-        <div className="border-r border-zinc-800" /> {/* time column spacer */}
+      <div className="grid shrink-0 border-b border-white/[0.06]" style={{ gridTemplateColumns: '48px repeat(7, 1fr)' }}>
+        <div className="border-r border-white/[0.06]" /> {/* time column spacer */}
         {weekDays.map((day, i) => {
           const dateStr = toDateStr(day);
           const isToday = dateStr === todayStr;
           return (
             <div
               key={i}
-              className="flex flex-col items-center border-r border-zinc-800 py-2 last:border-r-0"
+              className="flex flex-col items-center border-r border-white/[0.06] py-2 last:border-r-0"
             >
-              <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">
+              <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">
                 {DAY_LABELS[i]}
               </span>
               <button
                 onClick={() => onDayViewClick(dateStr)}
                 className={[
                   'mt-0.5 flex h-7 w-7 items-center justify-center rounded-full text-sm font-medium transition-colors',
-                  isToday ? 'bg-indigo-600 text-white' : 'text-zinc-200 hover:bg-zinc-800',
+                  isToday ? 'bg-indigo-600 text-white' : 'text-zinc-200 hover:bg-white/[0.04]',
                 ].join(' ')}
                 title="Go to day view"
               >
@@ -97,14 +97,14 @@ export default function WeekView({ currentDate, events, onDayClick, onEventClick
         <div className="relative" style={{ height: `${24 * HOUR_HEIGHT}px`, display: 'grid', gridTemplateColumns: '48px repeat(7, 1fr)' }}>
 
           {/* Hour labels column */}
-          <div className="relative border-r border-zinc-800">
+          <div className="relative border-r border-white/[0.06]">
             {HOURS.map((h) => (
               <div
                 key={h}
                 className="absolute left-0 right-0 flex items-start justify-end pr-2"
                 style={{ top: `${h * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }}
               >
-                <span className="text-[10px] text-zinc-600 select-none -translate-y-2">
+                <span className="text-xs text-zinc-600 select-none -translate-y-2">
                   {h === 0 ? '12 AM' : h < 12 ? `${h} AM` : h === 12 ? '12 PM' : `${h - 12} PM`}
                 </span>
               </div>
@@ -125,7 +125,7 @@ export default function WeekView({ currentDate, events, onDayClick, onEventClick
               <div
                 key={colIdx}
                 className={[
-                  'relative border-r border-zinc-800/60 last:border-r-0',
+                  'relative border-r border-white/[0.06] last:border-r-0',
                   isToday ? 'bg-indigo-950/10' : '',
                 ].join(' ')}
                 onClick={() => onDayClick(dateStr)}
@@ -134,7 +134,7 @@ export default function WeekView({ currentDate, events, onDayClick, onEventClick
                 {HOURS.map((h) => (
                   <div
                     key={h}
-                    className="absolute left-0 right-0 border-t border-zinc-800/40 pointer-events-none"
+                    className="absolute left-0 right-0 border-t border-white/[0.04] pointer-events-none"
                     style={{ top: `${h * HOUR_HEIGHT}px` }}
                   />
                 ))}
@@ -145,7 +145,7 @@ export default function WeekView({ currentDate, events, onDayClick, onEventClick
                     key={event.id}
                     onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
                     className={[
-                      'absolute left-0.5 right-0.5 z-10 truncate rounded border-l-2 px-1 py-px text-[10px] font-medium transition-opacity hover:opacity-80',
+                      'absolute left-0.5 right-0.5 z-10 truncate rounded border-l-2 px-1 py-px text-xs font-medium transition-opacity hover:opacity-80',
                       getEventColor(event),
                     ].join(' ')}
                     style={{ top: '2px' }}
@@ -185,9 +185,9 @@ export default function WeekView({ currentDate, events, onDayClick, onEventClick
                       ].join(' ')}
                       title={event.title}
                     >
-                      <p className="truncate text-[10px] font-medium leading-tight">{event.title}</p>
+                      <p className="truncate text-xs font-medium leading-tight">{event.title}</p>
                       {height > 28 && (
-                        <p className="text-[9px] opacity-70 leading-tight">
+                        <p className="text-xs opacity-70 leading-tight">
                           {start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                         </p>
                       )}
@@ -199,7 +199,7 @@ export default function WeekView({ currentDate, events, onDayClick, onEventClick
                 {allDayEvents.length > 2 && (
                   <button
                     onClick={(e) => { e.stopPropagation(); onShowDayEvents(dateStr); }}
-                    className="absolute left-0.5 right-0.5 z-10 rounded px-1 py-px text-[9px] text-zinc-500 hover:text-zinc-300 transition-colors"
+                    className="absolute left-0.5 right-0.5 z-10 rounded px-1 py-px text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
                     style={{ top: '18px' }}
                   >
                     +{allDayEvents.length - 2} more

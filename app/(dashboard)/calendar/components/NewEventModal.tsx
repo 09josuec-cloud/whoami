@@ -87,7 +87,7 @@ export default function NewEventModal({ initialDate, onSave, onClose }: NewEvent
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl bg-[#0f0f12] p-6 shadow-2xl ring-1 ring-zinc-800/60">
+      <div className="w-full max-w-md rounded-xl bg-[#111114] border border-white/[0.06] p-6">
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-base font-semibold text-zinc-100">New Event</h2>
@@ -111,7 +111,7 @@ export default function NewEventModal({ initialDate, onSave, onClose }: NewEvent
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') void handleSubmit(); }}
               placeholder="Event title *"
-              className="w-full rounded-lg bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:ring-1 focus:ring-indigo-500 border border-zinc-800"
+              className="w-full rounded-lg bg-white/[0.04] px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:ring-1 focus:ring-indigo-500 border border-white/[0.06]"
             />
             {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
           </div>
@@ -122,7 +122,7 @@ export default function NewEventModal({ initialDate, onSave, onClose }: NewEvent
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
+              className="flex-1 rounded-lg border border-white/[0.06] bg-white/[0.04] px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
             />
             <label className="flex items-center gap-1.5 text-xs text-zinc-400 cursor-pointer select-none">
               <input
@@ -149,14 +149,14 @@ export default function NewEventModal({ initialDate, onSave, onClose }: NewEvent
                     const endH = (h + 1) % 24;
                     setEndTime(`${String(endH).padStart(2, '0')}:${String(m ?? 0).padStart(2, '0')}`);
                   }}
-                  className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
+                  className="flex-1 rounded-lg border border-white/[0.06] bg-white/[0.04] px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
                 />
                 <span className="text-zinc-600 text-xs">to</span>
                 <input
                   type="time"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
+                  className="flex-1 rounded-lg border border-white/[0.06] bg-white/[0.04] px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
                 />
               </div>
             </div>
@@ -168,7 +168,7 @@ export default function NewEventModal({ initialDate, onSave, onClose }: NewEvent
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="Location (optional)"
-            className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:ring-1 focus:ring-indigo-500"
+            className="w-full rounded-lg border border-white/[0.06] bg-white/[0.04] px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:ring-1 focus:ring-indigo-500"
           />
 
           {/* Description */}
@@ -177,7 +177,7 @@ export default function NewEventModal({ initialDate, onSave, onClose }: NewEvent
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Description (optional)"
             rows={2}
-            className="w-full resize-none rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:ring-1 focus:ring-indigo-500"
+            className="w-full resize-none rounded-lg border border-white/[0.06] bg-white/[0.04] px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:ring-1 focus:ring-indigo-500"
           />
 
           {/* Color picker */}
@@ -204,7 +204,7 @@ export default function NewEventModal({ initialDate, onSave, onClose }: NewEvent
             <select
               value={recurrence}
               onChange={(e) => setRecurrence(e.target.value)}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full rounded-lg border border-white/[0.06] bg-white/[0.04] px-3 py-2 text-sm text-zinc-100 outline-none focus:ring-1 focus:ring-indigo-500"
             >
               <option value="none">No recurrence</option>
               <option value="RRULE:FREQ=DAILY">Daily</option>
@@ -225,7 +225,7 @@ export default function NewEventModal({ initialDate, onSave, onClose }: NewEvent
           </button>
           <button
             onClick={onClose}
-            className="flex-1 rounded-lg border border-zinc-800 py-2 text-sm text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-colors"
+            className="flex-1 rounded-lg border border-white/[0.06] py-2 text-sm text-zinc-400 hover:text-zinc-200 hover:border-white/[0.1] transition-colors"
           >
             Cancel
           </button>

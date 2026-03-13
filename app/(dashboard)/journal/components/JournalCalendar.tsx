@@ -53,7 +53,7 @@ export default function JournalCalendar({
       {/* Day headers */}
       <div className="grid grid-cols-7 mb-1">
         {DAYS.map((d) => (
-          <div key={d} className="text-center text-[9px] text-zinc-600 font-medium">{d}</div>
+          <div key={d} className="text-center text-xs text-zinc-600 font-medium">{d}</div>
         ))}
       </div>
 
@@ -75,7 +75,7 @@ export default function JournalCalendar({
                 'relative flex items-center justify-center h-7 w-7 mx-auto rounded-full text-[11px] transition-all',
                 isSelected ? 'bg-indigo-600 text-white font-semibold' :
                   isToday ? 'border border-indigo-500 text-indigo-300' :
-                    'text-zinc-400 hover:bg-zinc-800',
+                    'text-zinc-400 hover:bg-white/[0.04]',
               ].join(' ')}
             >
               {day}

@@ -42,9 +42,9 @@ export default function DayEventsModal({ dateStr, events, onClose, onEventClick,
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-2xl bg-[#0f0f12] shadow-2xl ring-1 ring-zinc-800/60">
+      <div className="w-full max-w-sm rounded-xl bg-[#111114] border border-white/[0.06]">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
+        <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
           <h2 className="text-sm font-semibold text-zinc-100">{formatDay(dateStr)}</h2>
           <button
             onClick={onClose}
@@ -65,12 +65,12 @@ export default function DayEventsModal({ dateStr, events, onClose, onEventClick,
               <button
                 key={event.id}
                 onClick={() => { onEventClick(event); onClose(); }}
-                className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-zinc-800/60 transition-colors"
+                className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-white/[0.04] transition-colors"
               >
                 <span className={['mt-0.5 h-2 w-2 shrink-0 rounded-full', getEventDot(event)].join(' ')} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-medium text-zinc-100">{event.title}</p>
-                  <p className="text-[10px] text-zinc-500">
+                  <p className="text-xs text-zinc-500">
                     {event.allDay
                       ? 'All day'
                       : `${new Date(event.start).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} – ${new Date(event.end).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`}
@@ -85,10 +85,10 @@ export default function DayEventsModal({ dateStr, events, onClose, onEventClick,
         </div>
 
         {/* Footer */}
-        <div className="border-t border-zinc-800 px-3 py-2.5 flex gap-2">
+        <div className="border-t border-white/[0.06] px-3 py-2.5 flex gap-2">
           <button
             onClick={() => { onViewDay(); onClose(); }}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-zinc-700 py-1.5 text-xs text-zinc-300 hover:border-zinc-600 hover:text-zinc-100 transition-colors"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-white/[0.06] py-1.5 text-xs text-zinc-300 hover:border-white/[0.1] hover:text-zinc-100 transition-colors"
           >
             View Day
           </button>

@@ -43,19 +43,19 @@ export default function NetWorthCard({
     savingsTarget > 0 ? Math.min(Math.round((savingsTotal / savingsTarget) * 100), 100) : 0;
 
   return (
-    <div className="rounded-2xl bg-[#0f0f12] p-5">
-      <h2 className="text-lg font-semibold text-zinc-100 mb-1">Net Worth Snapshot</h2>
-      <p className="text-4xl font-bold text-emerald-400 mb-5">{fmt(current)}</p>
+    <div className="rounded-xl bg-[#111114] border border-white/[0.06] p-5">
+      <h2 className="text-sm font-medium text-zinc-500 mb-1">Net Worth Snapshot</h2>
+      <p className="text-4xl font-semibold tabular-nums tracking-tight text-emerald-400 mb-5">{fmt(current)}</p>
 
       {accounts.length > 0 ? (
         <div className="space-y-2 mb-5">
-          <p className="text-xs font-medium uppercase tracking-widest text-zinc-600 mb-2">Accounts</p>
+          <p className="text-xs font-medium text-zinc-500 mb-2">Accounts</p>
           {accounts.map((a, i) => (
             <div key={i} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span
                   className={[
-                    'rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
+                    'rounded-md px-1.5 py-0.5 text-xs font-medium capitalize',
                     TYPE_COLORS[a.type] ?? TYPE_COLORS['other'],
                   ].join(' ')}
                 >
@@ -63,7 +63,7 @@ export default function NetWorthCard({
                 </span>
                 <span className="text-sm text-zinc-300 truncate max-w-[160px]">{a.name}</span>
               </div>
-              <span className="text-sm font-medium text-zinc-200">{fmtFull(a.balance)}</span>
+              <span className="text-sm font-medium tabular-nums text-zinc-200">{fmtFull(a.balance)}</span>
             </div>
           ))}
         </div>
@@ -72,22 +72,22 @@ export default function NetWorthCard({
       )}
 
       {savingsTarget > 0 && (
-        <div className="border-t border-zinc-800 pt-4">
+        <div className="border-t border-white/[0.06] pt-4">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-widest text-zinc-600">
+            <p className="text-xs font-medium text-zinc-500">
               Savings goals
             </p>
-            <span className="text-xs text-zinc-400">
+            <span className="text-xs text-zinc-400 tabular-nums">
               {fmtFull(savingsTotal)} / {fmtFull(savingsTarget)}
             </span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-800">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
             <div
               className="h-full rounded-full bg-indigo-500 transition-all"
               style={{ width: `${savingsPct}%` }}
             />
           </div>
-          <p className="mt-1 text-[11px] text-zinc-500">{savingsPct}% of total goal target saved</p>
+          <p className="mt-1 text-xs text-zinc-500">{savingsPct}% of total goal target saved</p>
         </div>
       )}
     </div>

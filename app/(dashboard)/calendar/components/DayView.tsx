@@ -62,7 +62,7 @@ export default function DayView({ currentDate, events, onEventClick }: DayViewPr
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       {/* Day header */}
-      <div className="border-b border-zinc-800 px-4 py-2.5">
+      <div className="border-b border-white/[0.06] px-4 py-2.5">
         <h2 className={['text-sm font-semibold', isToday ? 'text-indigo-300' : 'text-zinc-100'].join(' ')}>
           {isToday && <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-indigo-500 align-middle" />}
           {dayLabel}
@@ -74,7 +74,7 @@ export default function DayView({ currentDate, events, onEventClick }: DayViewPr
                 key={e.id}
                 onClick={() => onEventClick(e)}
                 className={[
-                  'rounded border px-2 py-0.5 text-[10px] font-medium transition-opacity hover:opacity-80',
+                  'rounded border px-2 py-0.5 text-xs font-medium transition-opacity hover:opacity-80',
                   getEventColor(e),
                 ].join(' ')}
               >
@@ -92,10 +92,10 @@ export default function DayView({ currentDate, events, onEventClick }: DayViewPr
           {HOURS.map((h) => (
             <div
               key={h}
-              className="absolute left-0 right-0 border-t border-zinc-800/50"
+              className="absolute left-0 right-0 border-t border-white/[0.06]"
               style={{ top: `${h * HOUR_HEIGHT}px` }}
             >
-              <span className="absolute left-2 -translate-y-1/2 text-[10px] text-zinc-600 select-none">
+              <span className="absolute left-2 -translate-y-1/2 text-xs text-zinc-600 select-none">
                 {h === 0 ? '12 AM' : h < 12 ? `${h} AM` : h === 12 ? '12 PM' : `${h - 12} PM`}
               </span>
             </div>
@@ -134,7 +134,7 @@ export default function DayView({ currentDate, events, onEventClick }: DayViewPr
                 >
                   <p className="truncate text-xs font-medium">{event.title}</p>
                   {height > 30 && (
-                    <p className="text-[10px] opacity-70">
+                    <p className="text-xs opacity-70">
                       {start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                       {' – '}
                       {end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
