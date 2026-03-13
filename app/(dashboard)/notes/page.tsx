@@ -9,6 +9,8 @@ interface Note {
   tags: string[];
   pinned: boolean;
   color: string | null;
+  locked: boolean;
+  pinAttempts: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,6 +44,14 @@ function PinIcon({ className }: { className?: string }) {
   return (
     <svg className={className ?? 'h-3.5 w-3.5'} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <path d="M16 12V4h1a1 1 0 0 0 0-2H7a1 1 0 0 0 0 2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z" />
+    </svg>
+  );
+}
+
+function LockIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className ?? 'h-3.5 w-3.5'} fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
     </svg>
   );
 }
@@ -84,12 +94,28 @@ export default function NotesPage() {
   const [search, setSearch] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
 
-  // Modal state
+  // Session-unlocked note IDs
+  const [unlockedNoteIds, setUnlockedNoteIds] = useState<Set<string>>(new Set());
+
+  // PIN unlock modal state
+  const [pinModalNote, setPinModalNote] = useState<Note | null>(null);
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [pinSubmitting, setPinSubmitting] = useState(false);
+  const [pinEraseMessage, setPinEraseMessage] = useState('');
+
+  // Lock-from-editor modal state
+  const [lockModalOpen, setLockModalOpen] = useState(false);
+  const [lockPinInput, setLockPinInput] = useState('');
+  const [lockPinError, setLockPinError] = useState('');
+  const [lockSubmitting, setLockSubmitting] = useState(false);
+
+  // Editor modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [activeNote, setActiveNote] = useState<Note | null>(null);
   const [isNew, setIsNew] = useState(false);
 
-  // Editor state
+  // Editor field state
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
   const [editTags, setEditTags] = useState('');
@@ -100,6 +126,8 @@ export default function NotesPage() {
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const pinInputRef = useRef<HTMLInputElement>(null);
+  const lockPinInputRef = useRef<HTMLInputElement>(null);
 
   // ── Data fetching ──────────────────────────────────────────────────────────
 
@@ -138,12 +166,30 @@ export default function NotesPage() {
     }
   }, [editContent, modalOpen]);
 
-  // Close modal on Escape
+  // Close editor modal on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModal(); };
     if (modalOpen) window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [modalOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Focus PIN input when PIN modal opens
+  useEffect(() => {
+    if (pinModalNote) {
+      setPinInput('');
+      setPinError('');
+      setTimeout(() => pinInputRef.current?.focus(), 50);
+    }
+  }, [pinModalNote]);
+
+  // Focus lock PIN input when lock modal opens
+  useEffect(() => {
+    if (lockModalOpen) {
+      setLockPinInput('');
+      setLockPinError('');
+      setTimeout(() => lockPinInputRef.current?.focus(), 50);
+    }
+  }, [lockModalOpen]);
 
   // ── Derived state ──────────────────────────────────────────────────────────
 
@@ -160,6 +206,9 @@ export default function NotesPage() {
     setEditColor(note.color ?? '');
     setEditPinned(note.pinned);
     setDeleteConfirm(false);
+    setLockModalOpen(false);
+    setLockPinInput('');
+    setLockPinError('');
     setModalOpen(true);
   };
 
@@ -172,6 +221,7 @@ export default function NotesPage() {
     setEditColor('');
     setEditPinned(false);
     setDeleteConfirm(false);
+    setLockModalOpen(false);
     setModalOpen(true);
   };
 
@@ -181,6 +231,107 @@ export default function NotesPage() {
     setActiveNote(null);
     setIsNew(false);
     setDeleteConfirm(false);
+    setLockModalOpen(false);
+    setLockPinInput('');
+    setLockPinError('');
+  };
+
+  const handleCardClick = (note: Note) => {
+    // If locked and not yet unlocked this session → open PIN modal
+    if (note.locked && !unlockedNoteIds.has(note.id)) {
+      setPinModalNote(note);
+      return;
+    }
+    openNote(note);
+  };
+
+  const closePinModal = () => {
+    setPinModalNote(null);
+    setPinInput('');
+    setPinError('');
+    setPinEraseMessage('');
+  };
+
+  // ── PIN unlock ─────────────────────────────────────────────────────────────
+
+  const handlePinUnlock = async () => {
+    if (!pinModalNote || !pinInput.trim()) return;
+    setPinSubmitting(true);
+    setPinError('');
+    try {
+      const res = await fetch(`/api/notes/${pinModalNote.id}/unlock`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: pinInput }),
+      });
+      const data = (await res.json()) as { success: boolean; attemptsLeft?: number; deleted?: boolean };
+
+      if (data.deleted) {
+        // Note erased
+        setNotes((prev) => prev.filter((n) => n.id !== pinModalNote.id));
+        setPinEraseMessage('Note erased after too many failed attempts.');
+        setPinInput('');
+        return;
+      }
+
+      if (data.success) {
+        // Mark as session-unlocked, then open editor
+        setUnlockedNoteIds((prev) => new Set([...prev, pinModalNote.id]));
+        const noteToOpen = pinModalNote;
+        closePinModal();
+        openNote(noteToOpen);
+      } else {
+        const left = data.attemptsLeft ?? 0;
+        setPinError(`Wrong PIN — ${left} attempt${left === 1 ? '' : 's'} left.`);
+        setPinInput('');
+        pinInputRef.current?.focus();
+      }
+    } catch {
+      setPinError('Something went wrong. Please try again.');
+    } finally {
+      setPinSubmitting(false);
+    }
+  };
+
+  // ── Lock note from editor ──────────────────────────────────────────────────
+
+  const handleLockNote = async () => {
+    if (!activeNote || !lockPinInput.trim()) return;
+    setLockSubmitting(true);
+    setLockPinError('');
+    try {
+      const res = await fetch(`/api/notes/${activeNote.id}/lock`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: lockPinInput }),
+      });
+      const data = (await res.json()) as { success: boolean; note?: Note; attemptsLeft?: number };
+
+      if (data.success && data.note) {
+        // Update note in list to locked: true
+        setNotes((prev) => prev.map((n) => (n.id === activeNote.id ? data.note! : n)));
+        // Remove from session-unlocked set (it's now locked again)
+        setUnlockedNoteIds((prev) => {
+          const next = new Set(prev);
+          next.delete(activeNote.id);
+          return next;
+        });
+        closeModal();
+      } else {
+        const left = data.attemptsLeft ?? 0;
+        setLockPinError(
+          data.attemptsLeft !== undefined
+            ? `Wrong PIN — ${left} attempt${left === 1 ? '' : 's'} left.`
+            : 'Wrong PIN. Please try again.'
+        );
+        setLockPinInput('');
+        lockPinInputRef.current?.focus();
+      }
+    } catch {
+      setLockPinError('Something went wrong. Please try again.');
+    } finally {
+      setLockSubmitting(false);
+    }
   };
 
   // ── API calls ──────────────────────────────────────────────────────────────
@@ -271,15 +422,18 @@ export default function NotesPage() {
 
   const NoteCard = ({ note }: { note: Note }) => {
     const cfg = getColorConfig(note.color);
+    const isLocked = note.locked && !unlockedNoteIds.has(note.id);
+
     return (
       <div
-        onClick={() => openNote(note)}
+        onClick={() => handleCardClick(note)}
         className={[
           'rounded-2xl border p-4 mb-4 break-inside-avoid cursor-pointer',
           'transition-all duration-200 hover:scale-[1.015] hover:shadow-lg hover:shadow-black/30',
           cfg.bg,
           cfg.border,
           'hover:border-white/[0.14]',
+          isLocked ? 'relative overflow-hidden' : '',
         ].join(' ')}
       >
         {/* Top row */}
@@ -291,36 +445,52 @@ export default function NotesPage() {
             {note.pinned && (
               <PinIcon className="h-3 w-3 text-amber-400" />
             )}
-            {note.color && (
+            {isLocked && (
+              <LockIcon className="h-3.5 w-3.5 text-rose-400/80" />
+            )}
+            {note.color && !isLocked && (
               <span className={['h-2 w-2 rounded-full shrink-0', cfg.dot].join(' ')} />
             )}
           </div>
         </div>
 
-        {/* Content preview */}
-        {note.content && (
-          <p className="text-xs text-zinc-400 leading-relaxed line-clamp-6 whitespace-pre-wrap mb-3">
-            {note.content}
-          </p>
-        )}
-
-        {/* Bottom row */}
-        <div className="flex items-center justify-between gap-2 mt-auto pt-1">
-          <div className="flex flex-wrap gap-1 min-w-0">
-            {note.tags.slice(0, 3).map((tag) => (
-              <span
-                key={tag}
-                className="rounded-md bg-white/[0.06] px-1.5 py-0.5 text-[10px] text-zinc-400 leading-none"
-              >
-                {tag}
-              </span>
-            ))}
-            {note.tags.length > 3 && (
-              <span className="text-[10px] text-zinc-600">+{note.tags.length - 3}</span>
-            )}
+        {/* Locked state: show overlay instead of content */}
+        {isLocked ? (
+          <div className="flex flex-col items-center justify-center gap-2 py-6">
+            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-rose-500/10 border border-rose-500/20">
+              <LockIcon className="h-5 w-5 text-rose-400" />
+            </div>
+            <span className="text-xs font-medium text-rose-400/70">Locked</span>
+            <span className="text-[10px] text-zinc-600">Tap to unlock with PIN</span>
           </div>
-          <span className="text-[10px] text-zinc-600 shrink-0">{timeAgo(note.updatedAt)}</span>
-        </div>
+        ) : (
+          <>
+            {/* Content preview */}
+            {note.content && (
+              <p className="text-xs text-zinc-400 leading-relaxed line-clamp-6 whitespace-pre-wrap mb-3">
+                {note.content}
+              </p>
+            )}
+
+            {/* Bottom row */}
+            <div className="flex items-center justify-between gap-2 mt-auto pt-1">
+              <div className="flex flex-wrap gap-1 min-w-0">
+                {note.tags.slice(0, 3).map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-md bg-white/[0.06] px-1.5 py-0.5 text-[10px] text-zinc-400 leading-none"
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {note.tags.length > 3 && (
+                  <span className="text-[10px] text-zinc-600">+{note.tags.length - 3}</span>
+                )}
+              </div>
+              <span className="text-[10px] text-zinc-600 shrink-0">{timeAgo(note.updatedAt)}</span>
+            </div>
+          </>
+        )}
       </div>
     );
   };
@@ -332,6 +502,9 @@ export default function NotesPage() {
     .split(',')
     .map((t) => t.trim())
     .filter(Boolean);
+
+  // Is the currently open note locked (and session-unlocked)?
+  const editorNoteIsSessionUnlocked = activeNote?.locked && unlockedNoteIds.has(activeNote.id);
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -437,7 +610,79 @@ export default function NotesPage() {
         </div>
       )}
 
-      {/* ── Full-screen modal overlay ── */}
+      {/* ── PIN Unlock Modal ── */}
+      {pinModalNote && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', backgroundColor: 'rgba(0,0,0,0.75)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) closePinModal(); }}
+        >
+          <div
+            className="relative w-full max-w-sm rounded-2xl border border-white/[0.08] bg-[#111114] shadow-2xl shadow-black/70 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={closePinModal}
+              className="absolute top-4 right-4 flex items-center justify-center h-7 w-7 rounded-lg text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.06] transition-colors"
+            >
+              <XIcon className="h-4 w-4" />
+            </button>
+
+            {/* Icon */}
+            <div className="flex items-center justify-center h-12 w-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 mb-4 mx-auto">
+              <LockIcon className="h-6 w-6 text-rose-400" />
+            </div>
+
+            {/* Title */}
+            <h2 className="text-base font-semibold text-zinc-100 text-center mb-0.5">Unlock note</h2>
+            <p className="text-xs text-zinc-500 text-center mb-5 line-clamp-1 px-4">
+              {pinModalNote.title || 'Untitled'}
+            </p>
+
+            {pinEraseMessage ? (
+              <div className="text-center">
+                <p className="text-sm text-red-400 font-medium mb-4">{pinEraseMessage}</p>
+                <button
+                  onClick={closePinModal}
+                  className="rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.08] px-5 py-2 text-sm text-zinc-300 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* PIN input */}
+                <input
+                  ref={pinInputRef}
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={pinInput}
+                  onChange={(e) => { setPinInput(e.target.value.replace(/\D/g, '')); setPinError(''); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') void handlePinUnlock(); }}
+                  placeholder="••••••"
+                  className="w-full rounded-xl bg-white/[0.04] border border-white/[0.08] focus:border-rose-500/50 px-4 py-3 text-center text-2xl tracking-[0.35em] font-mono text-zinc-100 placeholder-zinc-700 outline-none transition-colors mb-3"
+                />
+
+                {pinError && (
+                  <p className="text-xs text-red-400 text-center mb-3">{pinError}</p>
+                )}
+
+                <button
+                  onClick={() => void handlePinUnlock()}
+                  disabled={pinSubmitting || !pinInput.trim()}
+                  className="w-full rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2.5 text-sm font-medium text-white transition-colors shadow-lg shadow-rose-900/30"
+                >
+                  {pinSubmitting ? 'Unlocking…' : 'Unlock'}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Full-screen editor modal overlay ── */}
       {modalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8"
@@ -478,6 +723,26 @@ export default function NotesPage() {
                 {activeNote && !isNew && (
                   <span className="text-xs text-zinc-600 mr-2">
                     {saving ? 'Saving…' : 'Auto-saved'}
+                  </span>
+                )}
+
+                {/* Lock button — only for existing unlocked notes */}
+                {activeNote && !isNew && !activeNote.locked && (
+                  <button
+                    onClick={() => setLockModalOpen(true)}
+                    title="Lock this note with your journal PIN"
+                    className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                  >
+                    <LockIcon className="h-3.5 w-3.5" />
+                    Lock
+                  </button>
+                )}
+
+                {/* Locked + session-unlocked indicator */}
+                {editorNoteIsSessionUnlocked && (
+                  <span className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-rose-400/70 bg-rose-500/8 border border-rose-500/15">
+                    <LockIcon className="h-3 w-3" />
+                    Unlocked
                   </span>
                 )}
 
@@ -525,6 +790,48 @@ export default function NotesPage() {
                 </button>
               </div>
             </div>
+
+            {/* Inline Lock PIN prompt (inside modal) */}
+            {lockModalOpen && (
+              <div className="mx-5 mt-4 rounded-xl border border-rose-500/20 bg-rose-950/20 p-4">
+                <p className="text-xs font-medium text-rose-300 mb-3 flex items-center gap-1.5">
+                  <LockIcon className="h-3.5 w-3.5" />
+                  Enter your PIN to lock this note
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={lockPinInputRef}
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={lockPinInput}
+                    onChange={(e) => { setLockPinInput(e.target.value.replace(/\D/g, '')); setLockPinError(''); }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') void handleLockNote();
+                      if (e.key === 'Escape') { setLockModalOpen(false); setLockPinInput(''); setLockPinError(''); }
+                    }}
+                    placeholder="Your PIN"
+                    className="flex-1 rounded-lg bg-black/30 border border-rose-500/20 focus:border-rose-500/50 px-3 py-2 text-sm font-mono tracking-widest text-zinc-100 placeholder-zinc-700 outline-none transition-colors"
+                  />
+                  <button
+                    onClick={() => void handleLockNote()}
+                    disabled={lockSubmitting || !lockPinInput.trim()}
+                    className="rounded-lg bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-2 text-xs font-medium text-white transition-colors whitespace-nowrap"
+                  >
+                    {lockSubmitting ? 'Locking…' : 'Lock note'}
+                  </button>
+                  <button
+                    onClick={() => { setLockModalOpen(false); setLockPinInput(''); setLockPinError(''); }}
+                    className="flex items-center justify-center h-8 w-8 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.05] transition-colors shrink-0"
+                  >
+                    <XIcon className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                {lockPinError && (
+                  <p className="text-xs text-red-400 mt-2">{lockPinError}</p>
+                )}
+              </div>
+            )}
 
             {/* Title */}
             <div className="px-5 pt-4">

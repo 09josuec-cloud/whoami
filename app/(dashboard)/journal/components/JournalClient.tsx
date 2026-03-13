@@ -22,6 +22,151 @@ interface Entry {
   updatedAt: string;
 }
 
+// ─── PIN Lock Screen ──────────────────────────────────────────────────────────
+
+function PinLockScreen({ onUnlocked }: { onUnlocked: () => void }) {
+  const [pin, setPin] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [attemptsLeft, setAttemptsLeft] = useState<number | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [blocked, setBlocked] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pin || submitting || blocked) return;
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const res = await fetch('/api/journal/verify-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin }),
+      });
+
+      if (res.status === 429) {
+        setBlocked(true);
+        setError('Too many attempts. Please try again later.');
+        setPin('');
+        return;
+      }
+
+      const data = (await res.json()) as { success: boolean; attemptsLeft?: number };
+
+      if (data.success) {
+        onUnlocked();
+      } else {
+        const left = data.attemptsLeft ?? 0;
+        setAttemptsLeft(left);
+        if (left === 0) {
+          setBlocked(true);
+          setError('Too many attempts. Please try again later.');
+        } else {
+          setError(`Wrong PIN — ${left} attempt${left === 1 ? '' : 's'} left`);
+        }
+        setPin('');
+      }
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="flex h-[calc(100vh-8rem)] items-center justify-center bg-[#09090b]">
+      <div className="w-full max-w-sm">
+        {/* Card */}
+        <div className="rounded-2xl border border-white/[0.06] bg-[#111114] px-8 py-10 shadow-2xl shadow-black/60">
+          {/* Lock icon */}
+          <div className="mb-6 flex justify-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-500/10 ring-1 ring-indigo-500/20">
+              <svg
+                className="h-8 w-8 text-indigo-400"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.75}
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* Headings */}
+          <h1 className="mb-1.5 text-center text-lg font-bold tracking-tight text-zinc-100">
+            Journal is locked
+          </h1>
+          <p className="mb-8 text-center text-sm text-zinc-500">
+            Enter your PIN to continue
+          </p>
+
+          {/* Form */}
+          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+            <div className="flex justify-center">
+              <input
+                type="password"
+                inputMode="numeric"
+                maxLength={6}
+                value={pin}
+                onChange={(e) => {
+                  // Allow digits only
+                  const val = e.target.value.replace(/\D/g, '');
+                  setPin(val);
+                  if (error) setError(null);
+                }}
+                placeholder="••••"
+                disabled={submitting || blocked}
+                autoFocus
+                className={[
+                  'w-40 rounded-xl border bg-[#0e0e12] py-3 text-center font-mono text-2xl tracking-[0.5em] text-zinc-100 outline-none transition-all placeholder-zinc-700',
+                  error
+                    ? 'border-rose-500/60 ring-2 ring-rose-500/20'
+                    : 'border-white/[0.08] focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20',
+                  (submitting || blocked) ? 'opacity-50 cursor-not-allowed' : '',
+                ].join(' ')}
+              />
+            </div>
+
+            {/* Error message */}
+            {error && (
+              <p className="text-center text-xs font-medium text-rose-400">
+                {error}
+              </p>
+            )}
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={pin.length < 4 || submitting || blocked}
+              className={[
+                'w-full rounded-xl py-2.5 text-sm font-semibold transition-all',
+                pin.length >= 4 && !submitting && !blocked
+                  ? 'bg-indigo-600 text-white hover:bg-indigo-500 active:scale-[0.98]'
+                  : 'bg-indigo-600/30 text-indigo-400/50 cursor-not-allowed',
+              ].join(' ')}
+            >
+              {submitting ? 'Verifying…' : 'Unlock'}
+            </button>
+          </form>
+        </div>
+
+        {/* Subtle hint */}
+        <p className="mt-4 text-center text-xs text-zinc-700">
+          Forgot your PIN? Change it in Settings → Journal.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Journal Client ──────────────────────────────────────────────────────
+
 export default function JournalClient() {
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -36,6 +181,26 @@ export default function JournalClient() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'list' | 'calendar'>('list');
+
+  // PIN gate state
+  const [pinChecked, setPinChecked] = useState(false);
+  const [hasPin, setHasPin] = useState(false);
+  const [unlocked, setUnlocked] = useState(false);
+
+  // Check PIN status on mount
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await fetch('/api/journal/pin');
+        if (res.ok) {
+          const data = (await res.json()) as { hasPin: boolean };
+          setHasPin(data.hasPin);
+        }
+      } finally {
+        setPinChecked(true);
+      }
+    })();
+  }, []);
 
   const selectedEntry = entries.find((e) => e.id === selectedId) ?? null;
 
@@ -74,11 +239,16 @@ export default function JournalClient() {
   }, [month, year, activeTag, search, selectedId]);
 
   useEffect(() => {
+    // Only fetch entries once PIN is cleared
+    if (!pinChecked) return;
+    if (hasPin && !unlocked) return;
     void fetchEntries();
-  }, [month, year, activeTag]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [month, year, activeTag, pinChecked, hasPin, unlocked]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Debounced search
   useEffect(() => {
+    if (!pinChecked) return;
+    if (hasPin && !unlocked) return;
     const t = setTimeout(() => void fetchEntries(), 400);
     return () => clearTimeout(t);
   }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -179,6 +349,21 @@ export default function JournalClient() {
     entryDate: selectedEntry.entryDate,
   } : null;
 
+  // ── Render: waiting for PIN check ──────────────────────────────────────────
+  if (!pinChecked) {
+    return (
+      <div className="flex h-[calc(100vh-8rem)] items-center justify-center bg-[#09090b]">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  // ── Render: PIN lock screen ────────────────────────────────────────────────
+  if (hasPin && !unlocked) {
+    return <PinLockScreen onUnlocked={() => setUnlocked(true)} />;
+  }
+
+  // ── Render: journal content ────────────────────────────────────────────────
   return (
     <div className="flex h-[calc(100vh-8rem)] overflow-hidden rounded-xl bg-[#09090b]">
       {/* Left panel */}
