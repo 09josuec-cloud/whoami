@@ -27,6 +27,12 @@ model User {
   passwordResetToken   String?
   passwordResetExpires DateTime?
   journalPin           String?
+  notesPin             String?
+  phone                String?
+  phoneVerified        Boolean   @default(false)
+  pinResetToken        String?
+  pinResetExpires      DateTime?
+  pinResetType         String?   // "journal" | "notes"
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 

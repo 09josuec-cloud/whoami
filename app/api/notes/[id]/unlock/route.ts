@@ -40,14 +40,14 @@ export async function POST(req: NextRequest, { params }: Params): Promise<NextRe
     }),
     prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { journalPin: true },
+      select: { notesPin: true },
     }),
   ]);
 
   if (!note) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  if (!user?.journalPin) return NextResponse.json({ error: 'No PIN set' }, { status: 400 });
+  if (!user?.notesPin) return NextResponse.json({ error: 'No PIN set' }, { status: 400 });
 
-  const isCorrect = await verify(user.journalPin, body.pin);
+  const isCorrect = await verify(user.notesPin, body.pin);
 
   if (isCorrect) {
     // Reset attempts — unlock is session-only (note stays locked: true in DB)

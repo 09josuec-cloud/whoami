@@ -104,6 +104,15 @@ export default function NotesPage() {
   const [pinSubmitting, setPinSubmitting] = useState(false);
   const [pinEraseMessage, setPinEraseMessage] = useState('');
 
+  // PIN recovery state
+  const [noteRecoveryStep, setNoteRecoveryStep] = useState<'none' | 'choose' | 'verify'>('none');
+  const [noteRecoveryMethod, setNoteRecoveryMethod] = useState<'email' | 'sms' | null>(null);
+  const [noteRecoveryMasked, setNoteRecoveryMasked] = useState('');
+  const [noteOtpInput, setNoteOtpInput] = useState('');
+  const [noteNewPinInput, setNoteNewPinInput] = useState('');
+  const [noteRecoveryError, setNoteRecoveryError] = useState('');
+  const [noteRecoveryLoading, setNoteRecoveryLoading] = useState(false);
+
   // Lock-from-editor modal state
   const [lockModalOpen, setLockModalOpen] = useState(false);
   const [lockPinInput, setLockPinInput] = useState('');
@@ -250,6 +259,66 @@ export default function NotesPage() {
     setPinInput('');
     setPinError('');
     setPinEraseMessage('');
+    setNoteRecoveryStep('none');
+    setNoteRecoveryMethod(null);
+    setNoteRecoveryMasked('');
+    setNoteOtpInput('');
+    setNoteNewPinInput('');
+    setNoteRecoveryError('');
+  };
+
+  // ── PIN recovery ───────────────────────────────────────────────────────────
+
+  const handleNoteRecoveryRequest = async (method: 'email' | 'sms') => {
+    setNoteRecoveryLoading(true);
+    setNoteRecoveryError('');
+    setNoteRecoveryMethod(method);
+    try {
+      const res = await fetch('/api/pin-recovery/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pinType: 'notes', method }),
+      });
+      const data = (await res.json()) as { masked?: string; error?: string };
+      if (!res.ok) {
+        setNoteRecoveryError(data.error ?? 'Failed to send recovery code.');
+        setNoteRecoveryMethod(null);
+        return;
+      }
+      setNoteRecoveryMasked(data.masked ?? '');
+      setNoteRecoveryStep('verify');
+    } catch {
+      setNoteRecoveryError('Something went wrong. Please try again.');
+      setNoteRecoveryMethod(null);
+    } finally {
+      setNoteRecoveryLoading(false);
+    }
+  };
+
+  const handleNoteRecoveryVerify = async () => {
+    if (!noteOtpInput.trim() || !noteNewPinInput.trim()) return;
+    setNoteRecoveryLoading(true);
+    setNoteRecoveryError('');
+    try {
+      const res = await fetch('/api/pin-recovery/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp: noteOtpInput, newPin: noteNewPinInput }),
+      });
+      const data = (await res.json()) as { success?: boolean; error?: string };
+      if (!res.ok || !data.success) {
+        setNoteRecoveryError(data.error ?? 'Invalid or expired code.');
+        return;
+      }
+      // Success: show message then close
+      setNoteRecoveryStep('none');
+      setPinInput('');
+      setPinError('Notes PIN reset! Enter your new PIN to unlock.');
+    } catch {
+      setNoteRecoveryError('Something went wrong. Please try again.');
+    } finally {
+      setNoteRecoveryLoading(false);
+    }
   };
 
   // ── PIN unlock ─────────────────────────────────────────────────────────────
@@ -650,6 +719,85 @@ export default function NotesPage() {
                   Close
                 </button>
               </div>
+            ) : noteRecoveryStep === 'choose' ? (
+              /* Recovery step 1: choose method */
+              <div className="space-y-4">
+                <p className="text-xs text-zinc-400 text-center">How would you like to receive your recovery code?</p>
+                {noteRecoveryError && (
+                  <p className="text-xs text-red-400 text-center">{noteRecoveryError}</p>
+                )}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => void handleNoteRecoveryRequest('email')}
+                    disabled={noteRecoveryLoading}
+                    className="flex-1 flex flex-col items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] hover:border-indigo-500/40 px-4 py-3 text-sm text-zinc-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className="text-xl">📧</span>
+                    <span className="font-medium text-xs">Email</span>
+                  </button>
+                  <button
+                    onClick={() => void handleNoteRecoveryRequest('sms')}
+                    disabled={noteRecoveryLoading}
+                    className="flex-1 flex flex-col items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] hover:border-indigo-500/40 px-4 py-3 text-sm text-zinc-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className="text-xl">📱</span>
+                    <span className="font-medium text-xs">SMS</span>
+                  </button>
+                </div>
+                <button
+                  onClick={() => { setNoteRecoveryStep('none'); setNoteRecoveryError(''); }}
+                  className="w-full text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : noteRecoveryStep === 'verify' ? (
+              /* Recovery step 2: enter OTP + new PIN */
+              <div className="space-y-3">
+                {noteRecoveryMasked && (
+                  <p className="text-xs text-zinc-400 text-center">Code sent to <span className="text-zinc-200 font-medium">{noteRecoveryMasked}</span></p>
+                )}
+                {noteRecoveryError && (
+                  <p className="text-xs text-red-400 text-center">{noteRecoveryError}</p>
+                )}
+                <div>
+                  <label className="text-xs text-zinc-500 block mb-1">6-digit code</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={noteOtpInput}
+                    onChange={(e) => { setNoteOtpInput(e.target.value.replace(/\D/g, '')); setNoteRecoveryError(''); }}
+                    placeholder="000000"
+                    className="w-full rounded-xl bg-white/[0.04] border border-white/[0.08] focus:border-indigo-500/50 px-4 py-3 text-center text-lg tracking-[0.25em] font-mono text-zinc-100 placeholder-zinc-700 outline-none transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-zinc-500 block mb-1">New PIN (4–6 digits)</label>
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={noteNewPinInput}
+                    onChange={(e) => { setNoteNewPinInput(e.target.value.replace(/\D/g, '')); setNoteRecoveryError(''); }}
+                    placeholder="••••"
+                    className="w-full rounded-xl bg-white/[0.04] border border-white/[0.08] focus:border-indigo-500/50 px-4 py-3 text-center text-lg tracking-[0.25em] font-mono text-zinc-100 placeholder-zinc-700 outline-none transition-colors"
+                  />
+                </div>
+                <button
+                  onClick={() => void handleNoteRecoveryVerify()}
+                  disabled={noteRecoveryLoading || noteOtpInput.length !== 6 || noteNewPinInput.length < 4}
+                  className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2.5 text-sm font-medium text-white transition-colors shadow-lg shadow-indigo-900/30"
+                >
+                  {noteRecoveryLoading ? 'Verifying…' : 'Reset PIN'}
+                </button>
+                <button
+                  onClick={() => { setNoteRecoveryStep('choose'); setNoteRecoveryError(''); setNoteOtpInput(''); setNoteNewPinInput(''); }}
+                  className="w-full text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+                >
+                  Back
+                </button>
+              </div>
             ) : (
               <>
                 {/* PIN input */}
@@ -675,6 +823,14 @@ export default function NotesPage() {
                   className="w-full rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2.5 text-sm font-medium text-white transition-colors shadow-lg shadow-rose-900/30"
                 >
                   {pinSubmitting ? 'Unlocking…' : 'Unlock'}
+                </button>
+
+                {/* Forgot PIN link */}
+                <button
+                  onClick={() => { setNoteRecoveryStep('choose'); setNoteRecoveryError(''); }}
+                  className="w-full mt-3 text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+                >
+                  Forgot PIN?
                 </button>
               </>
             )}

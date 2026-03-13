@@ -25,11 +25,33 @@ interface Entry {
 // ─── PIN Lock Screen ──────────────────────────────────────────────────────────
 
 function PinLockScreen({ onUnlocked }: { onUnlocked: () => void }) {
+  // Normal PIN unlock state
   const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [attemptsLeft, setAttemptsLeft] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [blocked, setBlocked] = useState(false);
+
+  // Recovery flow state
+  const [recoveryStep, setRecoveryStep] = useState<'none' | 'choose' | 'sent' | 'verify'>('none');
+  const [recoveryMethod, setRecoveryMethod] = useState<'email' | 'sms' | null>(null);
+  const [recoveryMasked, setRecoveryMasked] = useState('');
+  const [otpInput, setOtpInput] = useState('');
+  const [newPinInput, setNewPinInput] = useState('');
+  const [recoveryError, setRecoveryError] = useState('');
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
+  const [recoverySuccess, setRecoverySuccess] = useState(false);
+
+  const resetRecovery = () => {
+    setRecoveryStep('none');
+    setRecoveryMethod(null);
+    setRecoveryMasked('');
+    setOtpInput('');
+    setNewPinInput('');
+    setRecoveryError('');
+    setRecoveryLoading(false);
+    setRecoverySuccess(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,93 +95,326 @@ function PinLockScreen({ onUnlocked }: { onUnlocked: () => void }) {
     }
   };
 
+  const handleRequestRecovery = async (method: 'email' | 'sms') => {
+    setRecoveryMethod(method);
+    setRecoveryError('');
+    setRecoveryLoading(true);
+    try {
+      const res = await fetch('/api/pin-recovery/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pinType: 'journal', method }),
+      });
+      const data = (await res.json()) as {
+        success: boolean;
+        method?: string;
+        maskedEmail?: string;
+        maskedPhone?: string;
+        error?: string;
+      };
+      if (data.success) {
+        const masked = method === 'email' ? (data.maskedEmail ?? '') : (data.maskedPhone ?? '');
+        setRecoveryMasked(masked);
+        setRecoveryStep('verify');
+      } else {
+        setRecoveryError(data.error ?? 'Failed to send code. Please try again.');
+      }
+    } catch {
+      setRecoveryError('Something went wrong. Please try again.');
+    } finally {
+      setRecoveryLoading(false);
+    }
+  };
+
+  const handleVerifyRecovery = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpInput || !newPinInput || recoveryLoading) return;
+    setRecoveryError('');
+    setRecoveryLoading(true);
+    try {
+      const res = await fetch('/api/pin-recovery/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp: otpInput, newPin: newPinInput }),
+      });
+      const data = (await res.json()) as { success: boolean; pinType?: string; error?: string };
+      if (data.success) {
+        setRecoverySuccess(true);
+      } else {
+        setRecoveryError(data.error ?? 'Invalid code or PIN. Please try again.');
+      }
+    } catch {
+      setRecoveryError('Something went wrong. Please try again.');
+    } finally {
+      setRecoveryLoading(false);
+    }
+  };
+
+  // ── Recovery: success state ──────────────────────────────────────────────────
+  const renderRecoverySuccess = () => (
+    <div className="flex flex-col items-center gap-5 py-2">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
+        <svg className="h-7 w-7 text-emerald-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        </svg>
+      </div>
+      <div className="text-center">
+        <p className="text-sm font-semibold text-zinc-100">PIN reset!</p>
+        <p className="mt-1 text-xs text-zinc-500">You can now log in with your new PIN.</p>
+      </div>
+      <button
+        onClick={resetRecovery}
+        className="w-full rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 active:scale-[0.98] transition-all"
+      >
+        Back to login
+      </button>
+    </div>
+  );
+
+  // ── Recovery: step — choose method ──────────────────────────────────────────
+  const renderChooseMethod = () => (
+    <div className="flex flex-col gap-4">
+      <p className="text-center text-sm text-zinc-400">How would you like to recover?</p>
+      <button
+        onClick={() => void handleRequestRecovery('email')}
+        disabled={recoveryLoading}
+        className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5 text-left transition-all hover:border-indigo-500/40 hover:bg-indigo-500/5 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span className="text-xl">📧</span>
+        <div>
+          <p className="text-sm font-medium text-zinc-100">Send code to email</p>
+          <p className="text-xs text-zinc-500">6-digit code sent to your account email</p>
+        </div>
+      </button>
+      <button
+        onClick={() => void handleRequestRecovery('sms')}
+        disabled={recoveryLoading}
+        className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3.5 text-left transition-all hover:border-indigo-500/40 hover:bg-indigo-500/5 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span className="text-xl">📱</span>
+        <div>
+          <p className="text-sm font-medium text-zinc-100">Send code via SMS</p>
+          <p className="text-xs text-zinc-500">6-digit code sent to your phone number</p>
+        </div>
+      </button>
+      {recoveryLoading && (
+        <div className="flex justify-center pt-1">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+        </div>
+      )}
+      {recoveryError && (
+        <p className="text-center text-xs font-medium text-rose-400">{recoveryError}</p>
+      )}
+    </div>
+  );
+
+  // ── Recovery: step — enter OTP + new PIN ────────────────────────────────────
+  const renderVerifyStep = () => (
+    <form onSubmit={(e) => void handleVerifyRecovery(e)} className="flex flex-col gap-4">
+      {recoveryMasked && (
+        <p className="text-center text-xs text-zinc-400">
+          Code sent to <span className="font-mono text-zinc-200">{recoveryMasked}</span>
+        </p>
+      )}
+
+      {/* OTP input */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-medium text-zinc-400">Enter the 6-digit code</label>
+        <input
+          type="text"
+          inputMode="numeric"
+          maxLength={6}
+          value={otpInput}
+          onChange={(e) => {
+            const val = e.target.value.replace(/\D/g, '');
+            setOtpInput(val);
+            if (recoveryError) setRecoveryError('');
+          }}
+          placeholder="000000"
+          autoFocus
+          className={[
+            'w-full rounded-xl border bg-[#0e0e12] py-3 text-center font-mono text-2xl tracking-[0.4em] text-zinc-100 outline-none transition-all placeholder-zinc-700',
+            recoveryError
+              ? 'border-rose-500/60 ring-2 ring-rose-500/20'
+              : 'border-white/[0.08] focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20',
+          ].join(' ')}
+        />
+      </div>
+
+      {/* New PIN input */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-medium text-zinc-400">New PIN (4–6 digits)</label>
+        <input
+          type="password"
+          inputMode="numeric"
+          maxLength={6}
+          value={newPinInput}
+          onChange={(e) => {
+            const val = e.target.value.replace(/\D/g, '');
+            setNewPinInput(val);
+            if (recoveryError) setRecoveryError('');
+          }}
+          placeholder="••••"
+          className={[
+            'w-full rounded-xl border bg-[#0e0e12] py-3 text-center font-mono text-2xl tracking-[0.5em] text-zinc-100 outline-none transition-all placeholder-zinc-700',
+            recoveryError
+              ? 'border-rose-500/60 ring-2 ring-rose-500/20'
+              : 'border-white/[0.08] focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20',
+          ].join(' ')}
+        />
+      </div>
+
+      {recoveryError && (
+        <p className="text-center text-xs font-medium text-rose-400">{recoveryError}</p>
+      )}
+
+      <button
+        type="submit"
+        disabled={otpInput.length !== 6 || newPinInput.length < 4 || recoveryLoading}
+        className={[
+          'w-full rounded-xl py-2.5 text-sm font-semibold transition-all',
+          otpInput.length === 6 && newPinInput.length >= 4 && !recoveryLoading
+            ? 'bg-indigo-600 text-white hover:bg-indigo-500 active:scale-[0.98]'
+            : 'bg-indigo-600/30 text-indigo-400/50 cursor-not-allowed',
+        ].join(' ')}
+      >
+        {recoveryLoading ? 'Resetting…' : 'Reset PIN'}
+      </button>
+    </form>
+  );
+
+  // ── Render recovery card contents ────────────────────────────────────────────
+  const renderRecoveryBody = () => {
+    if (recoverySuccess) return renderRecoverySuccess();
+    if (recoveryStep === 'choose') return renderChooseMethod();
+    if (recoveryStep === 'verify') return renderVerifyStep();
+    return null;
+  };
+
+  const isInRecovery = recoveryStep !== 'none';
+
   return (
     <div className="flex h-[calc(100vh-8rem)] items-center justify-center bg-[#09090b]">
       <div className="w-full max-w-sm">
         {/* Card */}
         <div className="rounded-2xl border border-white/[0.06] bg-[#111114] px-8 py-10 shadow-2xl shadow-black/60">
-          {/* Lock icon */}
-          <div className="mb-6 flex justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-500/10 ring-1 ring-indigo-500/20">
-              <svg
-                className="h-8 w-8 text-indigo-400"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={1.75}
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
-                />
-              </svg>
-            </div>
-          </div>
 
-          {/* Headings */}
-          <h1 className="mb-1.5 text-center text-lg font-bold tracking-tight text-zinc-100">
-            Journal is locked
-          </h1>
-          <p className="mb-8 text-center text-sm text-zinc-500">
-            Enter your PIN to continue
-          </p>
+          {isInRecovery ? (
+            /* ── Recovery flow ─────────────────────────────────────────────── */
+            <>
+              {/* Back arrow + title row */}
+              <div className="mb-6 flex items-center gap-3">
+                {!recoverySuccess && (
+                  <button
+                    onClick={resetRecovery}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.08] text-zinc-400 transition-colors hover:border-white/[0.16] hover:text-zinc-200"
+                    aria-label="Back to PIN login"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                    </svg>
+                  </button>
+                )}
+                <h1 className="text-base font-bold tracking-tight text-zinc-100">
+                  {recoverySuccess ? 'PIN Reset' : 'Recover access'}
+                </h1>
+              </div>
 
-          {/* Form */}
-          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
-            <div className="flex justify-center">
-              <input
-                type="password"
-                inputMode="numeric"
-                maxLength={6}
-                value={pin}
-                onChange={(e) => {
-                  // Allow digits only
-                  const val = e.target.value.replace(/\D/g, '');
-                  setPin(val);
-                  if (error) setError(null);
-                }}
-                placeholder="••••"
-                disabled={submitting || blocked}
-                autoFocus
-                className={[
-                  'w-40 rounded-xl border bg-[#0e0e12] py-3 text-center font-mono text-2xl tracking-[0.5em] text-zinc-100 outline-none transition-all placeholder-zinc-700',
-                  error
-                    ? 'border-rose-500/60 ring-2 ring-rose-500/20'
-                    : 'border-white/[0.08] focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20',
-                  (submitting || blocked) ? 'opacity-50 cursor-not-allowed' : '',
-                ].join(' ')}
-              />
-            </div>
+              {renderRecoveryBody()}
+            </>
+          ) : (
+            /* ── Normal PIN unlock ─────────────────────────────────────────── */
+            <>
+              {/* Lock icon */}
+              <div className="mb-6 flex justify-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-500/10 ring-1 ring-indigo-500/20">
+                  <svg
+                    className="h-8 w-8 text-indigo-400"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.75}
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"
+                    />
+                  </svg>
+                </div>
+              </div>
 
-            {/* Error message */}
-            {error && (
-              <p className="text-center text-xs font-medium text-rose-400">
-                {error}
+              {/* Headings */}
+              <h1 className="mb-1.5 text-center text-lg font-bold tracking-tight text-zinc-100">
+                Journal is locked
+              </h1>
+              <p className="mb-8 text-center text-sm text-zinc-500">
+                Enter your PIN to continue
               </p>
-            )}
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={pin.length < 4 || submitting || blocked}
-              className={[
-                'w-full rounded-xl py-2.5 text-sm font-semibold transition-all',
-                pin.length >= 4 && !submitting && !blocked
-                  ? 'bg-indigo-600 text-white hover:bg-indigo-500 active:scale-[0.98]'
-                  : 'bg-indigo-600/30 text-indigo-400/50 cursor-not-allowed',
-              ].join(' ')}
-            >
-              {submitting ? 'Verifying…' : 'Unlock'}
-            </button>
-          </form>
+              {/* Form */}
+              <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+                <div className="flex justify-center">
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={pin}
+                    onChange={(e) => {
+                      // Allow digits only
+                      const val = e.target.value.replace(/\D/g, '');
+                      setPin(val);
+                      if (error) setError(null);
+                    }}
+                    placeholder="••••"
+                    disabled={submitting || blocked}
+                    autoFocus
+                    className={[
+                      'w-40 rounded-xl border bg-[#0e0e12] py-3 text-center font-mono text-2xl tracking-[0.5em] text-zinc-100 outline-none transition-all placeholder-zinc-700',
+                      error
+                        ? 'border-rose-500/60 ring-2 ring-rose-500/20'
+                        : 'border-white/[0.08] focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20',
+                      (submitting || blocked) ? 'opacity-50 cursor-not-allowed' : '',
+                    ].join(' ')}
+                  />
+                </div>
+
+                {/* Error message */}
+                {error && (
+                  <p className="text-center text-xs font-medium text-rose-400">
+                    {error}
+                  </p>
+                )}
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={pin.length < 4 || submitting || blocked}
+                  className={[
+                    'w-full rounded-xl py-2.5 text-sm font-semibold transition-all',
+                    pin.length >= 4 && !submitting && !blocked
+                      ? 'bg-indigo-600 text-white hover:bg-indigo-500 active:scale-[0.98]'
+                      : 'bg-indigo-600/30 text-indigo-400/50 cursor-not-allowed',
+                  ].join(' ')}
+                >
+                  {submitting ? 'Verifying…' : 'Unlock'}
+                </button>
+
+                {/* Forgot PIN link */}
+                <div className="flex justify-center pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setRecoveryStep('choose')}
+                    className="text-xs text-zinc-500 underline underline-offset-2 hover:text-zinc-300 transition-colors"
+                  >
+                    Forgot PIN?
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
         </div>
-
-        {/* Subtle hint */}
-        <p className="mt-4 text-center text-xs text-zinc-700">
-          Forgot your PIN? Change it in Settings → Journal.
-        </p>
       </div>
     </div>
   );

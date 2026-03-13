@@ -30,11 +30,11 @@ export async function POST(req: NextRequest, { params }: Params): Promise<NextRe
   // Locking a note: requires PIN if one is set, or just locks it
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { journalPin: true },
+    select: { notesPin: true },
   });
 
-  if (!user?.journalPin) {
-    return NextResponse.json({ error: 'Set a PIN in Journal settings first' }, { status: 400 });
+  if (!user?.notesPin) {
+    return NextResponse.json({ error: 'Set a Notes PIN in Settings first' }, { status: 400 });
   }
 
   if (!body.pin) {
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest, { params }: Params): Promise<NextRe
     return NextResponse.json({ error: 'Too many attempts. Try again later.' }, { status: 429 });
   }
 
-  const isCorrect = await verify(user.journalPin, body.pin);
+  const isCorrect = await verify(user.notesPin!, body.pin);
   if (!isCorrect) {
     return NextResponse.json({ success: false, attemptsLeft: limit.remaining });
   }

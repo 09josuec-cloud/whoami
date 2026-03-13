@@ -13,9 +13,10 @@ interface SetupData {
   uri: string;
 }
 
-type Tab = 'general' | 'security' | 'journal' | 'calendar' | 'connections';
+type Tab = 'general' | 'security' | 'journal' | 'notes' | 'calendar' | 'connections';
 
 type JournalPinMode = 'idle' | 'set' | 'change' | 'remove';
+type NotesPinMode = 'idle' | 'set' | 'change' | 'remove';
 type CalendarStatus = { connected: boolean; lastSynced?: string | null } | null;
 type PlaidAccounts = { accounts: unknown[] } | null;
 
@@ -174,6 +175,14 @@ function IconBook() {
   );
 }
 
+function IconNote() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+    </svg>
+  );
+}
+
 function IconCalendar() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
@@ -194,6 +203,7 @@ const TAB_META: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'general', label: 'General', icon: <IconUser /> },
   { id: 'security', label: 'Security', icon: <IconShield /> },
   { id: 'journal', label: 'Journal', icon: <IconBook /> },
+  { id: 'notes', label: 'Notes', icon: <IconNote /> },
   { id: 'calendar', label: 'Calendar', icon: <IconCalendar /> },
   { id: 'connections', label: 'Connections', icon: <IconLink /> },
 ];
@@ -272,6 +282,14 @@ function SecurityTab() {
   const [disableError, setDisableError] = useState('');
   const [showDisable, setShowDisable] = useState(false);
 
+  // Recovery phone
+  const [phone, setPhone] = useState<string | null>(null);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [phoneInput, setPhoneInput] = useState('');
+  const [phoneSaving, setPhoneSaving] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
+  const [phoneLoadingData, setPhoneLoadingData] = useState(true);
+
   const fetchStatus = useCallback(async () => {
     try {
       const response = await fetch('/api/auth/session');
@@ -286,9 +304,72 @@ function SecurityTab() {
     }
   }, []);
 
+  const fetchPhone = useCallback(async () => {
+    try {
+      const res = await fetch('/api/auth/phone');
+      if (res.ok) {
+        const data = (await res.json()) as { phone: string | null; phoneVerified: boolean };
+        setPhone(data.phone);
+        setPhoneVerified(data.phoneVerified);
+      }
+    } finally {
+      setPhoneLoadingData(false);
+    }
+  }, []);
+
   useEffect(() => {
     void fetchStatus();
-  }, [fetchStatus]);
+    void fetchPhone();
+  }, [fetchStatus, fetchPhone]);
+
+  const handleSavePhone = async () => {
+    if (!phoneInput.trim()) return;
+    if (!/^\+\d{7,15}$/.test(phoneInput.trim())) {
+      setPhoneError('Enter a valid phone number in E.164 format (e.g. +12125551234).');
+      return;
+    }
+    setPhoneSaving(true);
+    setPhoneError('');
+    try {
+      const res = await fetch('/api/auth/phone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phoneInput.trim() }),
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setPhoneError(data.error ?? 'Failed to save phone number.');
+        return;
+      }
+      setPhone(phoneInput.trim());
+      setPhoneVerified(false);
+      setPhoneInput('');
+    } catch {
+      setPhoneError('Something went wrong. Please try again.');
+    } finally {
+      setPhoneSaving(false);
+    }
+  };
+
+  const handleRemovePhone = async () => {
+    setPhoneSaving(true);
+    setPhoneError('');
+    try {
+      const res = await fetch('/api/auth/phone', { method: 'DELETE' });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setPhoneError(data.error ?? 'Failed to remove phone number.');
+        return;
+      }
+      setPhone(null);
+      setPhoneVerified(false);
+      setPhoneInput('');
+    } catch {
+      setPhoneError('Something went wrong. Please try again.');
+    } finally {
+      setPhoneSaving(false);
+    }
+  };
 
   const handleSetup2FA = async () => {
     setSetupLoading(true);
@@ -378,7 +459,7 @@ function SecurityTab() {
     }
   };
 
-  if (loadingStatus) {
+  if (loadingStatus || phoneLoadingData) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
@@ -388,6 +469,71 @@ function SecurityTab() {
 
   return (
     <>
+      {/* Recovery Phone card */}
+      <div className={cardCls + ' mb-4'}>
+        <div className="mb-5">
+          <p className="text-sm font-semibold text-zinc-100">Recovery Phone</p>
+          <p className="text-xs text-zinc-500">Add a phone number to recover your PIN via SMS.</p>
+        </div>
+
+        {phoneError && (
+          <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/[0.08] px-4 py-3 text-sm text-red-400">
+            {phoneError}
+          </div>
+        )}
+
+        {phone ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <div className={[
+                'flex items-center gap-2 rounded-full border px-3 py-1',
+                phoneVerified
+                  ? 'border-green-500/30 bg-green-500/10'
+                  : 'border-amber-500/30 bg-amber-500/10',
+              ].join(' ')}>
+                <div className={['h-2 w-2 rounded-full', phoneVerified ? 'bg-green-500' : 'bg-amber-500'].join(' ')} />
+                <span className={['text-sm font-medium', phoneVerified ? 'text-green-400' : 'text-amber-400'].join(' ')}>
+                  {phoneVerified ? 'Verified' : 'Unverified'}
+                </span>
+              </div>
+              <span className="text-sm text-zinc-300 font-mono">{phone}</span>
+            </div>
+            <button
+              type="button"
+              className={btnSmDanger}
+              onClick={handleRemovePhone}
+              disabled={phoneSaving}
+            >
+              {phoneSaving && <Spinner />}
+              Remove
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm text-zinc-400">No recovery phone set.</p>
+            <div className="flex gap-2">
+              <input
+                type="tel"
+                placeholder="+12125551234"
+                value={phoneInput}
+                onChange={(e) => { setPhoneInput(e.target.value); setPhoneError(''); }}
+                disabled={phoneSaving}
+                className={inputCls}
+              />
+              <button
+                type="button"
+                className={btnSmPrimary}
+                onClick={handleSavePhone}
+                disabled={phoneSaving || !phoneInput.trim()}
+              >
+                {phoneSaving && <Spinner />}
+                Save
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className={cardCls}>
         <div className="mb-5">
           <p className="text-sm font-semibold text-zinc-100">Two-Factor Authentication</p>
@@ -926,6 +1072,385 @@ function JournalTab() {
             >
               <p className="text-sm text-red-400">
                 Enter your current PIN to remove it. All locked entries will be
+                unlocked.
+              </p>
+              <Field label="Current PIN" error={removePinError}>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  placeholder="••••"
+                  maxLength={6}
+                  value={currentPinRemove}
+                  onChange={(e) =>
+                    setCurrentPinRemove(e.target.value.replace(/\D/g, ''))
+                  }
+                  disabled={removePinLoading}
+                  className={inputCls}
+                />
+              </Field>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className={btnSmSecondary}
+                  onClick={resetForms}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={btnSmDanger}
+                  disabled={removePinLoading || currentPinRemove.length < 4}
+                >
+                  {removePinLoading && <Spinner />}
+                  Remove PIN
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// NotesTab
+// ---------------------------------------------------------------------------
+
+function NotesTab() {
+  const [hasPin, setHasPin] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [mode, setMode] = useState<NotesPinMode>('idle');
+
+  // Set PIN form
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [setPinError, setSetPinError] = useState('');
+  const [setPinLoading, setSetPinLoading] = useState(false);
+
+  // Change PIN form
+  const [currentPinChange, setCurrentPinChange] = useState('');
+  const [changedPin, setChangedPin] = useState('');
+  const [confirmChangedPin, setConfirmChangedPin] = useState('');
+  const [changePinError, setChangePinError] = useState('');
+  const [changePinLoading, setChangePinLoading] = useState(false);
+
+  // Remove PIN form
+  const [currentPinRemove, setCurrentPinRemove] = useState('');
+  const [removePinError, setRemovePinError] = useState('');
+  const [removePinLoading, setRemovePinLoading] = useState(false);
+
+  const fetchPinStatus = useCallback(async () => {
+    try {
+      const res = await fetch('/api/notes/pin');
+      if (res.ok) {
+        const data = (await res.json()) as { hasPin: boolean };
+        setHasPin(data.hasPin);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchPinStatus();
+  }, [fetchPinStatus]);
+
+  const resetForms = () => {
+    setNewPin('');
+    setConfirmPin('');
+    setSetPinError('');
+    setCurrentPinChange('');
+    setChangedPin('');
+    setConfirmChangedPin('');
+    setChangePinError('');
+    setCurrentPinRemove('');
+    setRemovePinError('');
+    setMode('idle');
+  };
+
+  const handleSetPin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!/^\d{4,6}$/.test(newPin)) {
+      setSetPinError('PIN must be 4–6 digits.');
+      return;
+    }
+    if (newPin !== confirmPin) {
+      setSetPinError('PINs do not match.');
+      return;
+    }
+    setSetPinLoading(true);
+    setSetPinError('');
+    try {
+      const res = await fetch('/api/notes/pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: newPin }),
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setSetPinError(data.error ?? 'Failed to set PIN.');
+        return;
+      }
+      setHasPin(true);
+      resetForms();
+    } catch {
+      setSetPinError('Something went wrong. Please try again.');
+    } finally {
+      setSetPinLoading(false);
+    }
+  };
+
+  const handleChangePin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!/^\d{4,6}$/.test(changedPin)) {
+      setChangePinError('New PIN must be 4–6 digits.');
+      return;
+    }
+    if (changedPin !== confirmChangedPin) {
+      setChangePinError('New PINs do not match.');
+      return;
+    }
+    setChangePinLoading(true);
+    setChangePinError('');
+    try {
+      const res = await fetch('/api/notes/pin', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPin: currentPinChange, newPin: changedPin }),
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setChangePinError(data.error ?? 'Failed to change PIN.');
+        return;
+      }
+      resetForms();
+    } catch {
+      setChangePinError('Something went wrong. Please try again.');
+    } finally {
+      setChangePinLoading(false);
+    }
+  };
+
+  const handleRemovePin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setRemovePinLoading(true);
+    setRemovePinError('');
+    try {
+      const res = await fetch('/api/notes/pin', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPin: currentPinRemove }),
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setRemovePinError(data.error ?? 'Failed to remove PIN.');
+        return;
+      }
+      setHasPin(false);
+      resetForms();
+    } catch {
+      setRemovePinError('Something went wrong. Please try again.');
+    } finally {
+      setRemovePinLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  return (
+    <div className={cardCls}>
+      <div className="mb-5">
+        <p className="text-sm font-semibold text-zinc-100">Notes PIN</p>
+        <p className="text-xs text-zinc-500">
+          Lock individual notes with a PIN. Anyone who opens a locked note must enter this PIN.
+        </p>
+      </div>
+
+      {!hasPin ? (
+        /* No PIN set */
+        <div className="space-y-4">
+          {mode !== 'set' ? (
+            <div className="space-y-3">
+              <p className="text-sm text-zinc-400">
+                No PIN set. You can lock notes with a PIN.
+              </p>
+              <button
+                type="button"
+                className={btnSmPrimary}
+                onClick={() => setMode('set')}
+              >
+                Set PIN
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSetPin} noValidate className="space-y-4">
+              <Field label="New PIN (4–6 digits)">
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  placeholder="••••"
+                  maxLength={6}
+                  value={newPin}
+                  onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
+                  disabled={setPinLoading}
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="Confirm PIN" error={setPinError}>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  placeholder="••••"
+                  maxLength={6}
+                  value={confirmPin}
+                  onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, ''))}
+                  disabled={setPinLoading}
+                  className={inputCls}
+                />
+              </Field>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className={btnSmSecondary}
+                  onClick={resetForms}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={btnSmPrimary}
+                  disabled={setPinLoading || newPin.length < 4 || confirmPin.length < 4}
+                >
+                  {setPinLoading && <Spinner />}
+                  Save PIN
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      ) : (
+        /* PIN is set */
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 rounded-full border border-green-500/30 bg-green-500/10 px-3 py-1">
+              <div className="h-2 w-2 rounded-full bg-green-500" />
+              <span className="text-sm font-medium text-green-400">
+                PIN is set
+              </span>
+            </div>
+            <p className="text-sm text-zinc-400">
+              Notes can be locked with your PIN.
+            </p>
+          </div>
+
+          {mode === 'idle' && (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className={btnSmSecondary}
+                onClick={() => setMode('change')}
+              >
+                Change PIN
+              </button>
+              <button
+                type="button"
+                className={btnSmDanger}
+                onClick={() => setMode('remove')}
+              >
+                Remove PIN
+              </button>
+            </div>
+          )}
+
+          {mode === 'change' && (
+            <form
+              onSubmit={handleChangePin}
+              noValidate
+              className="space-y-4 rounded-xl border border-white/[0.06] bg-white/[0.03] p-4"
+            >
+              <p className="text-sm font-semibold text-zinc-100">Change PIN</p>
+              <Field label="Current PIN">
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  placeholder="••••"
+                  maxLength={6}
+                  value={currentPinChange}
+                  onChange={(e) =>
+                    setCurrentPinChange(e.target.value.replace(/\D/g, ''))
+                  }
+                  disabled={changePinLoading}
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="New PIN (4–6 digits)">
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  placeholder="••••"
+                  maxLength={6}
+                  value={changedPin}
+                  onChange={(e) =>
+                    setChangedPin(e.target.value.replace(/\D/g, ''))
+                  }
+                  disabled={changePinLoading}
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="Confirm new PIN" error={changePinError}>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  placeholder="••••"
+                  maxLength={6}
+                  value={confirmChangedPin}
+                  onChange={(e) =>
+                    setConfirmChangedPin(e.target.value.replace(/\D/g, ''))
+                  }
+                  disabled={changePinLoading}
+                  className={inputCls}
+                />
+              </Field>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className={btnSmSecondary}
+                  onClick={resetForms}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={btnSmPrimary}
+                  disabled={
+                    changePinLoading ||
+                    currentPinChange.length < 4 ||
+                    changedPin.length < 4 ||
+                    confirmChangedPin.length < 4
+                  }
+                >
+                  {changePinLoading && <Spinner />}
+                  Update PIN
+                </button>
+              </div>
+            </form>
+          )}
+
+          {mode === 'remove' && (
+            <form
+              onSubmit={handleRemovePin}
+              noValidate
+              className="space-y-4 rounded-xl border border-red-500/20 bg-red-500/[0.04] p-4"
+            >
+              <p className="text-sm text-red-400">
+                Enter your current PIN to remove it. All locked notes will be
                 unlocked.
               </p>
               <Field label="Current PIN" error={removePinError}>
@@ -1523,6 +2048,7 @@ export default function SettingsPage() {
         )}
         {activeTab === 'security' && <SecurityTab />}
         {activeTab === 'journal' && <JournalTab />}
+        {activeTab === 'notes' && <NotesTab />}
         {activeTab === 'calendar' && <CalendarTab />}
         {activeTab === 'connections' && <ConnectionsTab />}
       </div>
