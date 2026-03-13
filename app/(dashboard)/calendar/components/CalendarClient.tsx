@@ -89,6 +89,7 @@ export default function CalendarClient() {
 
   const [newEventDate, setNewEventDate] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [dayEventsDate, setDayEventsDate] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -246,6 +247,28 @@ export default function CalendarClient() {
     setSelectedEvent(null);
   };
 
+  const handleUpdateEvent = async (data: EventFormData) => {
+    if (!editingEvent) return;
+    const res = await fetch(`/api/calendar/events/${editingEvent.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: data.title,
+        description: data.description || null,
+        location: data.location || null,
+        start: data.start,
+        end: data.end,
+        allDay: data.allDay,
+        color: data.color,
+        recurrence: data.recurrence || null,
+      }),
+    });
+    if (!res.ok) throw new Error('Failed to update event');
+    const json = (await res.json()) as { event: CalendarEvent };
+    setEvents((prev) => prev.map((e) => (e.id === editingEvent.id ? json.event : e)));
+    setEditingEvent(null);
+  };
+
   const handleGoogleConnect = async () => {
     setConnectingGoogle(true);
     try {
@@ -394,11 +417,6 @@ export default function CalendarClient() {
           />
         </div>
         <div className="border-t border-white/[0.06] p-3 flex flex-col gap-2">
-          {googleConnected && (
-            <p className="text-xs text-amber-500/80 leading-tight px-1">
-              To push events to Google, disconnect and reconnect to upgrade permissions.
-            </p>
-          )}
           {googleConnected ? (
             <button
               onClick={() => void handleGoogleDisconnect()}
@@ -604,6 +622,27 @@ export default function CalendarClient() {
           event={selectedEvent}
           onClose={() => setSelectedEvent(null)}
           onDelete={handleDeleteEvent}
+          onEdit={(event) => { setSelectedEvent(null); setEditingEvent(event); }}
+        />
+      )}
+
+      {/* Edit Event Modal */}
+      {editingEvent && (
+        <NewEventModal
+          initialDate={new Date(editingEvent.start).toLocaleDateString('en-CA')}
+          initialValues={{
+            title: editingEvent.title,
+            description: editingEvent.description ?? '',
+            location: editingEvent.location ?? '',
+            start: editingEvent.start,
+            end: editingEvent.end,
+            allDay: editingEvent.allDay,
+            color: editingEvent.color ?? 'indigo',
+            recurrence: editingEvent.recurrence ?? '',
+          }}
+          onSave={async () => {}}
+          onUpdate={handleUpdateEvent}
+          onClose={() => setEditingEvent(null)}
         />
       )}
 

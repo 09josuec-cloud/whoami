@@ -375,7 +375,7 @@ export async function POST(request: Request): Promise<Response> {
           // Phase 1: non-streaming call with tools enabled
           const firstResponse = await anthropic.messages.create({
             model: 'claude-sonnet-4-6',
-            max_tokens: 1024,
+            max_tokens: 4096,
             tools: ASSISTANT_TOOLS,
             system: systemPrompt,
             messages,
@@ -416,7 +416,7 @@ export async function POST(request: Request): Promise<Response> {
             // Phase 2: stream final response with tool results
             const secondStream = anthropic.messages.stream({
               model: 'claude-sonnet-4-6',
-              max_tokens: 1024,
+              max_tokens: 4096,
               system: systemPrompt,
               messages: [
                 ...messages,
@@ -449,9 +449,10 @@ export async function POST(request: Request): Promise<Response> {
           controller.enqueue(encode('data: [DONE]\n\n'));
           controller.close();
         } catch (err) {
-          console.error('[Assistant] stream error:', err);
+          const errMsg = err instanceof Error ? err.message : 'Stream failed';
+          console.error('[Assistant] stream error:', errMsg, err);
           controller.enqueue(
-            encode(`data: ${JSON.stringify({ error: 'Stream failed' })}\n\n`)
+            encode(`data: ${JSON.stringify({ error: errMsg })}\n\n`)
           );
           controller.close();
         }

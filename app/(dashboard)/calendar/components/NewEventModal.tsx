@@ -6,6 +6,8 @@ interface NewEventModalProps {
   initialDate: string;
   onSave: (data: EventFormData) => Promise<void>;
   onClose: () => void;
+  initialValues?: Partial<EventFormData>;
+  onUpdate?: (data: EventFormData) => Promise<void>;
 }
 
 export interface EventFormData {
@@ -34,16 +36,24 @@ function toLocalDateTimeValue(dateStr: string, time: string): string {
   return `${dateStr}T${time}`;
 }
 
-export default function NewEventModal({ initialDate, onSave, onClose }: NewEventModalProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('');
-  const [date, setDate] = useState(initialDate);
-  const [startTime, setStartTime] = useState('09:00');
-  const [endTime, setEndTime] = useState('10:00');
-  const [allDay, setAllDay] = useState(false);
-  const [color, setColor] = useState('indigo');
-  const [recurrence, setRecurrence] = useState('none');
+function toTimeStr(isoStr: string): string {
+  const d = new Date(isoStr);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+export default function NewEventModal({ initialDate, onSave, onClose, initialValues, onUpdate }: NewEventModalProps) {
+  const isEditing = Boolean(onUpdate);
+  const [title, setTitle] = useState(initialValues?.title ?? '');
+  const [description, setDescription] = useState(initialValues?.description ?? '');
+  const [location, setLocation] = useState(initialValues?.location ?? '');
+  const [date, setDate] = useState(
+    initialValues?.start ? new Date(initialValues.start).toLocaleDateString('en-CA') : initialDate
+  );
+  const [startTime, setStartTime] = useState(initialValues?.start ? toTimeStr(initialValues.start) : '09:00');
+  const [endTime, setEndTime] = useState(initialValues?.end ? toTimeStr(initialValues.end) : '10:00');
+  const [allDay, setAllDay] = useState(initialValues?.allDay ?? false);
+  const [color, setColor] = useState(initialValues?.color ?? 'indigo');
+  const [recurrence, setRecurrence] = useState(initialValues?.recurrence || 'none');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -68,7 +78,7 @@ export default function NewEventModal({ initialDate, onSave, onClose }: NewEvent
         end = new Date(toLocalDateTimeValue(date, endTime)).toISOString();
       }
 
-      await onSave({
+      const data: EventFormData = {
         title: title.trim(),
         description: description.trim(),
         location: location.trim(),
@@ -77,9 +87,14 @@ export default function NewEventModal({ initialDate, onSave, onClose }: NewEvent
         allDay,
         color,
         recurrence: recurrence === 'none' ? '' : recurrence,
-      });
+      };
+      if (isEditing && onUpdate) {
+        await onUpdate(data);
+      } else {
+        await onSave(data);
+      }
     } catch {
-      setError('Failed to create event. Please try again.');
+      setError(isEditing ? 'Failed to update event. Please try again.' : 'Failed to create event. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -90,7 +105,7 @@ export default function NewEventModal({ initialDate, onSave, onClose }: NewEvent
       <div className="w-full max-w-md rounded-xl bg-[#111114] border border-white/[0.06] p-6">
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-zinc-100">New Event</h2>
+          <h2 className="text-base font-semibold text-zinc-100">{isEditing ? 'Edit Event' : 'New Event'}</h2>
           <button
             onClick={onClose}
             className="rounded-md p-1 text-zinc-500 hover:text-zinc-300 transition-colors"
@@ -221,7 +236,7 @@ export default function NewEventModal({ initialDate, onSave, onClose }: NewEvent
             disabled={saving || !title.trim()}
             className="flex-1 rounded-lg bg-indigo-600 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
           >
-            {saving ? 'Saving…' : 'Create Event'}
+            {saving ? 'Saving…' : isEditing ? 'Update Event' : 'Create Event'}
           </button>
           <button
             onClick={onClose}
