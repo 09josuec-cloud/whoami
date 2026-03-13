@@ -13,7 +13,7 @@ interface SetupData {
   uri: string;
 }
 
-type Tab = 'general' | 'security' | 'journal' | 'notes' | 'calendar' | 'connections';
+type Tab = 'general' | 'security' | 'journal' | 'notes' | 'calendar' | 'connections' | 'notifications';
 
 type JournalPinMode = 'idle' | 'set' | 'change' | 'remove';
 type NotesPinMode = 'idle' | 'set' | 'change' | 'remove';
@@ -199,6 +199,14 @@ function IconLink() {
   );
 }
 
+function IconBell() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+    </svg>
+  );
+}
+
 const TAB_META: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'general', label: 'General', icon: <IconUser /> },
   { id: 'security', label: 'Security', icon: <IconShield /> },
@@ -206,6 +214,7 @@ const TAB_META: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: 'notes', label: 'Notes', icon: <IconNote /> },
   { id: 'calendar', label: 'Calendar', icon: <IconCalendar /> },
   { id: 'connections', label: 'Connections', icon: <IconLink /> },
+  { id: 'notifications', label: 'Digest', icon: <IconBell /> },
 ];
 
 // ---------------------------------------------------------------------------
@@ -1757,6 +1766,277 @@ function CalendarTab() {
 }
 
 // ---------------------------------------------------------------------------
+// NotificationsTab (Weekly AI Digest)
+// ---------------------------------------------------------------------------
+
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+function NotificationsTab() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+
+  const [digestEnabled, setDigestEnabled] = useState(false);
+  const [digestDay, setDigestDay] = useState(1);
+  const [digestTime, setDigestTime] = useState('08:00');
+  const [lastSentAt, setLastSentAt] = useState<string | null>(null);
+
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [sendSuccess, setSendSuccess] = useState('');
+  const [error, setError] = useState('');
+  const [preview, setPreview] = useState<{ narrative: string; weekRange: string; stats: { avgMood: number | null; habitPct: number; totalSpend: number; journalCount: number } } | null>(null);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await fetch('/api/digest/settings');
+        if (res.ok) {
+          const data = (await res.json()) as {
+            digestEnabled: boolean;
+            digestDay: number;
+            digestTime: string;
+            lastDigestSentAt: string | null;
+          };
+          setDigestEnabled(data.digestEnabled);
+          setDigestDay(data.digestDay);
+          setDigestTime(data.digestTime);
+          setLastSentAt(data.lastDigestSentAt);
+        }
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveSuccess(false);
+    setError('');
+    try {
+      const res = await fetch('/api/digest/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ digestEnabled, digestDay, digestTime }),
+      });
+      if (!res.ok) {
+        const d = (await res.json()) as { error?: string };
+        setError(d.error ?? 'Failed to save settings.');
+        return;
+      }
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePreview = async () => {
+    setPreviewing(true);
+    setError('');
+    setPreview(null);
+    try {
+      const res = await fetch('/api/digest/generate', { method: 'POST' });
+      if (!res.ok) {
+        const d = (await res.json()) as { error?: string };
+        setError(d.error ?? 'Failed to generate preview.');
+        return;
+      }
+      const data = (await res.json()) as typeof preview;
+      setPreview(data);
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setPreviewing(false);
+    }
+  };
+
+  const handleSend = async () => {
+    setSending(true);
+    setSendSuccess('');
+    setError('');
+    try {
+      const res = await fetch('/api/digest/send', { method: 'POST' });
+      if (!res.ok) {
+        const d = (await res.json()) as { error?: string };
+        setError(d.error ?? 'Failed to send digest.');
+        return;
+      }
+      const d = (await res.json()) as { email?: string };
+      setSendSuccess(`Digest sent to ${d.email ?? 'your email'}!`);
+      setLastSentAt(new Date().toISOString());
+    } catch {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Main digest card */}
+      <div className={cardCls}>
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-zinc-100">Weekly AI Digest</p>
+            <p className="mt-0.5 text-xs text-zinc-500">
+              A personalized email summary of your week — mood, habits, spending, and what&apos;s coming up — written by Claude.
+            </p>
+          </div>
+          {/* Toggle */}
+          <label className="relative inline-flex cursor-pointer items-center gap-2 shrink-0">
+            <input
+              type="checkbox"
+              className="sr-only"
+              checked={digestEnabled}
+              onChange={(e) => setDigestEnabled(e.target.checked)}
+            />
+            <div className={[
+              'relative h-5 w-9 rounded-full transition-colors duration-200',
+              digestEnabled ? 'bg-indigo-600' : 'bg-zinc-700',
+            ].join(' ')}>
+              <div className={[
+                'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200',
+                digestEnabled ? 'translate-x-4' : 'translate-x-0.5',
+              ].join(' ')} />
+            </div>
+          </label>
+        </div>
+
+        {digestEnabled && (
+          <div className="space-y-4 border-t border-white/[0.06] pt-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-zinc-400">Send on</label>
+                <select
+                  value={digestDay}
+                  onChange={(e) => setDigestDay(Number(e.target.value))}
+                  className={inputCls}
+                >
+                  {DAY_NAMES.map((day, i) => (
+                    <option key={i} value={i}>{day}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-zinc-400">Time (UTC)</label>
+                <input
+                  type="time"
+                  value={digestTime}
+                  onChange={(e) => setDigestTime(e.target.value)}
+                  className={inputCls}
+                />
+              </div>
+            </div>
+
+            {lastSentAt && (
+              <p className="text-xs text-zinc-500">
+                Last sent: {new Date(lastSentAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              </p>
+            )}
+          </div>
+        )}
+
+        {error && (
+          <p className="mt-3 text-xs font-medium text-rose-400">{error}</p>
+        )}
+
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            className={btnSmPrimary}
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving && <Spinner />}
+            {saveSuccess ? 'Saved!' : 'Save settings'}
+          </button>
+        </div>
+      </div>
+
+      {/* Preview & Send card */}
+      <div className={cardCls}>
+        <div className="mb-4">
+          <p className="text-sm font-semibold text-zinc-100">Preview & Send</p>
+          <p className="text-xs text-zinc-500 mt-0.5">
+            Generate a digest for last week and preview the AI summary, or send it directly to your email.
+          </p>
+        </div>
+
+        <div className="flex gap-2 flex-wrap">
+          <button
+            type="button"
+            className={btnSmSecondary}
+            onClick={handlePreview}
+            disabled={previewing || sending}
+          >
+            {previewing && <Spinner />}
+            {previewing ? 'Generating…' : 'Preview digest'}
+          </button>
+          <button
+            type="button"
+            className={btnSmPrimary}
+            onClick={handleSend}
+            disabled={sending || previewing}
+          >
+            {sending && <Spinner />}
+            {sending ? 'Sending…' : 'Send to my email'}
+          </button>
+        </div>
+
+        {sendSuccess && (
+          <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.08] px-4 py-3">
+            <svg className="h-4 w-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            <p className="text-sm text-emerald-400">{sendSuccess}</p>
+          </div>
+        )}
+
+        {preview && (
+          <div className="mt-4 space-y-3">
+            {/* Stats row */}
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { label: 'Mood', value: preview.stats.avgMood !== null ? `${preview.stats.avgMood}/5` : '—' },
+                { label: 'Habits', value: `${preview.stats.habitPct}%` },
+                { label: 'Entries', value: String(preview.stats.journalCount) },
+                { label: 'Spend', value: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(preview.stats.totalSpend) },
+              ].map((s) => (
+                <div key={s.label} className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 text-center">
+                  <p className="text-xs text-zinc-500">{s.label}</p>
+                  <p className="mt-0.5 text-sm font-semibold text-zinc-100">{s.value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Narrative preview */}
+            <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/[0.04] p-4">
+              <p className="mb-2 text-xs font-medium text-indigo-400">Week of {preview.weekRange}</p>
+              <div className="space-y-3">
+                {preview.narrative.split(/\n\n+/).filter(Boolean).map((p, i) => (
+                  <p key={i} className="text-sm text-zinc-300 leading-relaxed">{p}</p>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // ConnectionsTab
 // ---------------------------------------------------------------------------
 
@@ -2051,6 +2331,7 @@ export default function SettingsPage() {
         {activeTab === 'notes' && <NotesTab />}
         {activeTab === 'calendar' && <CalendarTab />}
         {activeTab === 'connections' && <ConnectionsTab />}
+        {activeTab === 'notifications' && <NotificationsTab />}
       </div>
     </div>
   );

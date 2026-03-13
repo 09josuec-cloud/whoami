@@ -33,6 +33,10 @@ model User {
   pinResetToken        String?
   pinResetExpires      DateTime?
   pinResetType         String?   // "journal" | "notes"
+  digestEnabled        Boolean   @default(false)
+  digestDay            Int       @default(1)      // 0=Sun … 6=Sat (JS getDay())
+  digestTime           String    @default("08:00") // "HH:MM" UTC
+  lastDigestSentAt     DateTime?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 

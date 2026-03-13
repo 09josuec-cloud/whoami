@@ -1,0 +1,60 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/src/lib/prisma';
+import { collectDigestData, generateDigestNarrative, buildDigestEmailHtml, sendDigestEmail } from '@/src/lib/digest';
+
+export async function POST(req: NextRequest): Promise<NextResponse> {
+  // Security: only Vercel cron (via CRON_SECRET) can call this
+  const authHeader = req.headers.get('authorization');
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const nowUTC = new Date();
+  const currentDay = nowUTC.getUTCDay();    // 0=Sun … 6=Sat
+  const currentHour = nowUTC.getUTCHours(); // 0–23
+  const todayStr = nowUTC.toISOString().slice(0, 10);
+
+  const users = await prisma.user.findMany({
+    where: { digestEnabled: true },
+    select: { id: true, email: true, name: true, digestDay: true, digestTime: true, lastDigestSentAt: true },
+  });
+
+  let processed = 0;
+  let sent = 0;
+  const errors: string[] = [];
+
+  for (const user of users) {
+    // Already sent today — skip
+    const lastSentStr = user.lastDigestSentAt?.toISOString().slice(0, 10);
+    if (lastSentStr === todayStr) continue;
+
+    // Check day + hour match
+    const [digestHourStr] = user.digestTime.split(':');
+    const digestHour = parseInt(digestHourStr, 10);
+    if (currentDay !== user.digestDay) continue;
+    if (currentHour !== digestHour) continue;
+
+    processed++;
+    try {
+      const data = await collectDigestData(user.id);
+      const narrative = await generateDigestNarrative(data);
+      const html = buildDigestEmailHtml(data, narrative);
+      const subject = `Your weekly digest — ${data.weekRange}`;
+
+      await sendDigestEmail(data.user.email, subject, html);
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { lastDigestSentAt: new Date() },
+      });
+
+      sent++;
+    } catch (err) {
+      const msg = `${user.email}: ${err instanceof Error ? err.message : String(err)}`;
+      errors.push(msg);
+      console.error('[cron/weekly-digest] error for user', user.id, err);
+    }
+  }
+
+  return NextResponse.json({ processed, sent, errors });
+}
