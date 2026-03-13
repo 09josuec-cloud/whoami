@@ -86,13 +86,14 @@ export default function NotificationBell() {
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 
-  // Close panel on outside click
+  // Close panel on outside click — exclude both the panel and the bell button
   useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      const target = e.target as Node;
+      const insidePanel = panelRef.current?.contains(target) ?? false;
+      const insideButton = buttonRef.current?.contains(target) ?? false;
+      if (!insidePanel && !insideButton) setOpen(false);
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
