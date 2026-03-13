@@ -2,18 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/src/lib/auth';
 import { prisma } from '@/src/lib/prisma';
 import { generateGoalNotification } from '@/src/lib/notifications';
+import { z } from 'zod';
+
+const patchGoalSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  emoji: z.string().max(10).optional(),
+  color: z.string().max(50).optional(),
+  targetAmount: z.number().positive().optional(),
+  currentAmount: z.number().min(0).optional(),
+  targetDate: z.string().nullable().optional(),
+});
 
 interface Params {
   params: Promise<{ id: string }>;
-}
-
-interface PatchBody {
-  name?: string;
-  emoji?: string;
-  color?: string;
-  targetAmount?: number;
-  currentAmount?: number;
-  targetDate?: string | null;
 }
 
 export async function PATCH(req: NextRequest, { params }: Params): Promise<NextResponse> {
@@ -23,12 +24,22 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<NextR
   }
 
   const { id } = await params;
-  let body: PatchBody;
+  let rawBody: unknown;
   try {
-    body = (await req.json()) as PatchBody;
+    rawBody = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
+
+  const parsed = patchGoalSchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation failed.', issues: parsed.error.flatten().fieldErrors },
+      { status: 422 }
+    );
+  }
+
+  const body = parsed.data;
 
   try {
     const goal = await prisma.savingsGoal.findFirst({

@@ -1,14 +1,32 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/src/lib/auth';
 import { plaidClient } from '@/src/services/plaid/client';
 import { prisma } from '@/src/lib/prisma';
 import { getCategoryFromPlaid } from '@/src/lib/categories';
 import { generateSyncNotifications } from '@/src/lib/notifications';
+import { rateLimit } from '@/src/lib/rate-limit';
 
-export async function POST(): Promise<NextResponse> {
+export async function POST(req: NextRequest): Promise<NextResponse> {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Rate limit: max 10 syncs per hour per user (Plaid syncs are expensive)
+  const limit = rateLimit(`plaid-sync:${session.user.id}`, {
+    maxAttempts: 10,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!limit.success) {
+    return NextResponse.json(
+      { error: 'Too many sync requests. Please try again later.' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(Math.ceil((limit.reset - Date.now()) / 1000)),
+        },
+      }
+    );
   }
 
   try {
@@ -43,9 +61,8 @@ export async function POST(): Promise<NextResponse> {
 
         const { added, modified, removed, next_cursor, has_more } = syncResponse.data;
 
+        // Counts only — no PII, account IDs, or transaction details logged
         console.log(`[Plaid Sync] added=${added.length} modified=${modified.length} removed=${removed.length} has_more=${has_more}`);
-        if (added.length > 0) console.log('[Plaid Sync] Sample tx:', added[0].name, added[0].amount, added[0].date, added[0].account_id);
-        console.log('[Plaid Sync] Account map keys:', [...accountMap.keys()]);
 
         // Process added transactions
         for (const tx of added) {
@@ -146,8 +163,8 @@ export async function POST(): Promise<NextResponse> {
     await generateSyncNotifications(session.user.id, allAddedTxs, updatedAccounts);
 
     return NextResponse.json({ synced: totalSynced });
-  } catch (error) {
-    console.error('[Plaid] sync error:', error);
+  } catch {
+    console.error('[Plaid] sync error: an unexpected error occurred during transaction sync');
     return NextResponse.json({ error: 'Sync failed' }, { status: 500 });
   }
 }

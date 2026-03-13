@@ -36,6 +36,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     });
     const userAccountIds = userAccounts.map((a: { id: string }) => a.id);
 
+    // If a specific accountId is requested, verify it belongs to this user
+    if (accountId && !userAccountIds.includes(accountId)) {
+      return NextResponse.json({ error: 'Account not found' }, { status: 404 });
+    }
+
     const transactions = await prisma.transaction.findMany({
       where: {
         bankAccountId: accountId

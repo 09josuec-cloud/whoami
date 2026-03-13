@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/src/lib/auth';
 import { prisma } from '@/src/lib/prisma';
+import { z } from 'zod';
+
+const patchJournalSchema = z.object({
+  title: z.string().max(500).optional().nullable(),
+  content: z.string().optional(),
+  mood: z.number().int().min(1).max(5).optional().nullable(),
+  tags: z.array(z.string().max(100)).max(50).optional(),
+  locked: z.boolean().optional(),
+  entryDate: z.string().optional(),
+});
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -30,15 +40,6 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<NextRe
   }
 }
 
-interface PatchBody {
-  title?: string;
-  content?: string;
-  mood?: number | null;
-  tags?: string[];
-  locked?: boolean;
-  entryDate?: string;
-}
-
 export async function PATCH(req: NextRequest, { params }: Params): Promise<NextResponse> {
   const session = await auth();
   if (!session?.user?.id) {
@@ -47,12 +48,22 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<NextR
 
   const { id } = await params;
 
-  let body: PatchBody;
+  let rawBody: unknown;
   try {
-    body = (await req.json()) as PatchBody;
+    rawBody = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
+
+  const parsed = patchJournalSchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation failed.', issues: parsed.error.flatten().fieldErrors },
+      { status: 422 }
+    );
+  }
+
+  const body = parsed.data;
 
   try {
     const entry = await prisma.journalEntry.findFirst({
@@ -63,10 +74,6 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<NextR
     // Block edits on locked entries (unless unlocking)
     if (entry.locked && body.locked !== false) {
       return NextResponse.json({ error: 'Entry is locked' }, { status: 403 });
-    }
-
-    if (body.mood !== undefined && body.mood !== null && (body.mood < 1 || body.mood > 5)) {
-      return NextResponse.json({ error: 'mood must be between 1 and 5' }, { status: 400 });
     }
 
     const updated = await prisma.journalEntry.update({

@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/src/lib/auth';
 import { prisma } from '@/src/lib/prisma';
+import { z } from 'zod';
+
+const createReminderSchema = z.object({
+  title: z.string().min(1).max(500),
+  notes: z.string().max(5000).optional(),
+  dueAt: z.string(),
+  repeat: z.enum(['none', 'daily', 'weekly', 'monthly']).optional(),
+  eventId: z.string().optional(),
+});
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_req: NextRequest): Promise<NextResponse> {
@@ -36,39 +45,32 @@ export async function GET(_req: NextRequest): Promise<NextResponse> {
   }
 }
 
-interface ReminderBody {
-  title: string;
-  notes?: string;
-  dueAt: string;
-  repeat?: string;
-  eventId?: string;
-}
-
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: ReminderBody;
+  let rawBody: unknown;
   try {
-    body = (await req.json()) as ReminderBody;
+    rawBody = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  if (!body.title || !body.dueAt) {
-    return NextResponse.json({ error: 'title and dueAt are required' }, { status: 400 });
+  const parsed = createReminderSchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation failed.', issues: parsed.error.flatten().fieldErrors },
+      { status: 422 }
+    );
   }
+
+  const body = parsed.data;
 
   const dueAt = new Date(body.dueAt);
   if (isNaN(dueAt.getTime())) {
     return NextResponse.json({ error: 'Invalid dueAt date' }, { status: 400 });
-  }
-
-  const validRepeat = ['none', 'daily', 'weekly', 'monthly'];
-  if (body.repeat && !validRepeat.includes(body.repeat)) {
-    return NextResponse.json({ error: 'Invalid repeat value' }, { status: 400 });
   }
 
   try {

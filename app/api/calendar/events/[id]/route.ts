@@ -2,6 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/src/lib/auth';
 import { prisma } from '@/src/lib/prisma';
 import { google } from 'googleapis';
+import { z } from 'zod';
+
+const patchEventSchema = z.object({
+  title: z.string().min(1).max(500).optional(),
+  description: z.string().max(5000).nullable().optional(),
+  location: z.string().max(500).nullable().optional(),
+  start: z.string().optional(),
+  end: z.string().optional(),
+  allDay: z.boolean().optional(),
+  color: z.string().max(50).optional(),
+  recurrence: z.string().max(500).nullable().optional(),
+});
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -31,17 +43,6 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<NextRe
   }
 }
 
-interface PatchBody {
-  title?: string;
-  description?: string | null;
-  location?: string | null;
-  start?: string;
-  end?: string;
-  allDay?: boolean;
-  color?: string;
-  recurrence?: string | null;
-}
-
 export async function PATCH(req: NextRequest, { params }: Params): Promise<NextResponse> {
   const session = await auth();
   if (!session?.user?.id) {
@@ -50,12 +51,22 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<NextR
 
   const { id } = await params;
 
-  let body: PatchBody;
+  let rawBody: unknown;
   try {
-    body = (await req.json()) as PatchBody;
+    rawBody = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
+
+  const parsedInput = patchEventSchema.safeParse(rawBody);
+  if (!parsedInput.success) {
+    return NextResponse.json(
+      { error: 'Validation failed.', issues: parsedInput.error.flatten().fieldErrors },
+      { status: 422 }
+    );
+  }
+
+  const body = parsedInput.data;
 
   try {
     const event = await prisma.calendarEvent.findFirst({

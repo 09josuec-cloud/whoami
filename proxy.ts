@@ -10,7 +10,7 @@ function applySecurityHeaders(response: NextResponse): NextResponse {
     "Content-Security-Policy",
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.plaid.com",
+      "script-src 'self' 'unsafe-inline' https://cdn.plaid.com",
       "style-src 'self' 'unsafe-inline' https://cdn.plaid.com",
       "img-src 'self' data: blob: https://*.plaid.com https://plaid-merchant-logos.plaid.com",
       "font-src 'self'",

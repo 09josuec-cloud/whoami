@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/src/lib/auth';
 import { prisma } from '@/src/lib/prisma';
+import { z } from 'zod';
+
+const createJournalSchema = z.object({
+  title: z.string().max(500).optional().nullable(),
+  content: z.string(),
+  mood: z.number().int().min(1).max(5).optional().nullable(),
+  tags: z.array(z.string().max(100)).max(50).default([]),
+  entryDate: z.string().datetime({ offset: true }).or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
+  locked: z.boolean().default(false),
+});
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const session = await auth();
@@ -70,34 +80,28 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 }
 
-interface JournalBody {
-  title?: string;
-  content: string;
-  mood?: number;
-  tags?: string[];
-  entryDate: string;
-}
-
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: JournalBody;
+  let rawBody: unknown;
   try {
-    body = (await req.json()) as JournalBody;
+    rawBody = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  if (body.content === undefined || body.content === null || !body.entryDate) {
-    return NextResponse.json({ error: 'content and entryDate are required' }, { status: 400 });
+  const parsed = createJournalSchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation failed.', issues: parsed.error.flatten().fieldErrors },
+      { status: 422 }
+    );
   }
 
-  if (body.mood !== undefined && (body.mood < 1 || body.mood > 5)) {
-    return NextResponse.json({ error: 'mood must be between 1 and 5' }, { status: 400 });
-  }
+  const body = parsed.data;
 
   try {
     const entry = await prisma.journalEntry.create({
@@ -106,8 +110,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         title: body.title ?? null,
         content: body.content,
         mood: body.mood ?? null,
-        tags: body.tags ?? [],
+        tags: body.tags,
         entryDate: new Date(body.entryDate),
+        locked: body.locked,
       },
     });
 

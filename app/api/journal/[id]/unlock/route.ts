@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/src/lib/auth';
 import { prisma } from '@/src/lib/prisma';
 import { verify } from '@node-rs/argon2';
+import { rateLimit } from '@/src/lib/rate-limit';
 
 const MAX_ATTEMPTS = 5;
 
@@ -15,7 +16,21 @@ export async function POST(req: NextRequest, { params }: Params): Promise<NextRe
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Server-side rate limiting: 5 attempts per 15 min per user per entry
   const { id } = await params;
+  const rlKey = `journal-unlock:${session.user.id}:${id}`;
+  const limit = rateLimit(rlKey, { maxAttempts: MAX_ATTEMPTS, windowMs: 15 * 60 * 1000 });
+  if (!limit.success) {
+    return NextResponse.json(
+      { error: 'Too many PIN attempts. Please try again later.' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(Math.ceil((limit.reset - Date.now()) / 1000)),
+        },
+      }
+    );
+  }
 
   let body: { pin?: string };
   try {

@@ -72,6 +72,7 @@ async function syncGoogleEvents(userId: string, connectionId: string, oauth2Clie
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get('code');
+  const state = searchParams.get('state');
 
   if (!code) {
     return NextResponse.redirect(new URL('/calendar?error=no_code', req.url));
@@ -83,6 +84,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 
   const userId = session.user.id;
+
+  // Verify the state parameter matches the authenticated user's ID to prevent CSRF
+  if (!state || state !== userId) {
+    return NextResponse.redirect(new URL('/calendar?error=state_mismatch', req.url));
+  }
   const baseUrl = process.env.NEXTAUTH_URL ?? `https://${req.headers.get('host')}`;
   const redirectUri = `${baseUrl}/api/calendar/google/callback`;
 

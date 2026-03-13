@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/src/lib/auth';
 import { prisma } from '@/src/lib/prisma';
 import { google } from 'googleapis';
+import { rateLimit } from '@/src/lib/rate-limit';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function POST(_req: NextRequest): Promise<NextResponse> {
@@ -11,6 +12,23 @@ export async function POST(_req: NextRequest): Promise<NextResponse> {
   }
 
   const userId = session.user.id;
+
+  // Rate limit Google Calendar syncs: max 20 per hour per user
+  const syncLimit = rateLimit(`google-cal-sync:${userId}`, {
+    maxAttempts: 20,
+    windowMs: 60 * 60 * 1000,
+  });
+  if (!syncLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many sync requests. Please try again later.' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(Math.ceil((syncLimit.reset - Date.now()) / 1000)),
+        },
+      }
+    );
+  }
 
   const connection = await prisma.calendarConnection.findUnique({
     where: { userId_provider: { userId, provider: 'google' } },
@@ -140,8 +158,7 @@ export async function POST(_req: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json({ synced });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    console.error('[Calendar] Sync error:', msg);
-    return NextResponse.json({ error: `Sync failed: ${msg}` }, { status: 500 });
+    console.error('[Calendar] Sync error:', error instanceof Error ? error.message : String(error));
+    return NextResponse.json({ error: 'Google Calendar sync failed' }, { status: 500 });
   }
 }

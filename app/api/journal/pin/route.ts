@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/src/lib/auth';
 import { prisma } from '@/src/lib/prisma';
 import { hash, verify } from '@node-rs/argon2';
+import { rateLimit } from '@/src/lib/rate-limit';
 
 export async function GET(): Promise<NextResponse> {
   const session = await auth();
@@ -58,6 +59,18 @@ export async function PATCH(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Rate limit PIN change attempts
+  const pinChangeLimit = rateLimit(`journal-pin-change:${session.user.id}`, {
+    maxAttempts: 5,
+    windowMs: 15 * 60 * 1000,
+  });
+  if (!pinChangeLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many attempts. Please try again later.' },
+      { status: 429 }
+    );
+  }
+
   let body: { currentPin?: string; newPin?: string };
   try {
     body = (await req.json()) as { currentPin?: string; newPin?: string };
@@ -107,6 +120,18 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Rate limit PIN deletion attempts
+  const pinDeleteLimit = rateLimit(`journal-pin-delete:${session.user.id}`, {
+    maxAttempts: 5,
+    windowMs: 15 * 60 * 1000,
+  });
+  if (!pinDeleteLimit.success) {
+    return NextResponse.json(
+      { error: 'Too many attempts. Please try again later.' },
+      { status: 429 }
+    );
   }
 
   let body: { currentPin?: string };

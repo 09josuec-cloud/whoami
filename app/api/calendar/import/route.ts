@@ -119,6 +119,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'File must be an .ics file' }, { status: 400 });
   }
 
+  // Limit file size to 5 MB to prevent DoS
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
+  if (file.size > MAX_FILE_SIZE) {
+    return NextResponse.json({ error: 'File size must not exceed 5 MB' }, { status: 413 });
+  }
+
   const text = await file.text();
   const events = parseICS(text);
 

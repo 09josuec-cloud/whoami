@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/src/lib/auth';
 import { prisma } from '@/src/lib/prisma';
+import { z } from 'zod';
+
+const createBudgetSchema = z.object({
+  category: z.string().min(1).max(100),
+  amount: z.number().positive(),
+  month: z.number().int().min(1).max(12),
+  year: z.number().int().min(2000).max(2100),
+});
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const session = await auth();
@@ -40,30 +48,28 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 }
 
-interface BudgetBody {
-  category: string;
-  amount: number;
-  month: number;
-  year: number;
-}
-
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: BudgetBody;
+  let rawBody: unknown;
   try {
-    body = (await req.json()) as BudgetBody;
+    rawBody = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const { category, amount, month, year } = body;
-  if (!category || typeof amount !== 'number' || !month || !year) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  const parsed = createBudgetSchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Validation failed.', issues: parsed.error.flatten().fieldErrors },
+      { status: 422 }
+    );
   }
+
+  const { category, amount, month, year } = parsed.data;
 
   try {
     const budget = await prisma.budget.upsert({

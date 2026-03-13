@@ -2,6 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/src/lib/auth';
 import { prisma } from '@/src/lib/prisma';
 import { google } from 'googleapis';
+import { z } from 'zod';
+
+const createEventSchema = z.object({
+  title: z.string().min(1).max(500),
+  description: z.string().max(5000).optional(),
+  location: z.string().max(500).optional(),
+  start: z.string(),
+  end: z.string(),
+  allDay: z.boolean().default(false),
+  color: z.string().max(50).default('indigo'),
+  recurrence: z.string().max(500).optional(),
+});
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const session = await auth();
@@ -16,12 +28,14 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   const where: Record<string, unknown> = { userId: session.user.id };
 
   if (startParam && endParam) {
-    where.start = { gte: new Date(startParam) };
-    where.end = { lte: new Date(endParam) };
+    // Return events that overlap the requested range:
+    // event starts before range end AND event ends after range start
+    where.start = { lte: new Date(endParam) };
+    where.end = { gte: new Date(startParam) };
   } else if (startParam) {
-    where.start = { gte: new Date(startParam) };
+    where.end = { gte: new Date(startParam) };
   } else if (endParam) {
-    where.end = { lte: new Date(endParam) };
+    where.start = { lte: new Date(endParam) };
   }
 
   try {
@@ -37,33 +51,28 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   }
 }
 
-interface EventBody {
-  title: string;
-  description?: string;
-  location?: string;
-  start: string;
-  end: string;
-  allDay?: boolean;
-  color?: string;
-  recurrence?: string;
-}
-
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: EventBody;
+  let rawBody: unknown;
   try {
-    body = (await req.json()) as EventBody;
+    rawBody = await req.json();
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  if (!body.title || !body.start || !body.end) {
-    return NextResponse.json({ error: 'title, start, and end are required' }, { status: 400 });
+  const parsedInput = createEventSchema.safeParse(rawBody);
+  if (!parsedInput.success) {
+    return NextResponse.json(
+      { error: 'Validation failed.', issues: parsedInput.error.flatten().fieldErrors },
+      { status: 422 }
+    );
   }
+
+  const body = parsedInput.data;
 
   const start = new Date(body.start);
   const end = new Date(body.end);
