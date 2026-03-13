@@ -45,14 +45,18 @@ export async function GET(): Promise<NextResponse> {
         ? moodEntries.reduce((sum, e) => sum + (e.mood ?? 0), 0) / moodEntries.length
         : null;
 
-    // Net worth: sum of all bank account balances
+    // Net worth: assets minus liabilities
     const bankAccounts = await prisma.bankAccount.findMany({
       where: {
         plaidItem: { userId: session.user.id },
       },
-      select: { currentBalance: true },
+      select: { type: true, currentBalance: true },
     });
-    const netWorth = bankAccounts.reduce((sum, a) => sum + (a.currentBalance ?? 0), 0);
+    const LIABILITY_TYPES = ['credit', 'loan', 'mortgage'];
+    const netWorth = bankAccounts.reduce((sum, a) => {
+      const bal = a.currentBalance ?? 0;
+      return LIABILITY_TYPES.includes(a.type) ? sum - bal : sum + bal;
+    }, 0);
 
     // Journal streak: consecutive days with entries ending today
     const allEntries = await prisma.journalEntry.findMany({

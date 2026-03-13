@@ -42,6 +42,8 @@ interface AccountRow {
 
 interface NetWorthData {
   current: number;
+  assets: number;
+  liabilities: number;
   accounts: AccountRow[];
   savingsTotal: number;
   savingsTarget: number;
@@ -192,7 +194,7 @@ export default function AnalyticsClient() {
 
         const netWorth = netWorthRes.ok
           ? ((await netWorthRes.json()) as NetWorthData)
-          : ({ current: 0, accounts: [], savingsTotal: 0, savingsTarget: 0 } satisfies NetWorthData);
+          : ({ current: 0, assets: 0, liabilities: 0, accounts: [], savingsTotal: 0, savingsTarget: 0 } satisfies NetWorthData);
 
         const mood = moodRes.ok
           ? ((await moodRes.json()) as MoodData)
@@ -309,6 +311,8 @@ export default function AnalyticsClient() {
         </div>
         <NetWorthCard
           current={netWorth.current}
+          assets={netWorth.assets}
+          liabilities={netWorth.liabilities}
           accounts={netWorth.accounts}
           savingsTotal={netWorth.savingsTotal}
           savingsTarget={netWorth.savingsTarget}

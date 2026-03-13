@@ -282,7 +282,14 @@ export default function BudgetClient() {
   }
 
   // Derived data
-  const totalBalance = accounts.reduce((sum, a) => sum + (a.currentBalance ?? 0), 0);
+  const LIABILITY_TYPES = ['credit', 'loan', 'mortgage'];
+  const totalAssets = accounts
+    .filter((a) => !LIABILITY_TYPES.includes(a.type))
+    .reduce((sum, a) => sum + (a.currentBalance ?? 0), 0);
+  const totalLiabilities = accounts
+    .filter((a) => LIABILITY_TYPES.includes(a.type))
+    .reduce((sum, a) => sum + (a.currentBalance ?? 0), 0);
+  const totalBalance = totalAssets - totalLiabilities;
 
   const monthIncome = transactions
     .filter((tx) => tx.amount < 0)
@@ -423,8 +430,8 @@ export default function BudgetClient() {
             <StatCard
               label="Net worth"
               value={formatCurrency(totalBalance)}
-              sub={`${accounts.length} account${accounts.length !== 1 ? 's' : ''}`}
-              color="text-zinc-100"
+              sub={totalLiabilities > 0 ? `${formatCurrency(totalAssets)} assets − ${formatCurrency(totalLiabilities)} debt` : `${accounts.length} account${accounts.length !== 1 ? 's' : ''}`}
+              color={totalBalance >= 0 ? 'text-zinc-100' : 'text-rose-400'}
               borderColor="border-zinc-500/30"
             />
             <StatCard

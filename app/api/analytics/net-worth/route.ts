@@ -16,12 +16,21 @@ export async function GET(): Promise<NextResponse> {
       select: { name: true, type: true, currentBalance: true },
     });
 
-    const current = bankAccounts.reduce((sum, a) => sum + (a.currentBalance ?? 0), 0);
+    const LIABILITY_TYPES = ['credit', 'loan', 'mortgage'];
+    let assets = 0;
+    let liabilities = 0;
+    for (const a of bankAccounts) {
+      const bal = a.currentBalance ?? 0;
+      if (LIABILITY_TYPES.includes(a.type)) liabilities += bal;
+      else assets += bal;
+    }
+    const current = assets - liabilities;
 
     const accounts = bankAccounts.map((a) => ({
       name: a.name,
       type: a.type,
       balance: a.currentBalance ?? 0,
+      isLiability: LIABILITY_TYPES.includes(a.type),
     }));
 
     const savingsGoals = await prisma.savingsGoal.findMany({
@@ -32,7 +41,7 @@ export async function GET(): Promise<NextResponse> {
     const savingsTotal = savingsGoals.reduce((sum, g) => sum + g.currentAmount, 0);
     const savingsTarget = savingsGoals.reduce((sum, g) => sum + g.targetAmount, 0);
 
-    return NextResponse.json({ current, accounts, savingsTotal, savingsTarget });
+    return NextResponse.json({ current, assets, liabilities, accounts, savingsTotal, savingsTarget });
   } catch (error) {
     console.error('[Analytics/NetWorth] GET error:', error);
     return NextResponse.json({ error: 'Failed to fetch net worth analytics' }, { status: 500 });

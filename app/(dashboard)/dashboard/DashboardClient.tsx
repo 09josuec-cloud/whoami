@@ -142,9 +142,35 @@ function RingGauge({ pct, color, size = 36 }: { pct: number; color: string; size
   );
 }
 
+const LIABILITY_TYPES = ['credit', 'loan', 'mortgage'];
+
+function calcNetWorth(accounts: BankAccount[]) {
+  let assets = 0;
+  let liabilities = 0;
+  for (const a of accounts) {
+    const bal = a.currentBalance ?? 0;
+    if (LIABILITY_TYPES.includes(a.type)) liabilities += bal;
+    else assets += bal;
+  }
+  return { assets, liabilities, netWorth: assets - liabilities };
+}
+
 export default function DashboardClient({ firstName }: { firstName: string }) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showNetWorth, setShowNetWorth] = useState(true);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('whoami_showNetWorth');
+    if (saved === 'false') setShowNetWorth(false);
+  }, []);
+
+  const toggleNetWorth = () => {
+    setShowNetWorth((v) => {
+      localStorage.setItem('whoami_showNetWorth', String(!v));
+      return !v;
+    });
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -210,14 +236,13 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
   }
 
   const accounts = data?.accounts ?? [];
-  const netWorth = accounts.reduce((sum, a) => sum + (a.currentBalance ?? 0), 0);
+  const { assets, liabilities, netWorth } = calcNetWorth(accounts);
   const cashflow = data?.cashflow ?? [];
   const currentCashflow = cashflow.at(-1);
   const prevCashflow = cashflow.at(-2);
   const monthlyIncome = currentCashflow?.income ?? 0;
   const monthlySpending = currentCashflow?.spending ?? 0;
   const netCash = monthlyIncome - monthlySpending;
-  const prevNetWorth = accounts.reduce((sum, a) => sum + (a.currentBalance ?? 0), 0); // same for now
   const prevSpending = prevCashflow?.spending ?? 0;
   const spendingDelta = prevSpending > 0 ? ((monthlySpending - prevSpending) / prevSpending) * 100 : 0;
 
@@ -266,26 +291,74 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
           }}
           aria-hidden="true"
         />
-        <div className="relative flex items-end justify-between">
-          <div>
-            <div className="mb-3 flex items-center gap-2">
+        <div className="relative">
+          {/* Header row */}
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <span className="text-xs font-medium uppercase tracking-widest text-zinc-600">Net Worth</span>
+              <span className="rounded-md border border-white/[0.06] bg-white/[0.04] px-1.5 py-0.5 text-[10px] text-zinc-600">
+                assets − liabilities
+              </span>
             </div>
-            <p className="bg-gradient-to-r from-white via-zinc-100 to-zinc-400 bg-clip-text text-5xl font-bold tracking-tight text-transparent tabular-nums">
-              {fmt(netWorth)}
-            </p>
-            <p className="mt-2.5 text-xs text-zinc-600">
-              Across {accounts.length} linked {accounts.length === 1 ? 'account' : 'accounts'}
-            </p>
+            <button
+              onClick={toggleNetWorth}
+              className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+              aria-label={showNetWorth ? 'Hide net worth' : 'Show net worth'}
+            >
+              {showNetWorth ? (
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>
+              ) : (
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+              )}
+              {showNetWorth ? 'Hide' : 'Show'}
+            </button>
           </div>
-          <div className="hidden sm:flex flex-col items-end gap-2 pb-1">
-            <span className="text-xs font-medium text-zinc-600">This month</span>
-            <div className={[
-              'flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-semibold tabular-nums',
-              netCash >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400',
-            ].join(' ')}>
-              <span>{netCash >= 0 ? '↑' : '↓'}</span>
-              {netCash >= 0 ? '+' : ''}{fmt(netCash)}
+
+          <div className="flex items-end justify-between">
+            <div>
+              {showNetWorth ? (
+                <p className={[
+                  'text-5xl font-bold tracking-tight tabular-nums',
+                  netWorth >= 0
+                    ? 'bg-gradient-to-r from-white via-zinc-100 to-zinc-400 bg-clip-text text-transparent'
+                    : 'text-rose-400',
+                ].join(' ')}>
+                  {netWorth < 0 ? '-' : ''}{fmt(Math.abs(netWorth))}
+                </p>
+              ) : (
+                <p className="text-5xl font-bold tracking-tight text-zinc-700 select-none">••••••</p>
+              )}
+
+              {/* Assets / Liabilities breakdown */}
+              {showNetWorth && accounts.length > 0 && (
+                <div className="mt-3 flex items-center gap-4">
+                  <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/60" />
+                    Assets <span className="text-emerald-400 font-medium">{fmt(assets)}</span>
+                  </span>
+                  {liabilities > 0 && (
+                    <span className="flex items-center gap-1.5 text-xs text-zinc-500">
+                      <span className="h-1.5 w-1.5 rounded-full bg-rose-500/60" />
+                      Liabilities <span className="text-rose-400 font-medium">{fmt(liabilities)}</span>
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <p className="mt-2 text-xs text-zinc-600">
+                Across {accounts.length} linked {accounts.length === 1 ? 'account' : 'accounts'}
+              </p>
+            </div>
+
+            <div className="hidden sm:flex flex-col items-end gap-2 pb-1">
+              <span className="text-xs font-medium text-zinc-600">This month</span>
+              <div className={[
+                'flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-semibold tabular-nums',
+                netCash >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400',
+              ].join(' ')}>
+                <span>{netCash >= 0 ? '↑' : '↓'}</span>
+                {netCash >= 0 ? '+' : ''}{fmt(netCash)}
+              </div>
             </div>
           </div>
         </div>
