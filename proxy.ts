@@ -42,9 +42,12 @@ export const proxy = auth((req: NextRequest & { auth: unknown }) => {
   const { pathname } = req.nextUrl;
   const session = (req as { auth?: { user?: unknown } }).auth;
 
-  const publicRoutes = ["/", "/login", "/register"];
+  const publicRoutes = ["/", "/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/terms", "/privacy", "/support"];
   const isPublic =
-    publicRoutes.includes(pathname) || pathname.startsWith("/api/auth");
+    publicRoutes.includes(pathname) ||
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/reset-password") ||
+    pathname.startsWith("/verify-email");
 
   if (!isPublic && !session?.user) {
     const loginUrl = new URL(

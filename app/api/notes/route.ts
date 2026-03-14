@@ -53,7 +53,7 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
   }
 
   const note = await prisma.note.create({

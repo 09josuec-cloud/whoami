@@ -4,8 +4,10 @@ import { collectDigestData, generateDigestNarrative, buildDigestEmailHtml, sendD
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   // Security: only Vercel cron (via CRON_SECRET) can call this
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) return NextResponse.json({ error: 'Cron not configured' }, { status: 500 });
   const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

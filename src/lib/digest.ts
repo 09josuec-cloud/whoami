@@ -2,8 +2,15 @@ import Anthropic from '@anthropic-ai/sdk';
 import { Resend } from 'resend';
 import { prisma } from '@/src/lib/prisma';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getAnthropic(): Anthropic {
+  if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY is not set');
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+}
+
+function getResend(): Resend {
+  if (!process.env.RESEND_API_KEY) throw new Error('RESEND_API_KEY is not set');
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 const MOOD_LABELS: Record<number, string> = { 1: 'Rough', 2: 'Low', 3: 'Okay', 4: 'Good', 5: 'Great' };
 
@@ -61,7 +68,7 @@ export async function collectDigestData(userId: string): Promise<DigestData> {
   const prevWeekStr = new Date(weekStart.getTime() - 86400000).toISOString().slice(0, 10);
 
   const sevenDaysLater = new Date(now);
-  sevenDaysLater.setDate(now.getDate() + 7);
+  sevenDaysLater.setUTCDate(now.getUTCDate() + 7);
 
   const [
     user,
@@ -264,7 +271,7 @@ ${reminderLines}
 
 Write the 3-paragraph narrative now.`;
 
-  const response = await anthropic.messages.create({
+  const response = await getAnthropic().messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 600,
     system: `You are a warm, insightful personal assistant for a life OS called "whoami".
@@ -317,7 +324,7 @@ export function buildDigestEmailHtml(data: DigestData, narrative: string): strin
       }).join('')
     : `<p style="margin:0;color:#52525b;font-size:14px;">Nothing scheduled — enjoy the open week.</p>`;
 
-  const appUrl = process.env.NEXTAUTH_URL ?? 'https://whoami-weld.vercel.app';
+  const appUrl = process.env.NEXTAUTH_URL ?? 'https://whoami.company';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -390,6 +397,6 @@ export function buildDigestEmailHtml(data: DigestData, narrative: string): strin
 // ─── Send via Resend ──────────────────────────────────────────────────────────
 
 export async function sendDigestEmail(to: string, subject: string, html: string): Promise<void> {
-  const from = process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev';
-  await resend.emails.send({ from, to, subject, html });
+  const from = process.env.RESEND_FROM_EMAIL ?? process.env.EMAIL_FROM ?? 'noreply@whoami.company';
+  await getResend().emails.send({ from, to, subject, html });
 }

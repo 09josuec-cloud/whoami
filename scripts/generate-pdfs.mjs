@@ -1,10 +1,10 @@
 import puppeteer from 'puppeteer';
-import { writeFileSync, mkdirSync } from 'fs';
+import { mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const OUT_DIR = join(__dirname, '..', 'docs');
+const OUT_DIR = '/Users/josuecastro/Desktop/whoami-docs';
 mkdirSync(OUT_DIR, { recursive: true });
 
 // ─── Shared styles ────────────────────────────────────────────────────────────
@@ -20,13 +20,14 @@ const BASE_CSS = `
     padding: 48px 56px;
   }
   h1 { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-  h2 { font-size: 16px; font-weight: 600; color: #a1a1aa; margin-bottom: 24px; font-weight: 400; }
+  h2 { font-size: 16px; font-weight: 400; color: #a1a1aa; margin-bottom: 24px; }
   h3 { font-size: 14px; font-weight: 600; color: #e4e4e7; margin-bottom: 10px; margin-top: 20px; }
   h4 { font-size: 12px; font-weight: 600; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; margin-top: 16px; }
   p  { color: #a1a1aa; margin-bottom: 8px; font-size: 12.5px; }
   ul { list-style: none; padding: 0; }
   li { padding: 4px 0 4px 16px; color: #a1a1aa; font-size: 12.5px; position: relative; }
   li::before { content: '·'; position: absolute; left: 4px; color: #6366f1; }
+  code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; background: #1c1c1e; border: 1px solid #3f3f46; border-radius: 3px; padding: 1px 5px; color: #a78bfa; }
   .badge {
     display: inline-flex; align-items: center;
     background: rgba(99,102,241,0.15); color: #818cf8;
@@ -64,6 +65,13 @@ const BASE_CSS = `
   .method.del   { background: rgba(239,68,68,0.15); color: #f87171; }
   .api-path { font-size: 11px; font-family: 'SF Mono', 'Fira Code', monospace; color: #a1a1aa; }
   .api-desc { font-size: 11px; color: #52525b; margin-left: auto; }
+  .env-row { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; border-bottom: 1px solid #1c1c1e; }
+  .env-row:last-child { border-bottom: none; }
+  .env-key { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; color: #a78bfa; min-width: 220px; }
+  .env-desc { font-size: 11px; color: #71717a; }
+  .env-req { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 3px; margin-left: auto; white-space: nowrap; }
+  .env-req.required { background: rgba(239,68,68,0.15); color: #f87171; }
+  .env-req.optional { background: rgba(16,185,129,0.1); color: #6ee7b7; }
 `;
 
 function header(title, subtitle) {
@@ -74,7 +82,7 @@ function header(title, subtitle) {
       </div>
       <div style="text-align:right;">
         <div style="font-size:11px;color:#52525b;">Personal Life OS</div>
-        <div style="font-size:11px;color:#3f3f46;">Confidential</div>
+        <div style="font-size:11px;color:#3f3f46;">Confidential · March 2026</div>
       </div>
     </div>
     <h1>${title}</h1>
@@ -86,26 +94,26 @@ function footer(pageNote) {
   return `
     <div class="page-footer">
       <p>${pageNote}</p>
-      <p>whoami · Personal Life OS</p>
+      <p>whoami.company · Personal Life OS</p>
     </div>
   `;
 }
 
-// ─── Document definitions ──────────────────────────────────────────────────────
+// ─── Document definitions ─────────────────────────────────────────────────────
 const docs = [
+
+  // ── Overview ────────────────────────────────────────────────────────────────
   {
     filename: 'whoami-overview.pdf',
-    title: 'Project Overview',
-    html: (css) => `<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <style>${css}</style></head><body>
+    html: (css) => `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${css}</style></head><body>
       ${header('Whoami — Project Overview', 'Personal Life OS: one secure app replacing budgeting, journaling, calendar, notes, reminders, and AI.')}
 
-      <span class="badge green">✓ Phases 1–5 Complete</span>
+      <span class="badge green">✓ Phases 1–6 Complete · Phase 7 (AI) Next</span>
 
       <div class="section">
         <h4>What is Whoami?</h4>
         <p>Whoami is a full-stack personal operating system built as a single secure web application. It replaces fragmented tools — Mint, Day One, Google Calendar, Notion, Reminders, and AI assistants — with one unified platform that never shares data with third parties.</p>
-        <p>All data lives in a private PostgreSQL database. Authentication uses Argon2id + JWT sessions. Every module is built with TypeScript strict mode, Next.js 16 App Router, and a dark-first UI with indigo/violet accents.</p>
+        <p>All data lives in a private PostgreSQL database. Authentication uses Argon2id + JWT sessions. Every module is built with TypeScript strict mode, Next.js 16 App Router, and a dark-first UI with indigo/violet accents. Live at <strong style="color:#818cf8;">whoami.company</strong>.</p>
       </div>
 
       <div class="section-row">
@@ -120,6 +128,8 @@ const docs = [
             <span class="stack-pill">Prisma 7</span>
             <span class="stack-pill">NextAuth v5</span>
             <span class="stack-pill">Vercel</span>
+            <span class="stack-pill">Resend email</span>
+            <span class="stack-pill">Plaid</span>
           </div>
         </div>
         <div class="section" style="margin:0">
@@ -127,11 +137,12 @@ const docs = [
           <ul>
             <li>Argon2id password hashing</li>
             <li>JWT sessions · httpOnly cookies</li>
-            <li>7 security headers via middleware</li>
+            <li>7 security headers via middleware (CSP, HSTS…)</li>
             <li>Rate limiting (5 attempts / 15 min / IP)</li>
             <li>Zod validation on all inputs</li>
             <li>Audit logging to database</li>
             <li>Journal PIN with 5-attempt erase</li>
+            <li>TOTP two-factor authentication (2FA)</li>
           </ul>
         </div>
       </div>
@@ -145,15 +156,15 @@ const docs = [
             ['Phase 1', 'Foundation', 'Auth, dashboard shell, DB schema, security headers, rate limiting, audit logs', 'complete'],
             ['Phase 2', 'Budget', 'Plaid sync, transactions, 14 categories, budgets, subscriptions, savings goals, cash flow, net worth', 'complete'],
             ['Phase 3', 'Journal', 'TipTap editor, mood tracking, tags, calendar view, PIN lock (session-only, 5-attempt erase)', 'complete'],
-            ['Phase 4', 'Calendar & Reminders', 'Google Calendar sync, iCal import, month/week/day views, standalone reminders page, two-way event push', 'complete'],
-            ['Phase 5', 'Analytics', 'Mood chart, journal frequency, budget breakdown, savings progress, net worth card, cash flow chart', 'complete'],
-            ['Phase 6', 'Notes', 'Full CRUD notes with color themes, tags, pin, auto-save, sidebar search/filter, two-pane editor', 'complete'],
+            ['Phase 4', 'Calendar & Reminders', 'Google Calendar sync, iCal import, month/week/day views, standalone reminders with repeat support', 'complete'],
+            ['Phase 5', 'Analytics', 'Mood chart, journal frequency, budget breakdown, savings progress, net worth, cash flow chart', 'complete'],
+            ['Phase 6', 'Notes', 'Full CRUD notes with color themes, tags, pin, auto-save, two-pane editor, full-text search', 'complete'],
             ['Phase 7', 'AI Assistant', 'Context-aware AI using Claude API — answers questions about your finances, mood, and calendar', 'upcoming'],
             ['Phase 8', 'Advanced Modules', 'Habit tracking, goal timeline, health integration, sleep logs', 'upcoming'],
           ].map(([phase, name, desc, status]) => `
             <div class="feature-card">
               <h4>
-                <span class="accent-dot ${status === 'complete' ? 'green' : status === 'upcoming' ? 'amber' : ''}"></span>
+                <span class="accent-dot ${status === 'complete' ? 'green' : 'amber'}"></span>
                 ${phase} — ${name}
               </h4>
               <p>${desc}</p>
@@ -163,15 +174,41 @@ const docs = [
         </div>
       </div>
 
-      ${footer('Phase Roadmap · March 2026')}
+      <hr class="divider"/>
+
+      <h3>Infrastructure</h3>
+      <div class="section-row">
+        <div class="section" style="margin:0">
+          <h4>Domain & Hosting</h4>
+          <ul>
+            <li>Domain: <strong style="color:#818cf8;">whoami.company</strong> (Squarespace Domains)</li>
+            <li>DNS: A record → 76.76.21.21 (Vercel), CNAME www → cname.vercel-dns.com</li>
+            <li>Deployed on Vercel (Hobby plan)</li>
+            <li>Automatic HTTPS via Let's Encrypt</li>
+            <li>Landing page at whoami.company with SEO metadata</li>
+          </ul>
+        </div>
+        <div class="section" style="margin:0">
+          <h4>Email</h4>
+          <ul>
+            <li>Resend for transactional email</li>
+            <li>Amazon SES MX records (via Squarespace)</li>
+            <li>SPF/DKIM/DMARC configured for @whoami.company</li>
+            <li>Email addresses: hello@, support@, privacy@</li>
+            <li>Support form at /support → sends to support@whoami.company</li>
+            <li>Weekly digest cron job (daily 8am UTC via Vercel)</li>
+          </ul>
+        </div>
+      </div>
+
+      ${footer('Project Overview · March 2026 · whoami.company')}
     </body></html>`,
   },
 
+  // ── Phase 1 ──────────────────────────────────────────────────────────────────
   {
     filename: 'whoami-phase1-foundation.pdf',
-    title: 'Phase 1 — Foundation',
-    html: (css) => `<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <style>${css}</style></head><body>
+    html: (css) => `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${css}</style></head><body>
       ${header('Phase 1 — Foundation', 'Auth system, dashboard shell, security middleware, rate limiting, audit logging, database schema.')}
 
       <span class="badge green">✓ Complete</span>
@@ -185,6 +222,8 @@ const docs = [
             <li>JWT sessions with httpOnly cookies</li>
             <li>Register + Login pages</li>
             <li>Session validated via <code>/api/auth/session</code> — no SessionProvider</li>
+            <li>TOTP 2FA with backup codes</li>
+            <li>Forgot/reset password via email link</li>
           </ul>
         </div>
         <div class="section" style="margin:0">
@@ -193,6 +232,7 @@ const docs = [
             <li>7 security headers: CSP, HSTS, X-Frame-Options, X-Content-Type, Referrer-Policy, Permissions-Policy, X-XSS-Protection</li>
             <li>Rate limiting: 5 attempts / 15 min / IP (in-memory)</li>
             <li>Route protection — all /dashboard/* require session</li>
+            <li>Public routes: /, /login, /register, /forgot-password, /reset-password, /verify-email, /terms, /privacy, /support</li>
             <li>Zod validation on all inputs</li>
           </ul>
         </div>
@@ -212,11 +252,12 @@ const docs = [
         <div class="section" style="margin:0">
           <h4>Dashboard Shell</h4>
           <ul>
-            <li>Sidebar navigation with active state</li>
-            <li>Module framework (route-based)</li>
-            <li>Notification bell with unread badge</li>
+            <li>Server-side UA detection: mobile vs desktop layout</li>
+            <li>Desktop: sidebar navigation (240px), active state via usePathname()</li>
+            <li>Mobile: full-screen layout, bottom tab bar (Home/Budget/Journal/Calendar/More), slide-out drawer</li>
+            <li>Notification bell with unread badge + slide panel</li>
             <li>Dark theme — bg #0a0a0a, indigo/violet accents</li>
-            <li>Responsive layout with overflow handling</li>
+            <li>Onboarding wizard (5-step) for new users</li>
           </ul>
         </div>
       </div>
@@ -229,9 +270,15 @@ const docs = [
           ['POST', '/api/auth/login', 'Credentials sign-in, sets JWT session cookie'],
           ['GET',  '/api/auth/session', 'Return current user session data'],
           ['POST', '/api/auth/signout', 'Clear session and redirect'],
+          ['POST', '/api/auth/forgot-password', 'Send password reset email'],
+          ['POST', '/api/auth/reset-password', 'Reset password with token'],
+          ['GET',  '/api/auth/2fa/setup', 'Generate TOTP QR code + secret'],
+          ['POST', '/api/auth/2fa/enable', 'Verify TOTP code + enable 2FA, returns backup codes'],
+          ['POST', '/api/auth/2fa/disable', 'Disable 2FA with current TOTP code'],
           ['GET',  '/api/notifications', 'List notifications + unread count'],
           ['PATCH','/api/notifications/[id]', 'Mark single notification read'],
           ['POST', '/api/notifications/mark-all-read', 'Mark all notifications read'],
+          ['POST', '/api/support', 'Submit support request (rate limited 3/hr, sends email)'],
         ].map(([m, p, d]) => `
           <div class="api-row">
             <span class="method ${m.toLowerCase()}">${m}</span>
@@ -241,15 +288,14 @@ const docs = [
         `).join('')}
       </div>
 
-      ${footer('Phase 1 — Foundation · Auth, Security, DB')}
+      ${footer('Phase 1 — Foundation · Auth, Security, DB, Mobile Layout')}
     </body></html>`,
   },
 
+  // ── Phase 2 ──────────────────────────────────────────────────────────────────
   {
     filename: 'whoami-phase2-budget.pdf',
-    title: 'Phase 2 — Budget',
-    html: (css) => `<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <style>${css}</style></head><body>
+    html: (css) => `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${css}</style></head><body>
       ${header('Phase 2 — Budget', 'Plaid bank sync, transaction management, budgets, subscriptions, savings goals, cash flow, net worth.')}
 
       <span class="badge green">✓ Complete</span>
@@ -257,7 +303,7 @@ const docs = [
       <div class="feature-grid">
         <div class="feature-card">
           <h4>🏦 Plaid Integration</h4>
-          <p>Connect real bank accounts via Plaid Link. Sync transactions with cursor-based incremental updates. Supports checking, savings, credit, investment accounts.</p>
+          <p>Connect real bank accounts via Plaid Link. Sync transactions with cursor-based incremental updates. Supports checking, savings, credit, investment accounts. Currently sandbox mode — production credentials needed for live bank data.</p>
         </div>
         <div class="feature-card">
           <h4>💳 Transactions</h4>
@@ -318,11 +364,10 @@ const docs = [
     </body></html>`,
   },
 
+  // ── Phase 3 ──────────────────────────────────────────────────────────────────
   {
     filename: 'whoami-phase3-journal.pdf',
-    title: 'Phase 3 — Journal',
-    html: (css) => `<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <style>${css}</style></head><body>
+    html: (css) => `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${css}</style></head><body>
       ${header('Phase 3 — Journal', 'TipTap rich text editor, mood tracking (1–5), tags, calendar view, PIN lock with session-only unlock.')}
 
       <span class="badge green">✓ Complete</span>
@@ -390,7 +435,7 @@ const docs = [
           ['POST',  '/api/journal/[id]/unlock', 'Verify PIN and mark entry revealed (session only)'],
         ].map(([m, p, d]) => `
           <div class="api-row">
-            <span class="method ${m.toLowerCase().replace('del','del')}">${m}</span>
+            <span class="method ${m.toLowerCase()}">${m}</span>
             <span class="api-path">${p}</span>
             <span class="api-desc">${d}</span>
           </div>
@@ -401,11 +446,10 @@ const docs = [
     </body></html>`,
   },
 
+  // ── Phase 4 ──────────────────────────────────────────────────────────────────
   {
     filename: 'whoami-phase4-calendar.pdf',
-    title: 'Phase 4 — Calendar & Reminders',
-    html: (css) => `<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <style>${css}</style></head><body>
+    html: (css) => `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${css}</style></head><body>
       ${header('Phase 4 — Calendar & Reminders', 'Google Calendar two-way sync, iCal import, month/week/day views, standalone reminders with repeat support.')}
 
       <span class="badge green">✓ Complete</span>
@@ -413,38 +457,27 @@ const docs = [
       <div class="feature-grid">
         <div class="feature-card">
           <h4>📅 Month View</h4>
-          <p>6-row × 7-col grid. Event color pills (up to 3 per day). "+N more" opens DayEventsModal. Clicking day number navigates to Day view. Overflow from prev/next month shown dimmed.</p>
+          <p>6-row × 7-col grid. Event color pills (up to 3 per day). "+N more" opens DayEventsModal. Clicking day number navigates to Day view.</p>
         </div>
         <div class="feature-card">
           <h4>📆 Week View</h4>
-          <p>Full time-grid with 56px hourly rows, absolute-positioned event blocks, sticky day headers, current time red line indicator. Clickable day numbers go to Day view.</p>
+          <p>Full time-grid with 56px hourly rows, absolute-positioned event blocks, sticky day headers, current time red line indicator.</p>
         </div>
         <div class="feature-card">
           <h4>🗓 Day View</h4>
-          <p>24-hour timeline. All-day events in header area. Timed events positioned absolutely by start + duration. Current time indicator with red dot + line.</p>
+          <p>24-hour timeline. All-day events in header area. Timed events positioned absolutely by start + duration. Current time indicator.</p>
         </div>
         <div class="feature-card">
           <h4>🔄 Google Calendar Sync</h4>
-          <p>OAuth2 via googleapis. Syncs events into Whoami. Two-way: events created in Whoami push to Google Calendar. Auto-sync on page load (once per session). Manual sync button.</p>
+          <p>OAuth2 via googleapis. Syncs events into Whoami. Two-way: events created in Whoami push to Google Calendar. Auto-sync on page load. Manual sync button.</p>
         </div>
         <div class="feature-card">
           <h4>📥 iCal Import</h4>
-          <p>Upload .ics files to bulk-import events. Parsed server-side, stored as CalendarEvent records with source="ical". Supports VEVENT format with DTSTART/DTEND.</p>
+          <p>Upload .ics files to bulk-import events. Parsed server-side, stored as CalendarEvent records with source="ical". Supports VEVENT format.</p>
         </div>
         <div class="feature-card">
           <h4>🔔 Reminders</h4>
           <p>Due date + time, optional notes, repeat (daily/weekly/monthly). Mark done → moves to Completed section. Standalone /reminders page + calendar sidebar panel. Overdue highlighted in red.</p>
-        </div>
-      </div>
-
-      <hr class="divider"/>
-      <h3>Event Colors</h3>
-      <div class="section">
-        <p style="margin-bottom:8px;">Events have 8 color options. Google events map colorIds 1–11 to named colors. Source-based fallback: local=indigo, google=blue, ical=purple.</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          ${[['indigo','#6366f1'],['blue','#3b82f6'],['green','#22c55e'],['yellow','#eab308'],['orange','#f97316'],['red','#ef4444'],['purple','#a855f7'],['pink','#ec4899']].map(([n,c]) => `
-            <div style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:${c};display:inline-block;"></span><span style="font-size:11px;color:#a1a1aa;">${n}</span></div>
-          `).join('')}
         </div>
       </div>
 
@@ -454,16 +487,17 @@ const docs = [
         ${[
           ['GET',   '/api/calendar/events', 'List events in date range (start/end params)'],
           ['POST',  '/api/calendar/events', 'Create event locally + push to Google Calendar'],
+          ['PATCH', '/api/calendar/events/[id]', 'Update event (title, time, color, notes)'],
           ['DEL',   '/api/calendar/events/[id]', 'Delete event locally + remove from Google Calendar'],
           ['GET',   '/api/calendar/google/status', 'Check if Google Calendar is connected'],
-          ['GET',   '/api/calendar/google/connect', 'Generate Google OAuth2 URL (scope: calendar)'],
+          ['GET',   '/api/calendar/google/connect', 'Generate Google OAuth2 URL'],
           ['GET',   '/api/calendar/google/callback', 'Handle OAuth2 callback, store tokens'],
           ['POST',  '/api/calendar/google/sync', 'Pull latest events from Google Calendar'],
           ['DEL',   '/api/calendar/google/disconnect', 'Remove connection + delete synced events'],
           ['POST',  '/api/calendar/import', 'Import .ics file (multipart/form-data)'],
           ['GET',   '/api/calendar/reminders', 'List pending, overdue, and recently done reminders'],
           ['POST',  '/api/calendar/reminders', 'Create reminder with title, notes, dueAt, repeat'],
-          ['PATCH', '/api/calendar/reminders/[id]', 'Update reminder (mark done, change due date, etc.)'],
+          ['PATCH', '/api/calendar/reminders/[id]', 'Update reminder (mark done, change due date)'],
           ['DEL',   '/api/calendar/reminders/[id]', 'Delete reminder permanently'],
         ].map(([m, p, d]) => `
           <div class="api-row">
@@ -478,11 +512,10 @@ const docs = [
     </body></html>`,
   },
 
+  // ── Phase 5 ──────────────────────────────────────────────────────────────────
   {
     filename: 'whoami-phase5-analytics.pdf',
-    title: 'Phase 5 — Analytics',
-    html: (css) => `<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <style>${css}</style></head><body>
+    html: (css) => `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${css}</style></head><body>
       ${header('Phase 5 — Analytics', 'Personal analytics engine: mood trends, journal frequency, budget breakdown, savings progress, net worth, cash flow.')}
 
       <span class="badge green">✓ Complete</span>
@@ -494,7 +527,7 @@ const docs = [
         </div>
         <div class="feature-card">
           <h4>📓 Journal Frequency</h4>
-          <p>Bar chart showing entries per week/month. Streak counter (days in a row with entries). Grace period: streak doesn't reset at midnight if you haven't written yet today.</p>
+          <p>Bar chart showing entries per week/month. Streak counter (days in a row with entries). Grace period so streak doesn't reset at midnight.</p>
         </div>
         <div class="feature-card">
           <h4>💰 Budget Breakdown</h4>
@@ -502,7 +535,7 @@ const docs = [
         </div>
         <div class="feature-card">
           <h4>🎯 Savings Progress</h4>
-          <p>Card showing all savings goals with progress bars, current/target amounts, emoji labels, and completion percentage. Color-coded per goal's chosen color.</p>
+          <p>Card showing all savings goals with progress bars, current/target amounts, emoji labels, and completion percentage.</p>
         </div>
         <div class="feature-card">
           <h4>📊 Net Worth Card</h4>
@@ -510,14 +543,13 @@ const docs = [
         </div>
         <div class="feature-card">
           <h4>💸 Cash Flow Chart</h4>
-          <p>6-month stacked bar chart: income (emerald) vs spending (rose). Each bar shows month label. Net cash flow line overlay. Powered by Recharts ComposedChart.</p>
+          <p>6-month stacked bar chart: income (emerald) vs spending (rose). Net cash flow overlay. Powered by Recharts ComposedChart.</p>
         </div>
       </div>
 
       <hr class="divider"/>
-      <h3>Overview API</h3>
+      <h3>API Routes</h3>
       <div class="section">
-        <p style="margin-bottom:10px;">Single aggregated endpoint for dashboard stats:</p>
         ${[
           ['GET', '/api/analytics/overview', 'totalSpentThisMonth, avgMoodThisMonth, journalEntriesThisMonth, netWorth, journalStreak, upcomingReminders'],
           ['GET', '/api/analytics/mood', 'Daily mood entries for selected month'],
@@ -534,29 +566,14 @@ const docs = [
         `).join('')}
       </div>
 
-      <hr class="divider"/>
-      <h3>Dashboard Quick Stats</h3>
-      <div class="section">
-        <p>The main dashboard (<code>/dashboard</code>) shows a condensed view powered by the same APIs:</p>
-        <div class="feature-grid" style="margin-top:12px;">
-          <div class="feature-card"><h4>Net Worth</h4><p>Sum of all linked accounts</p></div>
-          <div class="feature-card"><h4>Monthly Income</h4><p>Negative-amount transactions (credits)</p></div>
-          <div class="feature-card"><h4>Monthly Spending</h4><p>Positive-amount transactions (debits)</p></div>
-          <div class="feature-card"><h4>Net Cash Flow</h4><p>Income − Spending, surplus/deficit label</p></div>
-          <div class="feature-card"><h4>Cash Flow Bars</h4><p>Last 6 months income vs spending inline mini-bars</p></div>
-          <div class="feature-card"><h4>Top 5 Categories</h4><p>Horizontal bars, sorted by spend amount</p></div>
-        </div>
-      </div>
-
       ${footer('Phase 5 — Analytics · Recharts, Aggregations, Dashboard')}
     </body></html>`,
   },
 
+  // ── Phase 6 ──────────────────────────────────────────────────────────────────
   {
     filename: 'whoami-phase6-notes.pdf',
-    title: 'Phase 6 — Notes',
-    html: (css) => `<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <style>${css}</style></head><body>
+    html: (css) => `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${css}</style></head><body>
       ${header('Phase 6 — Notes', 'Full CRUD notes module with two-pane editor, color themes, tags, pin, auto-save, and full-text search.')}
 
       <span class="badge green">✓ Complete</span>
@@ -569,7 +586,6 @@ const docs = [
             <li>Right pane: full editor with toolbar</li>
             <li>Empty state: create-first-note prompt</li>
             <li>Note count in sidebar footer</li>
-            <li>Height: <code>calc(100vh - 4rem)</code> with overflow hidden</li>
           </ul>
         </div>
         <div class="section" style="margin:0">
@@ -579,7 +595,6 @@ const docs = [
             <li>800ms debounce (saveTimer ref)</li>
             <li>"Auto-saved" status indicator in toolbar</li>
             <li>New notes require explicit "Create Note" click</li>
-            <li>After creation, switches to edit mode (auto-save enabled)</li>
           </ul>
         </div>
       </div>
@@ -588,11 +603,10 @@ const docs = [
         <div class="section" style="margin:0">
           <h4>Color Themes</h4>
           <ul>
-            <li>6 color options: default, indigo, emerald, amber, rose, purple</li>
+            <li>6 options: default, indigo, emerald, amber, rose, purple</li>
             <li>Color affects background + border of editor pane</li>
             <li>Color dot shown in sidebar list for colored notes</li>
-            <li>Circle color picker in editor toolbar</li>
-            <li>Auto-saved on color change</li>
+            <li>Circle color picker in editor toolbar, auto-saved on change</li>
           </ul>
         </div>
         <div class="section" style="margin:0">
@@ -603,29 +617,6 @@ const docs = [
             <li>Full-text search: title + content (iLike)</li>
             <li>300ms debounced search re-fetch</li>
             <li>Search + tag filter can combine</li>
-            <li>All tags shown dynamically from current note set</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="section-row">
-        <div class="section" style="margin:0">
-          <h4>Pin Notes</h4>
-          <ul>
-            <li>📌 Pin button in editor toolbar</li>
-            <li>Pinned notes sort to top of list</li>
-            <li>Pin icon shown in sidebar list item</li>
-            <li>Toggle: pin → unpin on same click</li>
-            <li>Auto-saved immediately on toggle</li>
-          </ul>
-        </div>
-        <div class="section" style="margin:0">
-          <h4>Database Schema</h4>
-          <ul>
-            <li><code>Note</code> model: id, userId, title, content (Text), tags (String[]), pinned (Boolean), color (String?)</li>
-            <li>Indexes: userId, (userId + pinned)</li>
-            <li>Order: pinned DESC, updatedAt DESC</li>
-            <li>Cascade delete when user deleted</li>
           </ul>
         </div>
       </div>
@@ -648,61 +639,234 @@ const docs = [
         `).join('')}
       </div>
 
-      <hr class="divider"/>
-      <h3>Sidebar List Item</h3>
-      <div class="section">
-        <p>Each note in the sidebar shows:</p>
-        <ul style="margin-top:6px;">
-          <li>Color dot (if colored) + 📌 pin icon (if pinned)</li>
-          <li>Title (truncated to one line)</li>
-          <li>Content preview (2-line clamp, "Empty note" if blank)</li>
-          <li>Relative timestamp (just now / Xm / Xh / Xd / date)</li>
-          <li>First 2 tags as mini chips</li>
-        </ul>
-      </div>
-
       ${footer('Phase 6 — Notes · CRUD, Auto-Save, Color Themes, Tags')}
     </body></html>`,
   },
 
+  // ── Infrastructure ────────────────────────────────────────────────────────────
+  {
+    filename: 'whoami-infrastructure.pdf',
+    html: (css) => `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${css}</style></head><body>
+      ${header('Infrastructure & Deployment', 'Domain, DNS, Vercel deployment, Resend email, environment variables, and cron jobs.')}
+
+      <span class="badge green">✓ Live at whoami.company</span>
+
+      <div class="section-row">
+        <div class="section" style="margin:0">
+          <h4>Domain</h4>
+          <ul>
+            <li>Registrar: Squarespace Domains</li>
+            <li>Domain: <strong style="color:#818cf8;">whoami.company</strong></li>
+            <li>A record: @ → 76.76.21.21 (Vercel IP)</li>
+            <li>CNAME: www → cname.vercel-dns.com</li>
+            <li>TTL: 3600 (1 hour)</li>
+          </ul>
+        </div>
+        <div class="section" style="margin:0">
+          <h4>Hosting (Vercel)</h4>
+          <ul>
+            <li>Plan: Hobby</li>
+            <li>Framework: Next.js (auto-detected)</li>
+            <li>Build: <code>next build</code></li>
+            <li>Branch: main → auto-deploy</li>
+            <li>Cron job: <code>0 8 * * *</code> (daily 8am UTC) — weekly digest</li>
+            <li>CRON_SECRET required for cron authorization</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="section-row">
+        <div class="section" style="margin:0">
+          <h4>Email (Resend)</h4>
+          <ul>
+            <li>Provider: Resend (transactional email)</li>
+            <li>DNS (via Squarespace): MX → Amazon SES, SPF/DKIM TXT records</li>
+            <li>Domain verified: @whoami.company</li>
+            <li>From address: noreply@whoami.company</li>
+            <li>Support: support@whoami.company (forwarded to Gmail)</li>
+            <li>Hello: hello@whoami.company (forwarded)</li>
+            <li>Privacy: privacy@whoami.company (forwarded)</li>
+          </ul>
+        </div>
+        <div class="section" style="margin:0">
+          <h4>Database (Neon)</h4>
+          <ul>
+            <li>Provider: Neon (serverless PostgreSQL)</li>
+            <li>Connection via <code>@prisma/adapter-pg</code></li>
+            <li>Connection pooling enabled</li>
+            <li>Schema managed via Prisma 7</li>
+            <li>Migrations: <code>prisma db push</code></li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="divider"/>
+      <h3>Environment Variables</h3>
+      <div class="section">
+        ${[
+          ['DATABASE_URL', 'Neon PostgreSQL connection string (with pooler)', 'required'],
+          ['NEXTAUTH_URL', 'https://whoami.company (production)', 'required'],
+          ['NEXTAUTH_SECRET', 'Random 32-byte hex — used to sign JWT sessions', 'required'],
+          ['RESEND_API_KEY', 'Resend API key for transactional email', 'required'],
+          ['EMAIL_FROM', 'noreply@whoami.company — sender address', 'required'],
+          ['PLAID_CLIENT_ID', 'Plaid client ID (get from Plaid dashboard)', 'required'],
+          ['PLAID_SECRET', 'Plaid secret key (sandbox or production)', 'required'],
+          ['PLAID_ENV', 'sandbox | development | production', 'required'],
+          ['CRON_SECRET', 'Random hex — authorizes Vercel cron job calls', 'required'],
+          ['ANTHROPIC_API_KEY', 'Claude API key — required for AI assistant (Phase 7)', 'optional'],
+          ['GOOGLE_CLIENT_ID', 'Google OAuth2 client ID — for Calendar sync', 'optional'],
+          ['GOOGLE_CLIENT_SECRET', 'Google OAuth2 client secret', 'optional'],
+        ].map(([k, d, r]) => `
+          <div class="env-row">
+            <span class="env-key">${k}</span>
+            <span class="env-desc">${d}</span>
+            <span class="env-req ${r}">${r}</span>
+          </div>
+        `).join('')}
+      </div>
+
+      <hr class="divider"/>
+      <h3>vercel.json — Cron Job</h3>
+      <div class="section">
+        <p style="margin-bottom:10px;">Runs daily at 8am UTC. Sends weekly digest emails to users who have opted in. Requires <code>Authorization: Bearer CRON_SECRET</code> header.</p>
+        <div style="background:#0f0f0f;border:1px solid #3f3f46;border-radius:8px;padding:12px 16px;font-family:monospace;font-size:11px;color:#a78bfa;">
+          { "crons": [{ "path": "/api/cron/weekly-digest", "schedule": "0 8 * * *" }] }
+        </div>
+      </div>
+
+      ${footer('Infrastructure · Domain, Vercel, Resend, Env Vars')}
+    </body></html>`,
+  },
+
+  // ── Mobile Layout ─────────────────────────────────────────────────────────────
+  {
+    filename: 'whoami-mobile-layout.pdf',
+    html: (css) => `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${css}</style></head><body>
+      ${header('Mobile Layout Architecture', 'Server-side UA detection separates mobile and desktop experiences. No CSS breakpoint guessing.')}
+
+      <span class="badge">Architecture · March 2026</span>
+
+      <div class="section">
+        <h4>Why Server-Side Detection?</h4>
+        <p>The previous approach used CSS <code>hidden md:flex</code> on the sidebar to hide it on mobile. This failed on Chrome for iPhone because the browser's reported viewport width was inconsistent, causing the desktop sidebar to render on phones.</p>
+        <p>The fix: the server reads the <code>User-Agent</code> header on every request and renders a completely different layout component — no CSS breakpoints involved in the layout switching decision.</p>
+      </div>
+
+      <div class="section-row">
+        <div class="section" style="margin:0">
+          <h4>Desktop Layout</h4>
+          <ul>
+            <li>240px fixed sidebar with logo + SidebarNav + user footer</li>
+            <li>SidebarNav: 10 navigation items, active state via usePathname()</li>
+            <li>Header: greeting + date badge + notification bell</li>
+            <li>Main content: <code>flex-1 overflow-y-auto p-6</code></li>
+            <li>Full viewport height: <code>h-screen overflow-hidden</code></li>
+          </ul>
+        </div>
+        <div class="section" style="margin:0">
+          <h4>Mobile Layout</h4>
+          <ul>
+            <li>No sidebar — full-screen layout</li>
+            <li>Sticky header: logo + notification bell + user avatar</li>
+            <li>Content: <code>flex-1 overflow-y-auto p-4 pb-24</code></li>
+            <li>Bottom tab bar: Home, Budget, Journal, Calendar, More</li>
+            <li>More button → slide-out drawer (full nav + sign out)</li>
+            <li>iPhone safe area: <code>env(safe-area-inset-bottom)</code></li>
+            <li>Viewport: <code>h-[100dvh]</code> (dynamic viewport height)</li>
+          </ul>
+        </div>
+      </div>
+
+      <hr class="divider"/>
+
+      <h3>Detection Logic</h3>
+      <div class="section">
+        <p style="margin-bottom:10px;">File: <code>src/lib/device.ts</code></p>
+        <div style="background:#0f0f0f;border:1px solid #3f3f46;border-radius:8px;padding:12px 16px;font-family:monospace;font-size:11px;color:#a1a1aa;line-height:1.8;">
+          <span style="color:#818cf8;">export function</span> <span style="color:#34d399;">isMobileUserAgent</span>(ua: <span style="color:#fbbf24;">string</span>): <span style="color:#fbbf24;">boolean</span> {<br>
+          &nbsp;&nbsp;<span style="color:#818cf8;">return</span> /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.<span style="color:#34d399;">test</span>(ua);<br>
+          }
+        </div>
+      </div>
+
+      <div class="section">
+        <p style="margin-bottom:10px;">In <code>app/(dashboard)/layout.tsx</code>:</p>
+        <div style="background:#0f0f0f;border:1px solid #3f3f46;border-radius:8px;padding:12px 16px;font-family:monospace;font-size:11px;color:#a1a1aa;line-height:1.8;">
+          <span style="color:#818cf8;">const</span> headersList = <span style="color:#818cf8;">await</span> <span style="color:#34d399;">headers</span>();<br>
+          <span style="color:#818cf8;">const</span> ua = headersList.<span style="color:#34d399;">get</span>(<span style="color:#a3e635;">"user-agent"</span>) ?? <span style="color:#a3e635;">""</span>;<br>
+          <span style="color:#818cf8;">const</span> isMobile = <span style="color:#34d399;">isMobileUserAgent</span>(ua);<br><br>
+          <span style="color:#818cf8;">if</span> (isMobile) <span style="color:#818cf8;">return</span> &lt;<span style="color:#34d399;">MobileLayout</span> ...&gt;{children}&lt;/<span style="color:#34d399;">MobileLayout</span>&gt;;<br>
+          <span style="color:#818cf8;">return</span> &lt;<span style="color:#34d399;">DesktopLayout</span> ...&gt;{children}&lt;/<span style="color:#34d399;">DesktopLayout</span>&gt;;
+        </div>
+      </div>
+
+      <hr class="divider"/>
+
+      <h3>Mobile Navigation Structure</h3>
+      <div class="section-row">
+        <div class="section" style="margin:0">
+          <h4>Bottom Tabs (Always Visible)</h4>
+          <ul>
+            <li>🏠 Home → /dashboard</li>
+            <li>💳 Budget → /budget</li>
+            <li>📖 Journal → /journal</li>
+            <li>📅 Calendar → /calendar</li>
+            <li>⋮ More → opens full drawer</li>
+          </ul>
+        </div>
+        <div class="section" style="margin:0">
+          <h4>Drawer Navigation (All Pages)</h4>
+          <ul>
+            <li>Dashboard, Budget, Calendar, Journal</li>
+            <li>Analytics, Habits & Health</li>
+            <li>Notes, Reminders</li>
+            <li>AI Assistant, Settings</li>
+            <li>User info + Sign out button</li>
+          </ul>
+        </div>
+      </div>
+
+      ${footer('Mobile Layout · Server-Side UA Detection · MobileLayout Component')}
+    </body></html>`,
+  },
+
+  // ── Full API Reference ─────────────────────────────────────────────────────────
   {
     filename: 'whoami-api-reference.pdf',
-    title: 'Full API Reference',
-    html: (css) => `<!DOCTYPE html><html><head><meta charset="UTF-8">
-    <style>${css} body { font-size: 12px; }</style></head><body>
-      ${header('Full API Reference', 'All API routes across every phase — auth, budget, journal, calendar, reminders, notes, analytics, notifications.')}
+    html: (css) => `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${css} body { font-size: 12px; }</style></head><body>
+      ${header('Full API Reference', 'All API routes across every module — auth, budget, journal, calendar, notes, analytics, notifications, support.')}
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
         <div>
           <h3>Auth & User</h3>
           <div class="section" style="margin-bottom:12px;">
             ${[
-              ['POST','GET'],
-              ['/api/auth/register','/api/auth/session'],
-              ['Register user','Get session'],
-            ]}
-            ${[
-              ['POST', '/api/auth/register', 'Register with email + password'],
-              ['GET',  '/api/auth/session', 'Get current session user'],
-              ['POST', '/api/auth/signout', 'Sign out and clear session'],
-            ].map(([m,p,d]) => `<div class="api-row"><span class="method ${m.toLowerCase()}">${m}</span><span class="api-path" style="font-size:10px;">${p}</span></div>`).join('')}
+              ['POST', '/api/auth/register'],
+              ['GET',  '/api/auth/session'],
+              ['POST', '/api/auth/signout'],
+              ['POST', '/api/auth/forgot-password'],
+              ['POST', '/api/auth/reset-password'],
+              ['GET',  '/api/auth/2fa/setup'],
+              ['POST', '/api/auth/2fa/enable'],
+              ['POST', '/api/auth/2fa/disable'],
+            ].map(([m,p]) => `<div class="api-row"><span class="method ${m.toLowerCase()}">${m}</span><span class="api-path" style="font-size:10px;">${p}</span></div>`).join('')}
           </div>
 
           <h3>Plaid / Budget</h3>
           <div class="section" style="margin-bottom:12px;">
             ${[
-              ['POST', '/api/plaid/link-token',''],
-              ['POST', '/api/plaid/exchange-token',''],
-              ['GET',  '/api/plaid/accounts',''],
-              ['POST', '/api/plaid/sync',''],
-              ['GET',  '/api/plaid/transactions',''],
-              ['GET',  '/api/budget',''],
-              ['POST', '/api/budget',''],
-              ['GET',  '/api/budget/cashflow',''],
-              ['GET',  '/api/savings-goals',''],
-              ['POST', '/api/savings-goals',''],
-              ['PATCH','/api/savings-goals/[id]',''],
-              ['DEL',  '/api/savings-goals/[id]',''],
+              ['POST', '/api/plaid/link-token'],
+              ['POST', '/api/plaid/exchange-token'],
+              ['GET',  '/api/plaid/accounts'],
+              ['POST', '/api/plaid/sync'],
+              ['GET',  '/api/plaid/transactions'],
+              ['GET',  '/api/budget'],
+              ['POST', '/api/budget'],
+              ['GET',  '/api/budget/cashflow'],
+              ['GET',  '/api/savings-goals'],
+              ['POST', '/api/savings-goals'],
+              ['PATCH','/api/savings-goals/[id]'],
+              ['DEL',  '/api/savings-goals/[id]'],
             ].map(([m,p]) => `<div class="api-row"><span class="method ${m.toLowerCase()}">${m}</span><span class="api-path" style="font-size:10px;">${p}</span></div>`).join('')}
           </div>
 
@@ -720,6 +884,13 @@ const docs = [
               ['POST',  '/api/journal/[id]/unlock'],
             ].map(([m,p]) => `<div class="api-row"><span class="method ${m.toLowerCase()}">${m}</span><span class="api-path" style="font-size:10px;">${p}</span></div>`).join('')}
           </div>
+
+          <h3>Support</h3>
+          <div class="section" style="margin-bottom:12px;">
+            ${[
+              ['POST', '/api/support'],
+            ].map(([m,p]) => `<div class="api-row"><span class="method ${m.toLowerCase()}">${m}</span><span class="api-path" style="font-size:10px;">${p}</span></div>`).join('')}
+          </div>
         </div>
 
         <div>
@@ -728,6 +899,7 @@ const docs = [
             ${[
               ['GET',   '/api/calendar/events'],
               ['POST',  '/api/calendar/events'],
+              ['PATCH', '/api/calendar/events/[id]'],
               ['DEL',   '/api/calendar/events/[id]'],
               ['GET',   '/api/calendar/google/status'],
               ['GET',   '/api/calendar/google/connect'],
@@ -766,19 +938,27 @@ const docs = [
           </div>
 
           <h3>Notifications</h3>
-          <div class="section">
+          <div class="section" style="margin-bottom:12px;">
             ${[
               ['GET',  '/api/notifications'],
               ['PATCH','/api/notifications/[id]'],
               ['POST', '/api/notifications/mark-all-read'],
             ].map(([m,p]) => `<div class="api-row"><span class="method ${m.toLowerCase()}">${m}</span><span class="api-path" style="font-size:10px;">${p}</span></div>`).join('')}
           </div>
+
+          <h3>Cron</h3>
+          <div class="section">
+            ${[
+              ['POST', '/api/cron/weekly-digest'],
+            ].map(([m,p]) => `<div class="api-row"><span class="method ${m.toLowerCase()}">${m}</span><span class="api-path" style="font-size:10px;">${p}</span></div>`).join('')}
+          </div>
         </div>
       </div>
 
-      ${footer('Full API Reference · All 40+ Routes')}
+      ${footer('Full API Reference · 50+ Routes Across All Modules')}
     </body></html>`,
   },
+
 ];
 
 // ─── Generate PDFs ─────────────────────────────────────────────────────────────
@@ -802,4 +982,4 @@ for (const doc of docs) {
 }
 
 await browser.close();
-console.log(`\n📄 All PDFs saved to: ${OUT_DIR}`);
+console.log(`\n📄 ${docs.length} PDFs saved to: ${OUT_DIR}`);
