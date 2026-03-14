@@ -313,6 +313,7 @@ function SecurityTab() {
     }
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- re-enable when Twilio is configured
   const fetchPhone = useCallback(async () => {
     try {
       const res = await fetch('/api/auth/phone');
@@ -328,8 +329,8 @@ function SecurityTab() {
 
   useEffect(() => {
     void fetchStatus();
-    void fetchPhone();
-  }, [fetchStatus, fetchPhone]);
+    // void fetchPhone(); // SMS/Twilio not configured — re-enable when Twilio is set up
+  }, [fetchStatus]);
 
   const handleSavePhone = async () => {
     if (!phoneInput.trim()) return;
@@ -468,7 +469,7 @@ function SecurityTab() {
     }
   };
 
-  if (loadingStatus || phoneLoadingData) {
+  if (loadingStatus) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
@@ -478,70 +479,7 @@ function SecurityTab() {
 
   return (
     <>
-      {/* Recovery Phone card */}
-      <div className={cardCls + ' mb-4'}>
-        <div className="mb-5">
-          <p className="text-sm font-semibold text-zinc-100">Recovery Phone</p>
-          <p className="text-xs text-zinc-500">Add a phone number to recover your PIN via SMS.</p>
-        </div>
-
-        {phoneError && (
-          <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/[0.08] px-4 py-3 text-sm text-red-400">
-            {phoneError}
-          </div>
-        )}
-
-        {phone ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className={[
-                'flex items-center gap-2 rounded-full border px-3 py-1',
-                phoneVerified
-                  ? 'border-green-500/30 bg-green-500/10'
-                  : 'border-amber-500/30 bg-amber-500/10',
-              ].join(' ')}>
-                <div className={['h-2 w-2 rounded-full', phoneVerified ? 'bg-green-500' : 'bg-amber-500'].join(' ')} />
-                <span className={['text-sm font-medium', phoneVerified ? 'text-green-400' : 'text-amber-400'].join(' ')}>
-                  {phoneVerified ? 'Verified' : 'Unverified'}
-                </span>
-              </div>
-              <span className="text-sm text-zinc-300 font-mono">{phone}</span>
-            </div>
-            <button
-              type="button"
-              className={btnSmDanger}
-              onClick={handleRemovePhone}
-              disabled={phoneSaving}
-            >
-              {phoneSaving && <Spinner />}
-              Remove
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <p className="text-sm text-zinc-400">No recovery phone set.</p>
-            <div className="flex gap-2">
-              <input
-                type="tel"
-                placeholder="+12125551234"
-                value={phoneInput}
-                onChange={(e) => { setPhoneInput(e.target.value); setPhoneError(''); }}
-                disabled={phoneSaving}
-                className={inputCls}
-              />
-              <button
-                type="button"
-                className={btnSmPrimary}
-                onClick={handleSavePhone}
-                disabled={phoneSaving || !phoneInput.trim()}
-              >
-                {phoneSaving && <Spinner />}
-                Save
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      {/* Recovery Phone card — hidden until Twilio is configured */}
 
       <div className={cardCls}>
         <div className="mb-5">
