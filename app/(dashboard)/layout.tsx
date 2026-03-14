@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { auth } from "@/src/lib/auth";
 import { signOut } from "@/src/lib/auth";
+import { isMobileUserAgent } from "@/src/lib/device";
 import SidebarNav from "./components/SidebarNav";
 import NotificationBell from "./components/NotificationBell";
 import GreetingHeader, { DateBadge } from "./components/GreetingHeader";
+import MobileLayout from "./components/MobileLayout";
 
 export const metadata: Metadata = {
   title: {
@@ -11,7 +14,6 @@ export const metadata: Metadata = {
     default: "Dashboard | Whoami",
   },
 };
-
 
 async function SignOutButton() {
   return (
@@ -50,6 +52,26 @@ export default async function DashboardLayout({
 
   const firstName = userName.split(" ")[0] ?? userName;
 
+  // Server-side device detection — no CSS breakpoint guessing
+  const headersList = await headers();
+  const ua = headersList.get("user-agent") ?? "";
+  const isMobile = isMobileUserAgent(ua);
+
+  // ── Mobile layout ──────────────────────────────────────────────────────────
+  if (isMobile) {
+    return (
+      <MobileLayout
+        userName={userName}
+        userEmail={userEmail}
+        initials={initials}
+        signOutForm={<SignOutButton />}
+      >
+        {children}
+      </MobileLayout>
+    );
+  }
+
+  // ── Desktop layout ─────────────────────────────────────────────────────────
   return (
     <div className="flex h-screen bg-[#09090b] overflow-hidden">
       {/* Sidebar */}
@@ -66,7 +88,6 @@ export default async function DashboardLayout({
           </div>
         </div>
 
-        {/* Navigation — client component for active state */}
         <SidebarNav />
 
         {/* User footer */}
@@ -76,13 +97,9 @@ export default async function DashboardLayout({
               {initials || "U"}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-zinc-100">
-                {userName}
-              </p>
+              <p className="truncate text-sm font-medium text-zinc-100">{userName}</p>
               {userEmail && (
-                <p className="truncate text-xs text-zinc-500">
-                  {userEmail}
-                </p>
+                <p className="truncate text-xs text-zinc-500">{userEmail}</p>
               )}
             </div>
           </div>
@@ -92,11 +109,8 @@ export default async function DashboardLayout({
 
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Header */}
         <header className="relative z-10 h-14 shrink-0 flex items-center justify-between px-6 border-b border-white/[0.06] bg-[#09090b]/80 backdrop-blur-sm">
-          <div className="flex items-center gap-2">
-            <GreetingHeader firstName={firstName} />
-          </div>
+          <GreetingHeader firstName={firstName} />
           <div className="flex items-center gap-3">
             <DateBadge />
             <div className="h-4 w-px bg-white/[0.06]" aria-hidden="true" />
@@ -104,7 +118,6 @@ export default async function DashboardLayout({
           </div>
         </header>
 
-        {/* Page content */}
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </div>
