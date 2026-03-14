@@ -215,7 +215,14 @@ export default function MobileLayout({ children, userName, initials, signOutForm
 
             {/* User footer */}
             <div className="border-t border-white/[0.06] p-4 space-y-2">
-              <div className="flex items-center gap-3 px-1">
+              <Link
+                href="/support"
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04] transition-colors"
+              >
+                <span className="text-base leading-none">💬</span>
+                Send feedback
+              </Link>
+              <div className="flex items-center gap-3 px-1 pt-1">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-semibold text-white">
                   {initials || 'U'}
                 </div>

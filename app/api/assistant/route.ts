@@ -6,7 +6,9 @@ import { rateLimit } from '@/src/lib/rate-limit';
 import { sanitizeInput } from '@/src/lib/security';
 import { z } from 'zod';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const anthropic = process.env.ANTHROPIC_API_KEY
+  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  : null;
 
 const messageSchema = z.object({
   role: z.enum(['user', 'assistant']),
@@ -331,6 +333,10 @@ export interface ToolAction {
 // ── POST handler ──────────────────────────────────────────────────────────────
 
 export async function POST(request: Request): Promise<Response> {
+  if (!anthropic) {
+    return NextResponse.json({ error: 'not_configured' }, { status: 503 });
+  }
+
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -373,7 +379,7 @@ export async function POST(request: Request): Promise<Response> {
       async start(controller) {
         try {
           // Phase 1: non-streaming call with tools enabled
-          const firstResponse = await anthropic.messages.create({
+          const firstResponse = await anthropic!.messages.create({
             model: 'claude-sonnet-4-6',
             max_tokens: 4096,
             tools: ASSISTANT_TOOLS,
@@ -414,7 +420,7 @@ export async function POST(request: Request): Promise<Response> {
             }
 
             // Phase 2: stream final response with tool results
-            const secondStream = anthropic.messages.stream({
+            const secondStream = anthropic!.messages.stream({
               model: 'claude-sonnet-4-6',
               max_tokens: 4096,
               system: systemPrompt,

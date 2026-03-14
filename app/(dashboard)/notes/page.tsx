@@ -578,10 +578,10 @@ export default function NotesPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-full px-6 py-6">
+    <div className="min-h-full px-4 sm:px-6 py-4 sm:py-6">
 
       {/* ── Top bar ── */}
-      <div className="flex items-center gap-3 mb-5">
+      <div className="flex flex-wrap items-center gap-3 mb-5">
         <div>
           <h1 className="text-2xl font-bold text-zinc-100 tracking-tight">Notes</h1>
           <p className="text-sm text-zinc-500 mt-0.5">{notes.length} {notes.length === 1 ? 'note' : 'notes'}</p>
@@ -595,7 +595,7 @@ export default function NotesPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search notes…"
-              className="w-52 rounded-xl bg-white/[0.04] border border-white/[0.06] pl-8 pr-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-indigo-500/60 focus:bg-white/[0.06] transition-all"
+              className="w-36 sm:w-52 rounded-xl bg-white/[0.04] border border-white/[0.06] pl-8 pr-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-indigo-500/60 focus:bg-white/[0.06] transition-all"
             />
           </div>
           {/* New Note */}
@@ -604,7 +604,8 @@ export default function NotesPage() {
             className="flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-sm font-medium text-white transition-colors shadow-lg shadow-indigo-900/30"
           >
             <span className="text-base leading-none">+</span>
-            New Note
+            <span className="hidden sm:inline">New Note</span>
+            <span className="sm:hidden">New</span>
           </button>
         </div>
       </div>

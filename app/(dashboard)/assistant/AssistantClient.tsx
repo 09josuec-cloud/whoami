@@ -197,6 +197,7 @@ export default function AssistantClient() {
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notConfigured, setNotConfigured] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -233,6 +234,11 @@ export default function AssistantClient() {
 
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
+        if (res.status === 503 && data.error === 'not_configured') {
+          setNotConfigured(true);
+          setMessages([]);
+          return;
+        }
         throw new Error(data.error ?? 'Request failed');
       }
 
@@ -323,6 +329,23 @@ export default function AssistantClient() {
   };
 
   const isEmpty = messages.length === 0;
+
+  if (notConfigured) {
+    return (
+      <div className="flex h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6 text-center">
+        <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 ring-1 ring-white/[0.08]">
+          <SparklesIcon size={7} />
+        </div>
+        <h2 className="mb-2 text-xl font-bold text-zinc-100">AI Assistant</h2>
+        <p className="mb-1 text-sm text-zinc-400 max-w-xs">
+          Coming soon. The AI assistant is powered by Claude and will answer questions about your finances, mood, calendar, and more.
+        </p>
+        <p className="text-xs text-zinc-600 max-w-xs">
+          This feature will be enabled in an upcoming update.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] flex-col">

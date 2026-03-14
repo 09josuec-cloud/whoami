@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import OnboardingWizard from '../components/OnboardingWizard';
 
 interface BankAccount {
   id: string;
@@ -185,6 +186,12 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [showNetWorth, setShowNetWorth] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    const done = localStorage.getItem('whoami_onboarding_done');
+    if (!done) setShowOnboarding(true);
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem('whoami_showNetWorth');
@@ -260,11 +267,11 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
     return (
       <div className="mx-auto max-w-6xl space-y-5 px-1">
         <div className="h-32 animate-pulse rounded-xl bg-[#111114]" />
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[...Array(3)].map((_, i) => <div key={i} className="h-24 animate-pulse rounded-xl bg-[#111114]" />)}
         </div>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="col-span-2 h-52 animate-pulse rounded-xl bg-[#111114]" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 h-52 animate-pulse rounded-xl bg-[#111114]" />
           <div className="h-52 animate-pulse rounded-xl bg-[#111114]" />
         </div>
       </div>
@@ -296,6 +303,17 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
 
   return (
     <div className="mx-auto max-w-6xl space-y-4 px-1 pb-8">
+
+      {/* ── Onboarding wizard ── */}
+      {showOnboarding && (
+        <OnboardingWizard
+          firstName={firstName}
+          onComplete={() => {
+            localStorage.setItem('whoami_onboarding_done', '1');
+            setShowOnboarding(false);
+          }}
+        />
+      )}
 
       {/* ── Greeting ── */}
       <div className="flex items-end justify-between pt-1">
@@ -404,7 +422,7 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
       </div>
 
       {/* ── 3 Stat Cards ── */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatCard
           label="Income"
           value={fmt(monthlyIncome)}
@@ -518,11 +536,11 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
       </div>
 
       {/* ── Cash Flow + Accounts ── */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
 
         {/* Cash Flow bars */}
         {cashflow.length > 0 && (
-          <div className="col-span-2 rounded-xl bg-[#111114] border border-white/[0.06] p-5">
+          <div className="lg:col-span-2 rounded-xl bg-[#111114] border border-white/[0.06] p-5">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-zinc-500">Cash Flow</p>
@@ -604,7 +622,7 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
 
         {/* If no cashflow, span accounts full width */}
         {cashflow.length === 0 && accounts.length === 0 && (
-          <div className="col-span-3 rounded-xl bg-[#111114] border border-white/[0.06] p-6 text-center">
+          <div className="col-span-full rounded-xl bg-[#111114] border border-white/[0.06] p-6 text-center">
             <p className="text-sm text-zinc-500">Connect a bank account to see your cash flow.</p>
             <Link href="/budget" className="mt-2 inline-block text-xs text-indigo-400 hover:text-indigo-300">
               Connect account →
@@ -614,10 +632,10 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
       </div>
 
       {/* ── Budget Health + Goals ── */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
 
         {/* Budget Health — Monarch-style rows */}
-        <div className="col-span-2 rounded-xl bg-[#111114] border border-white/[0.06] p-5">
+        <div className="lg:col-span-2 rounded-xl bg-[#111114] border border-white/[0.06] p-5">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-zinc-500">Budget Health</p>
@@ -859,7 +877,7 @@ export default function DashboardClient({ firstName }: { firstName: string }) {
       )}
 
       {/* ── Top Spending + Recent Transactions ── */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
         {/* Top Spending */}
         {topSpending.length > 0 && (
