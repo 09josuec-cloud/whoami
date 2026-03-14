@@ -392,9 +392,9 @@ export default function CalendarClient() {
     : [];
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] overflow-hidden rounded-xl bg-[#09090b]">
-      {/* Left sidebar */}
-      <div className="flex w-60 shrink-0 flex-col border-r border-white/[0.06] bg-[#0e0e12]">
+    <div className="flex flex-col md:flex-row h-[calc(100dvh-10rem)] md:h-[calc(100vh-8rem)] overflow-hidden rounded-xl bg-[#09090b]">
+      {/* Left sidebar — desktop only */}
+      <div className="hidden md:flex w-60 shrink-0 flex-col border-r border-white/[0.06] bg-[#0e0e12]">
         {/* Today widget */}
         <div className="border-b border-white/[0.06] px-4 py-5">
           <p className="text-xs font-medium text-zinc-500">
@@ -442,17 +442,16 @@ export default function CalendarClient() {
       {/* Main calendar area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] px-4 py-3">
+        <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-white/[0.06] px-3 py-2.5">
           {/* Navigation */}
-          <div className="flex items-center gap-2">
-            {/* Back to month (shown in week/day view) */}
+          <div className="flex items-center gap-1.5 flex-1 min-w-0">
             {view !== 'month' && (
               <button
                 onClick={() => {
                   setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1));
                   setView('month');
                 }}
-                className="rounded-lg bg-white/[0.06] flex items-center gap-1 px-2.5 py-1.5 text-xs text-zinc-400 hover:bg-white/[0.1] hover:text-zinc-100 transition-colors"
+                className="hidden md:flex rounded-lg bg-white/[0.06] items-center gap-1 px-2.5 py-1.5 text-xs text-zinc-400 hover:bg-white/[0.1] hover:text-zinc-100 transition-colors"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -471,7 +470,7 @@ export default function CalendarClient() {
             </button>
             <button
               onClick={handleToday}
-              className="rounded-xl bg-indigo-600/10 px-3 py-1.5 text-xs font-medium text-indigo-400 hover:bg-indigo-600/20 transition-colors"
+              className="rounded-xl bg-indigo-600/10 px-2.5 py-1.5 text-xs font-medium text-indigo-400 hover:bg-indigo-600/20 transition-colors"
             >
               Today
             </button>
@@ -484,22 +483,21 @@ export default function CalendarClient() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
-            <h1 className="ml-1 text-xl font-semibold text-zinc-100">{headerLabel}</h1>
+            <h1 className="ml-1 text-sm font-semibold text-zinc-100 truncate">{headerLabel}</h1>
           </div>
 
           {/* Right actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             {syncMessage && (
-              <span className="text-xs text-zinc-400 animate-pulse">{syncMessage}</span>
+              <span className="hidden md:inline text-xs text-zinc-400 animate-pulse">{syncMessage}</span>
             )}
 
-            {/* View switcher */}
-            <div className="flex rounded-lg bg-white/[0.06] p-0.5 gap-0.5">
+            {/* View switcher — hidden on mobile (month only) */}
+            <div className="hidden md:flex rounded-lg bg-white/[0.06] p-0.5 gap-0.5">
               {(['month', 'week', 'day'] as CalendarView[]).map((v) => (
                 <button
                   key={v}
                   onClick={() => {
-                    // Always navigate to today when switching views
                     const d = new Date();
                     if (v === 'month') {
                       setCurrentDate(new Date(d.getFullYear(), d.getMonth(), 1));
@@ -510,9 +508,7 @@ export default function CalendarClient() {
                   }}
                   className={[
                     'rounded-lg px-3 py-1 text-xs capitalize transition-all',
-                    view === v
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'text-zinc-400 hover:text-zinc-200',
+                    view === v ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200',
                   ].join(' ')}
                 >
                   {v}
@@ -520,7 +516,7 @@ export default function CalendarClient() {
               ))}
             </div>
 
-            {/* Import .ics */}
+            {/* Import .ics — desktop only */}
             <input
               ref={fileInputRef}
               type="file"
@@ -534,23 +530,21 @@ export default function CalendarClient() {
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="rounded-lg bg-white/[0.06] px-2.5 py-1.5 text-xs text-zinc-400 hover:bg-white/[0.1] hover:text-zinc-200 transition-colors"
+              className="hidden md:block rounded-lg bg-white/[0.06] px-2.5 py-1.5 text-xs text-zinc-400 hover:bg-white/[0.1] hover:text-zinc-200 transition-colors"
             >
               Import .ics
             </button>
 
-            {/* Sync button */}
+            {/* Sync — desktop only */}
             {googleConnected && (
               <button
                 onClick={() => void handleSync()}
                 disabled={syncing}
-                className="rounded-lg bg-indigo-500/10 flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-indigo-400 hover:bg-indigo-500/20 disabled:opacity-50 transition-colors"
+                className="hidden md:flex rounded-lg bg-indigo-500/10 items-center gap-1.5 px-2.5 py-1.5 text-xs text-indigo-400 hover:bg-indigo-500/20 disabled:opacity-50 transition-colors"
               >
                 <svg
                   className={['h-3.5 w-3.5', syncing ? 'animate-spin' : ''].join(' ')}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
@@ -567,9 +561,9 @@ export default function CalendarClient() {
                 const day = String(d.getDate()).padStart(2, '0');
                 setNewEventDate(`${d.getFullYear()}-${m}-${day}`);
               }}
-              className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 transition-colors"
+              className="flex items-center gap-1 rounded-xl bg-indigo-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-indigo-500 transition-colors"
             >
-              + New Event
+              + <span className="hidden sm:inline">New Event</span><span className="sm:hidden">Event</span>
             </button>
           </div>
         </div>
@@ -605,6 +599,22 @@ export default function CalendarClient() {
             onEventClick={handleEventClick}
           />
         )}
+      </div>
+
+      {/* Mobile reminders strip — shown below calendar on small screens */}
+      <div className="md:hidden border-t border-white/[0.06] bg-[#0e0e12] overflow-y-auto max-h-48">
+        <div className="px-4 py-3 flex items-center justify-between">
+          <h2 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Reminders</h2>
+          <span className="text-[10px] text-zinc-600">{now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+        </div>
+        <div className="px-3 pb-3">
+          <ReminderPanel
+            reminders={reminders}
+            onToggleDone={(id, done) => void handleToggleDone(id, done)}
+            onDelete={(id) => void handleDeleteReminder(id)}
+            onAdd={handleAddReminder}
+          />
+        </div>
       </div>
 
       {/* New Event Modal */}
