@@ -105,51 +105,82 @@ export async function POST(_req: NextRequest): Promise<NextResponse> {
     });
 
     const items = response.data.items ?? [];
-    let synced = 0;
 
+    // Parse all valid events upfront — no DB calls in the loop
+    type ParsedEvent = {
+      googleId: string;
+      title: string;
+      description: string | null;
+      location: string | null;
+      start: Date;
+      end: Date;
+      allDay: boolean;
+      color: string;
+      recurrence: string | null;
+    };
+
+    const parsed: ParsedEvent[] = [];
     for (const event of items) {
       if (!event.id || !event.summary) continue;
-
       const startRaw = event.start?.dateTime ?? event.start?.date;
       const endRaw = event.end?.dateTime ?? event.end?.date;
-
       if (!startRaw || !endRaw) continue;
-
-      const allDay = !event.start?.dateTime;
-      const start = new Date(startRaw);
-      const end = new Date(endRaw);
-      const color = event.colorId ? (GOOGLE_COLOR_MAP[event.colorId] ?? 'blue') : 'blue';
-
-      await prisma.calendarEvent.upsert({
-        where: { googleId: event.id },
-        update: {
-          title: event.summary,
-          description: event.description ?? null,
-          location: event.location ?? null,
-          start,
-          end,
-          allDay,
-          color,
-          recurrence: event.recurrence ? event.recurrence.join(';') : null,
-          updatedAt: new Date(),
-        },
-        create: {
-          userId,
-          title: event.summary,
-          description: event.description ?? null,
-          location: event.location ?? null,
-          start,
-          end,
-          allDay,
-          source: 'google',
-          googleId: event.id,
-          recurrence: event.recurrence ? event.recurrence.join(';') : null,
-          color,
-        },
+      parsed.push({
+        googleId: event.id,
+        title: event.summary,
+        description: event.description ?? null,
+        location: event.location ?? null,
+        start: new Date(startRaw),
+        end: new Date(endRaw),
+        allDay: !event.start?.dateTime,
+        color: event.colorId ? (GOOGLE_COLOR_MAP[event.colorId] ?? 'blue') : 'blue',
+        recurrence: event.recurrence ? event.recurrence.join(';') : null,
       });
-
-      synced++;
     }
+
+    // 1 query: find which googleIds already exist for this user
+    const existingIds = new Set(
+      (await prisma.calendarEvent.findMany({
+        where: { userId, googleId: { in: parsed.map((e) => e.googleId) } },
+        select: { googleId: true },
+      })).map((e) => e.googleId)
+    );
+
+    const toCreate = parsed.filter((e) => !existingIds.has(e.googleId));
+    const toUpdate = parsed.filter((e) => existingIds.has(e.googleId));
+    const now = new Date();
+
+    // 1 query: bulk insert new events
+    if (toCreate.length > 0) {
+      await prisma.calendarEvent.createMany({
+        data: toCreate.map((e) => ({ ...e, userId, source: 'google' as const })),
+        skipDuplicates: true,
+      });
+    }
+
+    // 1 round-trip: batch all updates in a transaction
+    if (toUpdate.length > 0) {
+      await prisma.$transaction(
+        toUpdate.map((e) =>
+          prisma.calendarEvent.update({
+            where: { googleId: e.googleId },
+            data: {
+              title: e.title,
+              description: e.description,
+              location: e.location,
+              start: e.start,
+              end: e.end,
+              allDay: e.allDay,
+              color: e.color,
+              recurrence: e.recurrence,
+              updatedAt: now,
+            },
+          })
+        )
+      );
+    }
+
+    const synced = parsed.length;
 
     await prisma.calendarConnection.update({
       where: { id: connection.id },
