@@ -128,10 +128,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   // Notify admin of new signup (non-blocking)
-  void sendEmail({
+  sendEmail({
     to: ADMIN_EMAIL,
     subject: `New user: ${user.name ?? user.email}`,
     html: newUserAdminTemplate(user.name ?? "Unknown", user.email),
+  }).catch((err) => {
+    console.error("[Register] Failed to send admin notification:", err instanceof Error ? err.message : err);
   });
 
   return NextResponse.json(
