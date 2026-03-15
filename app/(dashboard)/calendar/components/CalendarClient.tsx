@@ -77,8 +77,9 @@ export default function CalendarClient() {
   const searchParams = useSearchParams();
   const now = new Date();
 
-  const [currentDate, setCurrentDate] = useState(new Date(now.getFullYear(), now.getMonth(), 1));
-  const [view, setView] = useState<CalendarView>('month');
+  // Default to day view (today) — overridden to month on desktop after mount
+  const [currentDate, setCurrentDate] = useState(now);
+  const [view, setView] = useState<CalendarView>('day');
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [googleConnected, setGoogleConnected] = useState(false);
@@ -94,9 +95,19 @@ export default function CalendarClient() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const autoSyncedRef = useRef(false);
+  const initialLoadDone = useRef(false);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
+
+  // On desktop (≥768px), default to month view
+  useEffect(() => {
+    if (window.innerWidth >= 768) {
+      setView('month');
+      setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const fetchEvents = useCallback(async (forDate?: Date, forView?: CalendarView) => {
     const d = forDate ?? currentDate;
@@ -168,6 +179,7 @@ export default function CalendarClient() {
     const load = async () => {
       setLoading(true);
       const [, , connected] = await Promise.all([fetchEvents(), fetchReminders(), checkGoogleConnection()]);
+      initialLoadDone.current = true;
       setLoading(false);
       // Auto-sync Google if connected
       if (connected) {
@@ -177,8 +189,9 @@ export default function CalendarClient() {
     void load();
   }, [fetchEvents, fetchReminders, checkGoogleConnection, silentSync]);
 
-  // Re-fetch events when date/view changes
+  // Re-fetch events when date/view changes (skip initial mount — handled by load effect above)
   useEffect(() => {
+    if (!initialLoadDone.current) return;
     void fetchEvents(currentDate, view);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentDate, view]);
@@ -451,7 +464,7 @@ export default function CalendarClient() {
                   setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1));
                   setView('month');
                 }}
-                className="hidden md:flex rounded-lg bg-white/[0.06] items-center gap-1 px-2.5 py-1.5 text-xs text-zinc-400 hover:bg-white/[0.1] hover:text-zinc-100 transition-colors"
+                className="flex rounded-lg bg-white/[0.06] items-center gap-1 px-2.5 py-1.5 text-xs text-zinc-400 hover:bg-white/[0.1] hover:text-zinc-100 transition-colors"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -492,8 +505,8 @@ export default function CalendarClient() {
               <span className="hidden md:inline text-xs text-zinc-400 animate-pulse">{syncMessage}</span>
             )}
 
-            {/* View switcher — hidden on mobile (month only) */}
-            <div className="hidden md:flex rounded-lg bg-white/[0.06] p-0.5 gap-0.5">
+            {/* View switcher */}
+            <div className="flex rounded-lg bg-white/[0.06] p-0.5 gap-0.5">
               {(['month', 'week', 'day'] as CalendarView[]).map((v) => (
                 <button
                   key={v}
@@ -507,11 +520,12 @@ export default function CalendarClient() {
                     setView(v);
                   }}
                   className={[
-                    'rounded-lg px-3 py-1 text-xs capitalize transition-all',
+                    'rounded-lg px-2 md:px-3 py-1 text-xs capitalize transition-all',
                     view === v ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200',
                   ].join(' ')}
                 >
-                  {v}
+                  <span className="hidden sm:inline">{v}</span>
+                  <span className="sm:hidden">{v[0].toUpperCase()}</span>
                 </button>
               ))}
             </div>
