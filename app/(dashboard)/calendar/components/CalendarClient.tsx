@@ -455,16 +455,16 @@ export default function CalendarClient() {
       {/* Main calendar area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top bar */}
-        <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-white/[0.06] px-3 py-2.5">
-          {/* Navigation */}
-          <div className="flex items-center gap-1.5 flex-1 min-w-0">
+        <div className="flex shrink-0 flex-col border-b border-white/[0.06] px-3 py-2">
+          <div className="flex items-center gap-1.5">
+            {/* ← Month — desktop only (view switcher M handles this on mobile) */}
             {view !== 'month' && (
               <button
                 onClick={() => {
                   setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1));
                   setView('month');
                 }}
-                className="flex rounded-lg bg-white/[0.06] items-center gap-1 px-2.5 py-1.5 text-xs text-zinc-400 hover:bg-white/[0.1] hover:text-zinc-100 transition-colors"
+                className="hidden md:flex rounded-lg bg-white/[0.06] items-center gap-1 px-2.5 py-1.5 text-xs text-zinc-400 hover:bg-white/[0.1] hover:text-zinc-100 transition-colors"
               >
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -496,11 +496,11 @@ export default function CalendarClient() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
-            <h1 className="ml-1 text-sm font-semibold text-zinc-100 truncate">{headerLabel}</h1>
-          </div>
+            {/* Header label — desktop only inline, mobile shown below */}
+            <h1 className="hidden md:block ml-1 text-sm font-semibold text-zinc-100 truncate flex-1">{headerLabel}</h1>
+            <div className="flex-1 md:hidden" />
 
-          {/* Right actions */}
-          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Right actions — inline in same row */}
             {syncMessage && (
               <span className="hidden md:inline text-xs text-zinc-400 animate-pulse">{syncMessage}</span>
             )}
@@ -579,6 +579,10 @@ export default function CalendarClient() {
             >
               + <span className="hidden sm:inline">New Event</span><span className="sm:hidden">Event</span>
             </button>
+          </div>
+          {/* Header label — mobile only, full width second row */}
+          <div className="md:hidden pt-1 pb-0.5">
+            <h1 className="text-sm font-semibold text-zinc-100">{headerLabel}</h1>
           </div>
         </div>
 

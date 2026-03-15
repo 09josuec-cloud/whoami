@@ -437,6 +437,9 @@ export default function JournalClient() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'list' | 'calendar'>('list');
 
+  // Mobile panel navigation: 'list' shows the sidebar, 'editor' shows the entry
+  const [mobilePanel, setMobilePanel] = useState<'list' | 'editor'>('list');
+
   // PIN gate state
   const [pinChecked, setPinChecked] = useState(false);
   const [hasPin, setHasPin] = useState(false);
@@ -520,6 +523,7 @@ export default function JournalClient() {
       const data = (await res.json()) as { entry: Entry };
       setEntries((prev) => [data.entry, ...prev]);
       setSelectedId(data.entry.id);
+      setMobilePanel('editor');
       setCalendarDates((prev) => {
         const exists = prev.find((d) => d.date === entryDate);
         if (exists) return prev;
@@ -579,6 +583,7 @@ export default function JournalClient() {
     const entry = entries.find((e) => e.entryDate.slice(0, 10) === date);
     if (entry) {
       setSelectedId(entry.id);
+      setMobilePanel('editor');
     } else {
       setSelectedId(null);
     }
@@ -621,8 +626,11 @@ export default function JournalClient() {
   // ── Render: journal content ────────────────────────────────────────────────
   return (
     <div className="flex h-[calc(100vh-8rem)] overflow-hidden rounded-xl bg-[#09090b]">
-      {/* Left panel */}
-      <div className="flex w-72 shrink-0 flex-col border-r border-white/[0.06] bg-[#0e0e12]">
+      {/* Left panel — full width on mobile, fixed sidebar on desktop */}
+      <div className={[
+        mobilePanel === 'editor' ? 'hidden md:flex' : 'flex',
+        'w-full md:w-72 shrink-0 flex-col border-r border-white/[0.06] bg-[#0e0e12]',
+      ].join(' ')}>
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3.5">
           <h2 className="text-sm font-bold tracking-tight text-zinc-100">Journal</h2>
@@ -719,7 +727,7 @@ export default function JournalClient() {
             <EntryList
               entries={entries}
               selectedId={selectedId}
-              onSelect={setSelectedId}
+              onSelect={(id) => { setSelectedId(id); setMobilePanel('editor'); }}
             />
           )}
         </div>
@@ -730,8 +738,23 @@ export default function JournalClient() {
         </div>
       </div>
 
-      {/* Right panel — editor */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      {/* Right panel — editor, hidden on mobile when showing list */}
+      <div className={[
+        mobilePanel === 'list' ? 'hidden md:flex' : 'flex',
+        'flex-1 flex-col overflow-hidden',
+      ].join(' ')}>
+        {/* Mobile back button */}
+        <div className="md:hidden flex items-center gap-2 border-b border-white/[0.06] bg-[#0e0e12] px-3 py-2.5">
+          <button
+            onClick={() => setMobilePanel('list')}
+            className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-100 transition-colors"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            All Entries
+          </button>
+        </div>
         {selectedEntry || selectedId === null ? (
           <EntryEditor
             entry={editorEntry}
