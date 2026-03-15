@@ -120,7 +120,11 @@ function LoginForm() {
       });
 
       if (result?.error) {
-        setServerError("Invalid email or password. Please try again.");
+        if (result.code === "email_not_verified") {
+          setServerError("Please verify your email before signing in. Check your inbox for the verification link.");
+        } else {
+          setServerError("Invalid email or password. Please try again.");
+        }
       } else {
         router.push(callbackUrl);
         router.refresh();

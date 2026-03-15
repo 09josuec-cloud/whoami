@@ -1,10 +1,14 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
 import { verify } from "@node-rs/argon2";
 import { prisma } from "./prisma";
 import { loginSchema } from "./validations";
 import { authConfig } from "../../auth.config";
+
+class EmailNotVerifiedError extends CredentialsSignin {
+  code = "email_not_verified" as const;
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
@@ -37,6 +41,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             hashedPassword: true,
             role: true,
             twoFactorEnabled: true,
+            emailVerified: true,
           },
         });
 
@@ -51,6 +56,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         });
 
         if (!isValid) return null;
+
+        // Block login until email is verified
+        if (!user.emailVerified) throw new EmailNotVerifiedError();
 
         // NOTE: If twoFactorEnabled is true, full TOTP verification at login-time
         // is a Phase 1.5 enhancement. The settings page (/settings) handles

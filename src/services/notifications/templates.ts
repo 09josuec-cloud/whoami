@@ -66,6 +66,24 @@ export function verifyEmailTemplate(verifyUrl: string): string {
   `);
 }
 
+export function newUserAdminTemplate(name: string, email: string): string {
+  return emailWrapper(`
+    <div class="badge">New Sign-up</div>
+    <h1>New user joined Whoami</h1>
+    <p>Someone just created an account on <strong style="color:#e2e8f0;">whoami.company</strong>.</p>
+    <table style="width:100%; border-collapse:collapse; margin: 16px 0;">
+      <tr>
+        <td style="color:#64748b; font-size:14px; padding: 6px 0; width:80px;">Name</td>
+        <td style="color:#e2e8f0; font-size:14px; font-weight:600;">${name}</td>
+      </tr>
+      <tr>
+        <td style="color:#64748b; font-size:14px; padding: 6px 0;">Email</td>
+        <td style="color:#e2e8f0; font-size:14px; font-weight:600;">${email}</td>
+      </tr>
+    </table>
+  `);
+}
+
 export function twoFactorEnabledTemplate(): string {
   return emailWrapper(`
     <div class="badge">Security Update</div>

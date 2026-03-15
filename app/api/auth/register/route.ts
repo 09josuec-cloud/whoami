@@ -7,7 +7,9 @@ import { rateLimit } from "@/src/lib/rate-limit";
 import { logAuthEvent, AuditAction } from "@/src/lib/audit";
 import { getClientIp, sanitizeInput } from "@/src/lib/security";
 import { sendEmail } from "@/src/services/notifications/email";
-import { verifyEmailTemplate } from "@/src/services/notifications/templates";
+import { verifyEmailTemplate, newUserAdminTemplate } from "@/src/services/notifications/templates";
+
+const ADMIN_EMAIL = "09josuec@gmail.com";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const ip = getClientIp(request);
@@ -124,6 +126,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }
+
+  // Notify admin of new signup (non-blocking)
+  void sendEmail({
+    to: ADMIN_EMAIL,
+    subject: `New user: ${user.name ?? user.email}`,
+    html: newUserAdminTemplate(user.name ?? "Unknown", user.email),
+  });
 
   return NextResponse.json(
     { message: "Account created successfully." },
