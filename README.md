@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Whoami
 
-## Getting Started
+A personal life dashboard I built to learn modern web tools and automate things in my own life. It brings budget, calendar, journal, notes, reminders, and habits into one place, with an AI assistant and scheduled automations on top.
 
-First, run the development server:
+This is a personal learning project, not a commercial product.
+
+## What it automates
+
+**Scheduled AI digest.** A Vercel Cron job runs daily, checks each user's digest settings, collects their week of data, has Claude write a short summary, and emails it through Resend. Only the scheduler can call the endpoint (it checks a secret token), and errors are logged per user so one failure does not stop the rest.
+
+**AI assistant with tools.** An assistant built on the Anthropic API can take real actions from a plain English request, such as creating calendar events, reminders, and notes. Every request is validated with Zod before anything runs, and the endpoint is rate limited.
+
+**Integrations.**
+* Google Calendar through OAuth, to connect an account and sync events
+* Plaid API, to link bank accounts and pull transactions automatically (runs in Plaid's sandbox with test accounts, so no real financial data is used)
+
+**Documentation.** A script generates the project's documentation as PDFs automatically.
+
+## How it's built and hosted
+
+| Piece | Tool |
+|---|---|
+| App framework | Next.js (React, TypeScript) |
+| Hosting and deploys | Vercel, deploys automatically on every push to `main` |
+| Database | Hosted PostgreSQL, managed with Prisma (schema and migrations) |
+| Auth | Auth.js (NextAuth) |
+| Email | Resend |
+| SMS verification | Twilio |
+| AI | Anthropic API (Claude) |
+| Scheduled jobs | Vercel Cron |
+
+All API keys and secrets are stored as environment variables in Vercel, not in the code. See `.env.example` for the list of settings (placeholder values only).
+
+## Security
+
+* Two factor authentication (authenticator app) and email verification
+* Passwords hashed with Argon2
+* Rate limits on authentication, bank sync, and AI endpoints
+* Audit logs for account security events (registration, email verification, password changes, two factor changes)
+* Bank sync logs record counts only, never account details or transactions
+* Input validation with Zod on routes that accept user data
+
+## Running it locally
 
 ```bash
+npm install
+cp .env.example .env    # fill in your own values
+npx prisma migrate dev
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Then open http://localhost:3000. Full setup steps are in `SETUP.md`.
