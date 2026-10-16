@@ -49,6 +49,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const { name, email, password } = parsed.data;
   const sanitizedName = sanitizeInput(name);
 
+  // Invite only: just emails listed in ALLOWED_SIGNUP_EMAILS (comma separated) can register.
+  // Fails closed: if the variable is not set, no new accounts can be created.
+  const allowedEmails = (process.env.ALLOWED_SIGNUP_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  if (!allowedEmails.includes(email.trim().toLowerCase())) {
+    return NextResponse.json(
+      { error: "Signups are invite only right now." },
+      { status: 403 }
+    );
+  }
+
   // Check for existing user
   const existing = await prisma.user.findUnique({
     where: { email },
